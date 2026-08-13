@@ -4,26 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mood Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <h1>Mood Tracker</h1>
         <form id="moodForm">
-            <label for="mood">Mood:</label>
-            <button type="button" name="mood" value="Great">Great</button>
-            <button type="button" name="mood" value="Good">Good</button>
-            <button type="button" name="mood" value="Okay">Okay</button>
-            <button type="button" name="mood" value="Bad">Bad</button>
-            <button type="button" name="mood" value="Terrible">Terrible</button>
+            <div class="mood-buttons">
+                <button type="button" name="mood" value="Great">Great</button>
+                <button type="button" name="mood" value="Good">Good</button>
+                <button type="button" name="mood" value="Okay">Okay</button>
+                <button type="button" name="mood" value="Bad">Bad</button>
+                <button type="button" name="mood" value="Terrible">Terrible</button>
+            </div>
+            
+            <div class="notes">
+                <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
+            </div>
 
-            <label for="notes">Notes:</label>
-            <textarea id="notes" name="notes"></textarea>
-
-            <label for="dateTime">Date and Time:</label>
-            <input type="datetime-local" id="dateTime" name="dateTime" value="">
-
-            <button type="submit" id="saveEntry">Save Entry</button>
+            <div class="datetime-submit">
+                <input type="datetime-local" id="dateTime" name="dateTime" value="">
+                <button type="submit" id="saveEntry">Save Entry</button>
+            </div>
         </form>
 
         <div id="history"></div>

@@ -58,7 +58,7 @@ function renderSummary() {
 moodForm.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON' && e.target.name === 'mood') {
         const selectedMoodButton = e.target;
-        document.querySelectorAll('#moodForm button[name="mood"]').forEach(button => {
+        document.querySelectorAll('#moodForm .mood-buttons button').forEach(button => {
             button.classList.remove('selected');
         });
         selectedMoodButton.classList.add('selected');
@@ -68,7 +68,7 @@ moodForm.addEventListener('click', (e) => {
 moodForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const moodButtons = document.querySelectorAll('#moodForm button[name="mood"].selected');
+    const moodButtons = document.querySelectorAll('#moodForm .mood-buttons button.selected');
     let selectedMood = null;
 
     if (moodButtons.length > 0) {
@@ -95,7 +95,7 @@ moodForm.addEventListener('submit', (e) => {
     renderSummary();
 
     moodForm.reset();
-    document.querySelectorAll('#moodForm button[name="mood"]').forEach(button => button.classList.remove('selected'));
+    document.querySelectorAll('#moodForm .mood-buttons button').forEach(button => button.classList.remove('selected'));
 });
 
 historyDiv.addEventListener('click', (e) => {

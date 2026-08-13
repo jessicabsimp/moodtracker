@@ -1,15 +1,17 @@
 :root {
-    --primary-bg: #181926;
-    --secondary-bg: #1e1f30;
+    --primary-bg: #1a1a24;
+    --secondary-bg: #232333;
     --text-color: #d4d4d4;
     --button-bg: #7a7b8c;
+    --selected-button-bg: #61dafb;
     --border-radius: 8px;
+    --font-family: 'Arial', sans-serif;
 }
 
 body {
     background-color: var(--primary-bg);
     color: var(--text-color);
-    font-family: Arial, sans-serif;
+    font-family: var(--font-family);
     margin: 0;
     padding: 2rem;
     display: flex;
@@ -31,20 +33,99 @@ h1 {
     margin-bottom: 2rem;
 }
 
-form button {
+.mood-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.mood-buttons button {
     background-color: var(--button-bg);
     border: none;
     color: var(--text-color);
     padding: 0.5rem 1rem;
-    margin-right: 0.5rem;
     border-radius: var(--border-radius);
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-form button:hover {
+.mood-buttons button:hover {
     background-color: #8a8b9c;
 }
 
-#history, #summary {
-    margin-top: 2rem;
+.mood-buttons button.selected {
+    background-color: var(--selected-button-bg);
+}
+
+.notes textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #4a4a5a;
+    margin-bottom: 1rem;
+    resize: vertical;
+    font-size: 16px;
+}
+
+.datetime-submit {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.datetime-submit input[type="datetime-local"] {
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #4a4a5a;
+    font-size: 16px;
+}
+
+.datetime-submit button {
+    background-color: var(--button-bg);
+    border: none;
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.datetime-submit button:hover {
+    background-color: #8a8b9c;
+}
+
+.entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #4a4a5a;
+    margin-bottom: 0.5rem;
+}
+
+.mood {
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+}
+
+.entry .dateTime {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.entry button.delete {
+    background-color: transparent;
+    border: none;
+    color: #f44336;
+    cursor: pointer;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.entry button.delete:hover {
+    color: #ff5722;
+}
+
+#summary {
+    margin-top: 1rem;
 }
