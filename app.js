@@ -55,17 +55,28 @@ function renderSummary() {
     summaryDiv.innerHTML = summaryText;
 }
 
+moodForm.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' && e.target.name === 'mood') {
+        const selectedMoodButton = e.target;
+        document.querySelectorAll('#moodForm button[name="mood"]').forEach(button => {
+            button.classList.remove('selected');
+        });
+        selectedMoodButton.classList.add('selected');
+    }
+});
+
 moodForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const moodButtons = document.querySelectorAll('#moodForm button[name="mood"]:not([disabled])');
+    const moodButtons = document.querySelectorAll('#moodForm button[name="mood"].selected');
     let selectedMood = null;
 
-    moodButtons.forEach(button => {
-        if (button.classList.contains('selected')) {
-            selectedMood = button.value;
-        }
-    });
+    if (moodButtons.length > 0) {
+        selectedMood = moodButtons[0].value;
+    } else {
+        alert('Please select a mood.');
+        return;
+    }
 
     const notes = document.getElementById('notes').value.trim();
     const dateTime = document.getElementById('dateTime').value || new Date().toISOString();
@@ -84,7 +95,7 @@ moodForm.addEventListener('submit', (e) => {
     renderSummary();
 
     moodForm.reset();
-    moodButtons.forEach(button => button.classList.remove('selected'));
+    document.querySelectorAll('#moodForm button[name="mood"]').forEach(button => button.classList.remove('selected'));
 });
 
 historyDiv.addEventListener('click', (e) => {
