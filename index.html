@@ -3,33 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mood Tracker</title>
+    <title>Mood Tracker Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Mood Tracker</h1>
-        <form id="moodForm">
-            <div class="mood-buttons">
-                <button type="button" name="mood" value="Great">Great</button>
-                <button type="button" name="mood" value="Good">Good</button>
-                <button type="button" name="mood" value="Okay">Okay</button>
-                <button type="button" name="mood" value="Bad">Bad</button>
-                <button type="button" name="mood" value="Terrible">Terrible</button>
-            </div>
-            
-            <div class="notes">
-                <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
-            </div>
+    <div class="dashboard-container">
+        <!-- Mood Tracker Card -->
+        <div class="card mood-tracker">
+            <h2>Mood Tracker</h2>
+            <form id="moodForm">
+                <div class="mood-buttons">
+                    <button type="button" name="mood" value="Great">Great</button>
+                    <button type="button" name="mood" value="Good">Good</button>
+                    <button type="button" name="mood" value="Okay">Okay</button>
+                    <button type="button" name="mood" value="Bad">Bad</button>
+                    <button type="button" name="mood" value="Terrible">Terrible</button>
+                </div>
 
-            <div class="datetime-submit">
-                <input type="datetime-local" id="dateTime" name="dateTime" value="">
-                <button type="submit" id="saveEntry">Save Entry</button>
-            </div>
-        </form>
+                <div class="notes">
+                    <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
+                </div>
 
-        <div id="history"></div>
-        <div id="summary"></div>
+                <div class="datetime-submit">
+                    <input type="datetime-local" id="dateTime" name="dateTime" value="">
+                    <button type="submit" id="saveEntry">Save Entry</button>
+                </div>
+            </form>
+
+            <div id="history"></div>
+        </div>
+
+        <!-- Music & Mood Insights Card -->
+        <div class="card music-insights">
+            <h2>Music & Mood Insights</h2>
+            <p>This section will display recent track history and mood-correlation trends.</p>
+        </div>
+
+        <!-- Medication Tracker Card -->
+        <div class="card medication-tracker">
+            <h2>Medication Tracker</h2>
+            <p>This section will display NFC-logged medication status and schedules.</p>
+        </div>
+
+        <!-- Journal & Prompts Card -->
+        <div class="card journal-prompts">
+            <h2>Journal & Prompts</h2>
+            <p>This section will display weekly reflective prompts and text entries.</p>
+        </div>
+
+        <!-- Trends & Analytics Card -->
+        <div class="card trends-analytics">
+            <h2>Trends & Analytics</h2>
+            <p>This section will display behavioral trend flags and analytics.</p>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>

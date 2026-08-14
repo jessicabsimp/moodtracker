@@ -6,6 +6,7 @@
     --selected-button-bg: #61dafb;
     --border-radius: 8px;
     --font-family: 'Arial', sans-serif;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 body {
@@ -20,17 +21,32 @@ body {
     height: 100vh;
 }
 
-.container {
+.dashboard-container {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    width: 95%;
+    max-width: 1400px;
+    margin: auto;
+}
+
+.card {
     background-color: var(--secondary-bg);
     border-radius: var(--border-radius);
     padding: 2rem;
-    max-width: 400px;
-    width: 100%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-h1 {
-    margin-bottom: 2rem;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+h2 {
+    margin-bottom: 1rem;
 }
 
 .mood-buttons {
@@ -43,7 +59,7 @@ h1 {
     background-color: var(--button-bg);
     border: none;
     color: var(--text-color);
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.25rem;
     border-radius: var(--border-radius);
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
@@ -59,7 +75,7 @@ h1 {
 
 .notes textarea {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border-radius: var(--border-radius);
     border: 1px solid #4a4a5a;
     margin-bottom: 1rem;
@@ -74,7 +90,7 @@ h1 {
 }
 
 .datetime-submit input[type="datetime-local"] {
-    padding: 0.5rem;
+    padding: 0.75rem;
     border-radius: var(--border-radius);
     border: 1px solid #4a4a5a;
     font-size: 16px;
@@ -84,7 +100,7 @@ h1 {
     background-color: var(--button-bg);
     border: none;
     color: var(--text-color);
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.25rem;
     border-radius: var(--border-radius);
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
@@ -124,8 +140,4 @@ h1 {
 
 .entry button.delete:hover {
     color: #ff5722;
-}
-
-#summary {
-    margin-top: 1rem;
 }

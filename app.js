@@ -1,6 +1,5 @@
 const moodForm = document.getElementById('moodForm');
 const historyDiv = document.getElementById('history');
-const summaryDiv = document.getElementById('summary');
 
 const moods = ['Great', 'Good', 'Okay', 'Bad', 'Terrible'];
 
@@ -34,25 +33,6 @@ function renderHistory() {
 
         historyDiv.appendChild(entryElement);
     });
-}
-
-function renderSummary() {
-    const entries = getLocalStorageData();
-    const totalEntries = entries.length;
-    let moodCount = { Great: 0, Good: 0, Okay: 0, Bad: 0, Terrible: 0 };
-
-    entries.forEach(entry => {
-        moodCount[entry.mood]++;
-    });
-
-    const averageMood = totalEntries ? Object.keys(moodCount).reduce((acc, key) => acc + (moodCount[key] * moods.indexOf(key)), 0) / totalEntries : 0;
-    const summaryText = `
-        <h2>Summary</h2>
-        <p>Total Entries: ${totalEntries}</p>
-        <p>Average Mood Rating: ${averageMood.toFixed(1)}</p>
-    `;
-
-    summaryDiv.innerHTML = summaryText;
 }
 
 moodForm.addEventListener('click', (e) => {
@@ -92,8 +72,6 @@ moodForm.addEventListener('submit', (e) => {
     setLocalStorageData(entries);
 
     renderHistory();
-    renderSummary();
-
     moodForm.reset();
     document.querySelectorAll('#moodForm .mood-buttons button').forEach(button => button.classList.remove('selected'));
 });
@@ -106,9 +84,7 @@ historyDiv.addEventListener('click', (e) => {
         setLocalStorageData(entries);
 
         renderHistory();
-        renderSummary();
     }
 });
 
 renderHistory();
-renderSummary();
