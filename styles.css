@@ -1,5 +1,13 @@
 :root {
-    /* Existing variables */
+    --bg-color: #F8F4EC;
+    --card-bg: #FFFDF8;
+    --primary-text: #34382A;
+    --secondary-text: #6E6B61;
+    --border-color: rgba(90, 80, 60, 0.12);
+    --olive: #56613B;
+    --sage: #A7AF8B;
+    --terracotta: #C96F4A;
+    --gold: #D8A646;
 }
 
 body {
@@ -10,40 +18,182 @@ body {
     padding: 0;
 }
 
-.dashboard-container {
+.dashboard-grid {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
-    grid-template-columns: repeat(4, 1fr); /* 4-column layout */
-    max-width: 1400px;
+    max-width: 1300px;
     margin: 0 auto;
     padding: 32px;
 }
 
-/* Summary Cards with Grid Spanning */
-.summary-card.mood-tracker {
-    grid-column: span 2; /* Spans 2 columns */
-    display: flex;
-    flex-direction: column;
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(40, 35, 25, 0.04);
 }
 
-.summary-card.music-insights,
-.summary-card.medication-tracker {
-    grid-column: span 1; /* Each spans 1 column */
-    display: flex;
-    flex-direction: column;
+.mood-tracker-card {
+    grid-column: span 2; /* Spans 2 columns on desktop */
 }
 
-/* Detail Panels with Grid Spanning */
-.detail-panel.journal-details,
-.detail-panel.trends-analytics {
-    grid-column: span 1; /* Each spans 1 column */
-    display: flex;
-    flex-direction: column;
+h2 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--primary-text);
+    margin-bottom: 16px;
+    position: relative;
 }
 
-.detail-panel.medication-details,
-.detail-panel.analytics-chart {
-    grid-column: span 1; /* Each spans 1 column */
+h3 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--primary-text);
+    margin-bottom: 16px;
+    position: relative;
+}
+
+h2 .icon,
+h3 .icon {
+    margin-left: 8px;
+    color: var(--sage);
+    font-size: 1.5em;
+}
+
+.card p {
+    color: var(--secondary-text);
+    margin-bottom: 16px;
+}
+
+.mood-buttons button {
+    background-color: transparent;
+    border: none;
+    padding: 10px 24px;
+    margin-right: 8px;
+    border-radius: 20px;
+    color: var(--primary-text);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mood-buttons button:hover {
+    background-color: rgba(90, 80, 60, 0.1);
+}
+
+.mood-buttons .selected {
+    background-color: var(--olive) !important;
+    color: white !important;
+}
+
+.notes textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #E2DCD0;
+    background-color: var(--card-bg);
+    color: var(--primary-text);
+    font-size: 16px;
+    resize: vertical;
+}
+
+.notes textarea:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(90, 80, 60, 0.2);
+}
+
+.datetime-submit input[type="datetime-local"] {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #E2DCD0;
+    background-color: var(--card-bg);
+    color: var(--primary-text);
+    font-size: 16px;
+    width: calc(100% - 136px); /* Adjust based on button width */
+}
+
+.datetime-submit button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    background-color: var(--olive);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 8px;
+}
+
+.datetime-submit button:hover {
+    background-color: rgba(90, 80, 60, 0.8);
+}
+
+#history .entry {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(90, 80, 60, 0.1);
+}
+
+#history .entry:last-child {
+    border-bottom: none;
+}
+
+#history .mood {
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: white;
+}
+
+#history .mood.great { background-color: var(--olive); }
+#history .mood.good { background-color: var(--sage); }
+#history .mood.okay { background-color: var(--gold); }
+#history .mood.bad { background-color: var(--terracotta); }
+#history .mood.terrible { background-color: rgba(255, 0, 0, 0.8); }
+
+#history .dateTime {
+    color: var(--secondary-text);
+    font-size: 0.9em;
+}
+
+#history button.delete {
+    background-color: transparent;
+    border: none;
+    color: var(--terracotta);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#history button.delete:hover {
+    color: rgba(255, 0, 0, 0.8);
+}
+
+.action-link {
+    text-decoration: none;
+    color: var(--gold);
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.action-link:hover {
+    color: var(--terracotta);
+}
+
+.prompt-box {
+    padding: 12px;
+    border-radius: 8px;
+    background-color: rgba(90, 80, 60, 0.1);
+    color: var(--primary-text);
+    margin-bottom: 16px;
+}
+
+.entry-preview {
+    color: var(--secondary-text);
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+.metric-summary div {
+    margin-right: 24px;
 }

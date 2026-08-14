@@ -10,17 +10,17 @@
 </head>
 <body>
     <!-- Main Dashboard Container -->
-    <div class="dashboard-container">
-        <!-- Top Row: Summary Cards -->
-        <div class="summary-card mood-tracker">
+    <div class="dashboard-grid">
+        <!-- Mood Tracker Card -->
+        <div class="card mood-tracker-card">
             <h2>Mood Tracker <span class="icon">🌿</span></h2>
             <form id="moodForm" style="width: 100%; box-sizing: border-box;">
                 <div class="mood-buttons" style="flex-wrap: wrap;">
-                    <button type="button" name="mood" value="Great" style="background-color: var(--accent-olive);">Great</button>
-                    <button type="button" name="mood" value="Good" style="background-color: var(--accent-sage);">Good</button>
-                    <button type="button" name="mood" value="Okay" style="background-color: var(--accent-gold);">Okay</button>
-                    <button type="button" name="mood" value="Bad" style="background-color: var(--accent-terracotta);">Bad</button>
-                    <button type="button" name="mood" value="Terrible" style="background-color: var(--accent-muted-red);">Terrible</button>
+                    <button type="button" name="mood" value="Great" style="background-color: var(--olive);">Great</button>
+                    <button type="button" name="mood" value="Good" style="background-color: var(--sage);">Good</button>
+                    <button type="button" name="mood" value="Okay" style="background-color: var(--gold);">Okay</button>
+                    <button type="button" name="mood" value="Bad" style="background-color: var(--terracotta);">Bad</button>
+                    <button type="button" name="mood" value="Terrible" style="background-color: var(--olive);">Terrible</button>
                 </div>
 
                 <div class="notes">
@@ -36,26 +36,28 @@
             <div id="history"></div>
         </div>
 
-        <div class="summary-card music-insights">
-            <h2>Music & Mood Insights <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18c-3.5 0-6.3 2.797-6.3 6.3s2.797 6.3 6.3 6.3 6.3-2.797 6.3-6.3S12.5 18 9 18zm0-1c2.34 0 4.3 1.959 4.3 4.3s-1.959 4.3-4.3 4.3S4.7 22.341 4.7 20S6.66 16 9 16zm0-1c-.826 0-1.5-.674-1.5-1.5s.674-1.5 1.5-1.5 1.5.674 1.5 1.5S9.826 17 9 17z" fill="var(--accent-sage)"/></svg></span></h2>
+        <!-- Music & Mood Insights Card -->
+        <div class="card music-insights-card">
+            <h2>Music & Mood Insights <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18c-3.5 0-6.3 2.797-6.3 6.3s2.797 6.3 6.3 6.3 6.3-2.797 6.3-6.3S12.5 18 9 18zm0-1c2.34 0 4.3 1.959 4.3 4.3s-1.959 4.3-4.3 4.3S4.7 22.341 4.7 20S6.66 16 9 16zm0-1c-.826 0-1.5-.674-1.5-1.5s.674-1.5 1.5-1.5 1.5.674 1.5 1.5S9.826 17 9 17z" fill="var(--sage)"/></svg></span></h2>
             <p>This section will display recent track history and mood-correlation trends.</p>
             <a href="#" class="action-link">View Insights →</a>
         </div>
 
-        <div class="summary-card medication-tracker">
-            <h2>Medication Tracker <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.5 18c0-2.21 1.79-4 4-4s4 1.79 4 4v6h-8v-6zM4 18c0 2.21-1.79 4-4 4S0 20.21 0 18V6c0-2.21 1.79-4 4-4s4 1.79 4 4v6H4z" fill="var(--accent-gold)"/></svg></span></h2>
+        <!-- Medication Tracker Card -->
+        <div class="card medication-tracker-card">
+            <h2>Medication Tracker <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.5 18c0-2.21 1.79-4 4-4s4 1.79 4 4v6h-8v-6zM4 18c0 2.21-1.79 4-4 4S0 20.21 0 18V6c0-2.21 1.79-4 4-4s4 1.79 4 4v6H4z" fill="var(--gold)"/></svg></span></h2>
             <p>This section will display NFC-logged medication status and schedules.</p>
             <a href="#" class="action-link">Open Journal →</a>
         </div>
 
         <!-- Bottom Row: Detail Panels -->
-        <div class="detail-panel journal-details">
+        <div class="card journal-details-card">
             <h3>Journal Details</h3>
             <div class="prompt-box">Prompt of the Week: Reflect on your day.</div>
             <div class="entry-preview">Recent Entry: Feeling great today!</div>
         </div>
 
-        <div class="detail-panel trends-analytics">
+        <div class="card trends-analytics-card">
             <h3>Trends & Analytics</h3>
             <!-- SVG Line Chart Placeholder -->
             <svg width="100%" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
@@ -69,7 +71,7 @@
             </div>
         </div>
 
-        <div class="detail-panel medication-details">
+        <div class="card medication-details-card">
             <h3>Medication Details</h3>
             <ul>
                 <li>Taken - 09:00 AM, 8/14/2026</li>
@@ -78,7 +80,7 @@
             </ul>
         </div>
 
-        <div class="detail-panel analytics-chart">
+        <div class="card analytics-chart-card">
             <h3>Analytics Chart/Metrics</h3>
             <!-- SVG Line Chart Placeholder -->
             <svg width="100%" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
