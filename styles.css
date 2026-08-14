@@ -24,7 +24,7 @@ body {
 .dashboard-container {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     width: 95%;
     max-width: 1400px;
     margin: auto;
@@ -53,6 +53,7 @@ h2 {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    flex-wrap: wrap; /* Ensure mood buttons wrap on smaller screens */
 }
 
 .mood-buttons button {
@@ -63,6 +64,7 @@ h2 {
     border-radius: var(--border-radius);
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    flex: 0 0 auto; /* Prevent buttons from stretching */
 }
 
 .mood-buttons button:hover {
@@ -81,12 +83,14 @@ h2 {
     margin-bottom: 1rem;
     resize: vertical;
     font-size: 16px;
+    box-sizing: border-box; /* Ensure padding and border are included in width */
 }
 
 .datetime-submit {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap; /* Ensure datetime input wraps on smaller screens */
 }
 
 .datetime-submit input[type="datetime-local"] {
@@ -94,6 +98,8 @@ h2 {
     border-radius: var(--border-radius);
     border: 1px solid #4a4a5a;
     font-size: 16px;
+    flex: 1; /* Ensure datetime input takes available space */
+    max-width: 100%; /* Prevent overflow on smaller screens */
 }
 
 .datetime-submit button {
