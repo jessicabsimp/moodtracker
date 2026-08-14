@@ -14,21 +14,21 @@
         <!-- Top Row: Summary Cards -->
         <div class="summary-card mood-tracker">
             <h2>Mood Tracker <span class="icon">🌿</span></h2>
-            <form id="moodForm">
-                <div class="mood-buttons">
-                    <button type="button" name="mood" value="Great">Great</button>
-                    <button type="button" name="mood" value="Good">Good</button>
-                    <button type="button" name="mood" value="Okay">Okay</button>
-                    <button type="button" name="mood" value="Bad">Bad</button>
-                    <button type="button" name="mood" value="Terrible">Terrible</button>
+            <form id="moodForm" style="width: 100%; box-sizing: border-box;">
+                <div class="mood-buttons" style="flex-wrap: wrap;">
+                    <button type="button" name="mood" value="Great" style="background-color: var(--accent-olive);">Great</button>
+                    <button type="button" name="mood" value="Good" style="background-color: var(--accent-sage);">Good</button>
+                    <button type="button" name="mood" value="Okay" style="background-color: var(--accent-gold);">Okay</button>
+                    <button type="button" name="mood" value="Bad" style="background-color: var(--accent-terracotta);">Bad</button>
+                    <button type="button" name="mood" value="Terrible" style="background-color: var(--accent-muted-red);">Terrible</button>
                 </div>
 
                 <div class="notes">
-                    <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
+                    <textarea id="notes" name="notes" placeholder="Add any notes or tags here..." style="width: 100%; box-sizing: border-box;"></textarea>
                 </div>
 
-                <div class="datetime-submit">
-                    <input type="datetime-local" id="dateTime" name="dateTime" value="">
+                <div class="datetime-submit" style="width: 100%; box-sizing: border-box;">
+                    <input type="datetime-local" id="dateTime" name="dateTime" value="" style="width: 100%; box-sizing: border-box;">
                     <button type="submit" id="saveEntry">Save Entry</button>
                 </div>
             </form>
@@ -37,30 +37,38 @@
         </div>
 
         <div class="summary-card music-insights">
-            <h2>Music & Mood Insights <span class="icon">🎵</span></h2>
+            <h2>Music & Mood Insights <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18c-3.5 0-6.3 2.797-6.3 6.3s2.797 6.3 6.3 6.3 6.3-2.797 6.3-6.3S12.5 18 9 18zm0-1c2.34 0 4.3 1.959 4.3 4.3s-1.959 4.3-4.3 4.3S4.7 22.341 4.7 20S6.66 16 9 16zm0-1c-.826 0-1.5-.674-1.5-1.5s.674-1.5 1.5-1.5 1.5.674 1.5 1.5S9.826 17 9 17z" fill="var(--accent-sage)"/></svg></span></h2>
             <p>This section will display recent track history and mood-correlation trends.</p>
             <a href="#" class="action-link">View Insights →</a>
         </div>
 
         <div class="summary-card medication-tracker">
-            <h2>Medication Tracker <span class="icon">💊</span></h2>
+            <h2>Medication Tracker <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.5 18c0-2.21 1.79-4 4-4s4 1.79 4 4v6h-8v-6zM4 18c0 2.21-1.79 4-4 4S0 20.21 0 18V6c0-2.21 1.79-4 4-4s4 1.79 4 4v6H4z" fill="var(--accent-gold)"/></svg></span></h2>
             <p>This section will display NFC-logged medication status and schedules.</p>
             <a href="#" class="action-link">Open Journal →</a>
         </div>
 
-        <div class="summary-card journal-prompts">
-            <h2>Journal & Prompts <span class="icon">✍️</span></h2>
-            <p>This section will display weekly reflective prompts and text entries.</p>
-            <a href="#" class="action-link">Open Journal →</a>
-        </div>
-
-        <div class="summary-card trends-analytics">
-            <h2>Trends & Analytics <span class="icon">📊</span></h2>
-            <p>This section will display behavioral trend flags and analytics.</p>
-            <a href="#" class="action-link">View Trends →</a>
-        </div>
-
         <!-- Bottom Row: Detail Panels -->
+        <div class="detail-panel journal-details">
+            <h3>Journal Details</h3>
+            <div class="prompt-box">Prompt of the Week: Reflect on your day.</div>
+            <div class="entry-preview">Recent Entry: Feeling great today!</div>
+        </div>
+
+        <div class="detail-panel trends-analytics">
+            <h3>Trends & Analytics</h3>
+            <!-- SVG Line Chart Placeholder -->
+            <svg width="100%" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+                <line x1="50" y1="150" x2="350" y2="50" stroke="#D8A646" stroke-width="2" />
+                <circle cx="350" cy="50" r="5" fill="#C96F4A" />
+            </svg>
+            <div class="metric-summary">
+                <div><strong>Average Mood:</strong> 3.2</div>
+                <div><strong>Total Entries:</strong> 10</div>
+                <div><strong>Last Updated:</strong> 8/15/2026</div>
+            </div>
+        </div>
+
         <div class="detail-panel medication-details">
             <h3>Medication Details</h3>
             <ul>
@@ -68,12 +76,6 @@
                 <li>Due Soon - 10:30 AM, 8/15/2026</li>
                 <li>Scheduled - 2:00 PM, 8/16/2026</li>
             </ul>
-        </div>
-
-        <div class="detail-panel journal-details">
-            <h3>Journal Details</h3>
-            <div class="prompt-box">Prompt of the Week: Reflect on your day.</div>
-            <div class="entry-preview">Recent Entry: Feeling great today!</div>
         </div>
 
         <div class="detail-panel analytics-chart">

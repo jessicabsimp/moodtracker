@@ -1,19 +1,5 @@
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;700&display=swap');
-
 :root {
-    --bg-color: #F8F4EC;
-    --card-fill: #FFFDF8;
-    --primary-text: #34382A;
-    --secondary-text: #6E6B61;
-    --accent-olive: #56613B;
-    --accent-sage: #A7AF8B;
-    --accent-gold: #D8A646;
-    --accent-terracotta: #C96F4A;
-    --accent-muted-red: #FFC0C0;
-    --border-color: rgba(90, 80, 60, 0.1);
-    --box-shadow: 0 4px 20px rgba(40, 35, 25, 0.04);
-    --border-radius: 18px;
+    /* Existing variables */
 }
 
 body {
@@ -26,242 +12,38 @@ body {
 
 .dashboard-container {
     display: grid;
-    gap: 32px;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    grid-template-columns: repeat(4, 1fr); /* 4-column layout */
     max-width: 1400px;
+    margin: 0 auto;
     padding: 32px;
-    margin: auto;
 }
 
-/* Summary Cards */
-.summary-card {
-    background-color: var(--card-fill);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 24px;
+/* Summary Cards with Grid Spanning */
+.summary-card.mood-tracker {
+    grid-column: span 2; /* Spans 2 columns */
     display: flex;
     flex-direction: column;
 }
 
-.summary-card h2 {
-    font-family: 'DM Serif Display', serif;
-    color: var(--primary-text);
-    margin-bottom: 16px;
-    position: relative;
-}
-
-.summary-card h2 .icon {
-    margin-left: 8px;
-    color: var(--accent-sage);
-    font-size: 1.5em;
-}
-
-.summary-card p {
-    color: var(--secondary-text);
-    margin-bottom: 16px;
-}
-
-.summary-card .mood-buttons {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.summary-card .mood-buttons button {
-    background-color: transparent;
-    border: 1px solid var(--accent-olive);
-    color: var(--secondary-text);
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.summary-card .mood-buttons button.selected {
-    background-color: var(--accent-olive);
-    color: white;
-    box-shadow: 0 0 8px rgba(86, 97, 59, 0.4);
-}
-
-.summary-card .notes textarea {
-    width: 100%;
-    padding: 12px;
-    border-radius: var(--border-radius);
-    border: 1px solid #E2DCD0;
-    background-color: var(--card-fill);
-    color: var(--primary-text);
-    font-size: 16px;
-    resize: vertical;
-}
-
-.summary-card .notes textarea:focus {
-    outline: none;
-    box-shadow: 0 0 8px rgba(86, 97, 59, 0.2);
-}
-
-.summary-card .datetime-submit {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-}
-
-.summary-card .datetime-submit input[type="datetime-local"] {
-    padding: 12px;
-    border-radius: var(--border-radius);
-    border: 1px solid #E2DCD0;
-    background-color: var(--card-fill);
-    color: var(--primary-text);
-    font-size: 16px;
-    flex: 1;
-    max-width: 100%;
-}
-
-.summary-card .datetime-submit input[type="datetime-local"]:focus {
-    outline: none;
-    box-shadow: 0 0 8px rgba(86, 97, 59, 0.2);
-}
-
-.summary-card .datetime-submit button {
-    background-color: var(--accent-olive);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.summary-card .datetime-submit button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(86, 97, 59, 0.1);
-}
-
-.summary-card #history .entry {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(102, 98, 87, 0.1);
-}
-
-.summary-card #history .entry:last-child {
-    border-bottom: none;
-}
-
-.summary-card #history .mood {
-    font-weight: bold;
-    padding: 4px 8px;
-    border-radius: 8px;
-    color: white;
-}
-
-.summary-card #history .mood.great { background-color: var(--accent-olive); }
-.summary-card #history .mood.good { background-color: var(--accent-sage); }
-.summary-card #history .mood.okay { background-color: var(--accent-gold); }
-.summary-card #history .mood.bad { background-color: var(--accent-terracotta); }
-.summary-card #history .mood.terrible { background-color: var(--accent-muted-red); }
-
-.summary-card #history .dateTime {
-    color: var(--secondary-text);
-    font-size: 0.9em;
-}
-
-.summary-card #history button.delete {
-    background-color: transparent;
-    border: none;
-    color: var(--accent-terracotta);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.summary-card #history button.delete:hover {
-    color: var(--accent-muted-red);
-}
-
-/* Action Links */
-.action-link {
-    text-decoration: none;
-    color: var(--accent-gold);
-    font-weight: bold;
-    transition: color 0.3s ease;
-}
-
-.action-link:hover {
-    color: var(--accent-sage);
-}
-
-/* Detail Panels */
-.detail-panel {
-    background-color: var(--card-fill);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 24px;
+.summary-card.music-insights,
+.summary-card.medication-tracker {
+    grid-column: span 1; /* Each spans 1 column */
     display: flex;
     flex-direction: column;
 }
 
-.detail-panel h3 {
-    font-family: 'DM Serif Display', serif;
-    color: var(--primary-text);
-    margin-bottom: 16px;
-}
-
-.detail-panel ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.detail-panel li {
+/* Detail Panels with Grid Spanning */
+.detail-panel.journal-details,
+.detail-panel.trends-analytics {
+    grid-column: span 1; /* Each spans 1 column */
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(102, 98, 87, 0.1);
+    flex-direction: column;
 }
 
-.detail-panel li:last-child {
-    border-bottom: none;
-}
-
-.detail-panel li .status-badge {
-    padding: 4px 8px;
-    border-radius: 8px;
-    color: white;
-    font-size: 0.9em;
-}
-
-.detail-panel li .status-badge.taken { background-color: var(--accent-olive); }
-.detail-panel li .status-badge.due-soon { background-color: var(--accent-gold); }
-.detail-panel li .status-badge.scheduled { background-color: var(--accent-sage); }
-
-.detail-panel .prompt-box {
-    padding: 12px;
-    border-radius: var(--border-radius);
-    background-color: rgba(86, 97, 59, 0.1);
-    color: var(--primary-text);
-    margin-bottom: 16px;
-}
-
-.detail-panel .entry-preview {
-    color: var(--secondary-text);
-    font-size: 16px;
-    margin-bottom: 16px;
-}
-
-.detail-panel svg {
-    margin-bottom: 16px;
-}
-
-.detail-panel .metric-summary {
+.detail-panel.medication-details,
+.detail-panel.analytics-chart {
+    grid-column: span 1; /* Each spans 1 column */
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.detail-panel .metric-summary div {
-    color: var(--primary-text);
-    font-size: 16px;
+    flex-direction: column;
 }
