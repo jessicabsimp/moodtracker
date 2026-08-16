@@ -8,10 +8,28 @@
     --sage: #A7AF8B;
     --terracotta: #C96F4A;
     --gold: #D8A646;
+    
+    /* Botanical SVG Data-URIs */
+    --leaf-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%2356613B' opacity='0.15'%3E%3Cpath d='M10,90 Q30,40 80,10 Q60,50 10,90 Z'/%3E%3Cpath d='M30,65 Q45,50 60,45 Q40,65 30,65 Z'/%3E%3Cpath d='M45,48 Q65,30 80,30 Q60,48 45,48 Z'/%3E%3C/svg%3E");
+    --leaf-divider: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20' fill='%23A7AF8B' opacity='0.4'%3E%3Cpath d='M10,10 Q50,0 100,10 T190,10' stroke='%23A7AF8B' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='10' r='3'/%3E%3Cpath d='M85,10 Q92,3 95,10'/%3E%3Cpath d='M115,10 Q108,3 105,10'/%3E%3C/svg%3E");
 }
 
+/* Page Background with Large Organic Botanical Watermarks & Watercolor Wash */
 body {
     background-color: var(--bg-color);
+    background-image: 
+        /* Top-Left Soft Watercolor Wash */
+        radial-gradient(circle at 5% 10%, rgba(201, 111, 74, 0.08) 0%, transparent 40%),
+        /* Bottom-Right Soft Olive Wash */
+        radial-gradient(circle at 95% 90%, rgba(86, 97, 59, 0.08) 0%, transparent 45%),
+        /* Left Margin Large Botanical Line Art */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 600' fill='none' stroke='%2356613B' stroke-width='1.2' opacity='0.08'%3E%3Cpath d='M-50,600 Q100,300 50,0'/%3E%3Cpath d='M25,450 Q120,400 150,420 Q80,470 25,450 Z' fill='%2356613B' fill-opacity='0.03'/%3E%3Cpath d='M50,300 Q160,230 180,260 Q100,320 50,300 Z' fill='%2356613B' fill-opacity='0.03'/%3E%3Cpath d='M40,150 Q130,80 160,110 Q80,170 40,150 Z' fill='%2356613B' fill-opacity='0.03'/%3E%3C/svg%3E"),
+        /* Right Margin Large Botanical Line Art */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 600' fill='none' stroke='%23C96F4A' stroke-width='1.2' opacity='0.08'%3E%3Cpath d='M350,600 Q200,300 250,0'/%3E%3Cpath d='M275,450 Q180,400 150,420 Q220,470 275,450 Z' fill='%23C96F4A' fill-opacity='0.03'/%3E%3Cpath d='M250,300 Q140,230 120,260 Q200,320 250,300 Z' fill='%23C96F4A' fill-opacity='0.03'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: top left, bottom right, left center, right center;
+    background-size: auto, auto, 300px 600px, 300px 600px;
+    background-attachment: fixed;
     color: var(--primary-text);
     font-family: 'Inter', sans-serif;
     margin: 0;
@@ -26,7 +44,7 @@ body {
     margin: 0 auto;
 }
 
-/* Base Card Styling */
+/* Base Card Styling with Subtle Botanical Corners */
 .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -36,6 +54,22 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Leaf Accent in Top-Right Corner of Cards */
+.card::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 80px;
+    height: 80px;
+    background-image: var(--leaf-corner);
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
 }
 
 h2, h3 {
@@ -59,9 +93,23 @@ h2, h3 {
     display: block;
 }
 
-/* Top Navigation Cards */
-.nav-card {
-    min-height: 160px;
+/* Top Navigation Cards - Individual Watercolor Bottom Gradients */
+.nav-card { min-height: 160px; }
+
+.olive-card {
+    background: linear-gradient(180deg, #FFFDF8 60%, rgba(167, 175, 139, 0.18) 100%);
+}
+
+.sage-card {
+    background: linear-gradient(180deg, #FFFDF8 60%, rgba(86, 97, 59, 0.12) 100%);
+}
+
+.terracotta-card {
+    background: linear-gradient(180deg, #FFFDF8 60%, rgba(201, 111, 74, 0.15) 100%);
+}
+
+.gold-card {
+    background: linear-gradient(180deg, #FFFDF8 60%, rgba(216, 166, 70, 0.18) 100%);
 }
 
 .nav-card .card-header {
@@ -77,9 +125,7 @@ h2, h3 {
     line-height: 1.4;
 }
 
-.nav-icon {
-    font-size: 1.2rem;
-}
+.nav-icon { font-size: 1.2rem; }
 
 /* Navigation Buttons */
 .pill-btn {
@@ -92,10 +138,14 @@ h2, h3 {
     cursor: pointer;
     text-align: center;
     width: fit-content;
-    transition: opacity 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    z-index: 1;
 }
 
-.pill-btn:hover { opacity: 0.9; }
+.pill-btn:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
 
 .olive-btn { background-color: var(--olive); }
 .sage-btn { background-color: var(--sage); }
@@ -184,9 +234,7 @@ h2, h3 {
 }
 
 /* History List */
-#history {
-    margin-top: 16px;
-}
+#history { margin-top: 16px; }
 
 #history .entry {
     display: flex;
@@ -262,13 +310,25 @@ h2, h3 {
 
 .med-time { font-size: 0.8rem; color: var(--secondary-text); margin-left: 8px; }
 
-/* Prompt Box */
+/* Prompt Box with Botanical Divider Line */
 .prompt-box {
     background: #FAF8F3;
-    padding: 12px 16px;
+    padding: 14px 16px;
     border-radius: 12px;
     margin-bottom: 16px;
     border-left: 3px solid var(--terracotta);
+    position: relative;
+}
+
+.prompt-box::after {
+    content: '';
+    display: block;
+    height: 12px;
+    width: 100%;
+    background-image: var(--leaf-divider);
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-top: 10px;
 }
 
 .prompt-title {
@@ -284,15 +344,13 @@ h2, h3 {
     font-size: 0.85rem;
 }
 
-.recent-entries {
-    margin-bottom: 16px;
-}
+.recent-entries { margin-bottom: 16px; }
 
 .entry-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 0;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -345,11 +403,12 @@ h2, h3 {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-color);
-    background: transparent;
+    background: var(--card-bg);
     border-radius: 10px;
     font-weight: 600;
     color: var(--primary-text);
     cursor: pointer;
+    z-index: 1;
 }
 
 .text-btn {
@@ -369,6 +428,7 @@ h2, h3 {
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
+    z-index: 1;
 }
 
 /* Responsive Grid */
@@ -378,6 +438,7 @@ h2, h3 {
 }
 
 @media (max-width: 600px) {
+    body { padding: 16px; }
     .dashboard-grid { grid-template-columns: 1fr; }
     .card, .mood-tracker-card, .detail-card { grid-column: span 1; }
 }
