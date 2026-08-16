@@ -22,6 +22,12 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 32px;
+
     max-width: 1300px;
     margin: 0 auto;
     padding: 32px;
@@ -173,6 +179,34 @@ h3 .icon {
     text-decoration: none;
     color: var(--gold);
     font-weight: bold;
+
+.pill-button {
+    border-radius: 50px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.pill-button.olive {
+    background-color: var(--olive);
+}
+
+.pill-button.sage {
+    background-color: var(--sage);
+}
+
+.pill-button.terracotta {
+    background-color: var(--terracotta);
+}
+
+.pill-button.gold {
+    background-color: var(--gold);
+}
+
     transition: color 0.3s ease;
 }
 

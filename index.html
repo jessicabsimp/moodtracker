@@ -1,3 +1,31 @@
+<style>
+.pill-button {
+    border-radius: 50px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.pill-button.olive {
+    background-color: var(--olive);
+}
+
+.pill-button.sage {
+    background-color: var(--sage);
+}
+
+.pill-button.terracotta {
+    background-color: var(--terracotta);
+}
+
+.pill-button.gold {
+    background-color: var(--gold);
+}
+</style>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +37,11 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="card music-insights-card">
+    <h2>Music & Mood Insights <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18c-3.5 0-6.3 2.797-6.3 6.3s2.797 6.3 6.3 6.3 6.3-2.797 6.3-6.3S12.5 18 9 18zm0-1c2.34 0 4.3 1.959 4.3 4.3s-1.959 4.3-4.3 4.3S4.7 22.341 4.7 20S6.66 16 9 16zm0-1c-.826 0-1.5-.674-1.5-1.5s.674-1.5 1.5-1.5 1.5.674 1.5 1.5S9.826 17 9 17z" fill="var(--sage)"/></svg></span></h2>
+    <p>This section will display recent track history and mood-correlation trends.</p>
+    <button class="pill-button sage">View Insights →</button>
+</div>
     <!-- Main Dashboard Container -->
     <div class="dashboard-grid">
         <!-- Mood Tracker Card -->
@@ -17,7 +50,17 @@
             <form id="moodForm" style="width: 100%; box-sizing: border-box;">
                 <div class="mood-buttons" style="flex-wrap: wrap;">
                     <button type="button" name="mood" value="Great" style="background-color: var(--olive);">Great</button>
+<div class="card journal-prompts-card">
+    <h2>Journal & Prompts <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17h2v-6h-2v6zm0-8h2v-2h-2v2z" fill="var(--olive)"/></svg></span></h2>
+    <p>Explore guided journaling prompts and track your reflections.</p>
+    <button class="pill-button olive">Open Journal →</button>
+</div>
                     <button type="button" name="mood" value="Good" style="background-color: var(--sage);">Good</button>
+<div class="card trends-analytics-card">
+    <h2>Trends & Analytics <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17h2v-6h-2v6zm0-8h2v-2h-2v2z" fill="var(--terracotta)"/></svg></span></h2>
+    <p>Visualize mood trends, medication adherence, and other analytics.</p>
+    <button class="pill-button terracotta">View Analytics →</button>
+</div>
                     <button type="button" name="mood" value="Okay" style="background-color: var(--gold);">Okay</button>
                     <button type="button" name="mood" value="Bad" style="background-color: var(--terracotta);">Bad</button>
                     <button type="button" name="mood" value="Terrible" style="background-color: var(--olive);">Terrible</button>
