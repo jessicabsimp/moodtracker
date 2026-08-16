@@ -67,18 +67,16 @@ h3 .icon {
     margin-bottom: 16px;
 }
 
-.mood-buttons button {
-    background-color: transparent;
-    border: none;
-    padding: 10px 24px;
-    margin-right: 8px;
-    border-radius: 20px;
-    color: var(--primary-text);
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.mood-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
 }
-
+.mood-buttons button {
+    margin-right: 0;
+    margin-bottom: 0;
+}
 .mood-buttons button:hover {
     background-color: rgba(90, 80, 60, 0.1);
 }
@@ -90,6 +88,9 @@ h3 .icon {
 
 .notes textarea {
     width: 100%;
+    box-sizing: border-box;
+    min-height: 80px;
+    margin: 0;
     padding: 12px;
     border-radius: 8px;
     border: 1px solid #E2DCD0;
