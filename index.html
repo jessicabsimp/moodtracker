@@ -1,52 +1,67 @@
-<style>
-.pill-button {
-    border-radius: 50px;
-    padding: 10px 20px;
-    color: white;
-    font-weight: bold;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.pill-button.olive {
-    background-color: var(--olive);
-}
-
-.pill-button.sage {
-    background-color: var(--sage);
-}
-
-.pill-button.terracotta {
-    background-color: var(--terracotta);
-}
-
-.pill-button.gold {
-    background-color: var(--gold);
-}
-</style>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warm & Organic Modern Wellness Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Warm & Organic Wellness Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
     <div class="dashboard-grid">
-        <!-- Mood Tracker Card -->
+
+        <!-- Top Row Feature Navigation Cards -->
+        <div class="card nav-card olive-card">
+            <div class="card-header">
+                <h3>Music & Mood Insights</h3>
+                <span class="nav-icon">🎵</span>
+            </div>
+            <p>Your recent tracks and mood correlations.</p>
+            <button class="pill-btn olive-btn">View Insights →</button>
+        </div>
+
+        <div class="card nav-card sage-card">
+            <div class="card-header">
+                <h3>Medication Tracker</h3>
+                <span class="nav-icon">💊</span>
+            </div>
+            <p>NFC-logged medication status and upcoming schedules.</p>
+            <button class="pill-btn sage-btn">View Medications →</button>
+        </div>
+
+        <div class="card nav-card terracotta-card">
+            <div class="card-header">
+                <h3>Journal & Prompts</h3>
+                <span class="nav-icon">📖</span>
+            </div>
+            <p>Weekly reflective prompts and journal entries.</p>
+            <button class="pill-btn terracotta-btn">Open Journal →</button>
+        </div>
+
+        <div class="card nav-card gold-card">
+            <div class="card-header">
+                <h3>Trends & Analytics</h3>
+                <span class="nav-icon">📊</span>
+            </div>
+            <p>Behavioral trends, mood patterns, and insights.</p>
+            <button class="pill-btn gold-btn">View Analytics →</button>
+        </div>
+
+        <!-- Row 2 Left: Mood Tracker Form -->
         <div class="card mood-tracker-card">
-            <h2>Mood Tracker <span class="icon">🌿</span></h2>
+            <div class="card-header">
+                <h2>Mood Tracker <span class="icon">🌿</span></h2>
+            </div>
+            
             <form id="moodForm">
                 <div class="mood-buttons">
-                    <button type="button" name="mood" value="Great" style="background-color: var(--olive);">Great</button>
-                    <button type="button" name="mood" value="Good" style="background-color: var(--sage);">Good</button>
-                    <button type="button" name="mood" value="Okay" style="background-color: var(--gold);">Okay</button>
-                    <button type="button" name="mood" value="Bad" style="background-color: var(--terracotta);">Bad</button>
-                    <button type="button" name="mood" value="Terrible" style="background-color: var(--olive);">Terrible</button>
+                    <button type="button" name="mood" value="Great" class="mood-btn great">Great</button>
+                    <button type="button" name="mood" value="Good" class="mood-btn good">Good</button>
+                    <button type="button" name="mood" value="Okay" class="mood-btn okay">Okay</button>
+                    <button type="button" name="mood" value="Bad" class="mood-btn bad">Bad</button>
+                    <button type="button" name="mood" value="Terrible" class="mood-btn terrible">Terrible</button>
                 </div>
 
                 <div class="notes">
@@ -55,61 +70,126 @@
 
                 <div class="datetime-submit">
                     <input type="datetime-local" id="dateTime" name="dateTime">
-                    <button type="submit" id="saveEntry">Save Entry</button>
+                    <button type="submit" id="saveEntry" class="save-btn">Save Entry</button>
                 </div>
             </form>
 
             <div id="history"></div>
         </div>
 
-        <!-- Top Feature Cards -->
-        <div class="card music-insights-card">
-            <h2>Music & Mood Insights</h2>
-            <p>This section will display recent track history and mood-correlation trends.</p>
-            <button class="pill-button sage">View Insights →</button>
-        </div>
-
-        <div class="card medication-tracker-card">
-            <h2>Medication Tracker</h2>
-            <p>NFC-logged medication status and upcoming schedules.</p>
-            <button class="pill-button gold">View Schedule →</button>
-        </div>
-
-        <div class="card journal-prompts-card">
-            <h2>Journal & Prompts</h2>
-            <p>Explore guided journaling prompts and track your reflections.</p>
-            <button class="pill-button olive">Open Journal →</button>
-        </div>
-
-        <div class="card trends-analytics-card">
-            <h2>Trends & Analytics</h2>
-            <p>Visualize mood trends, medication adherence, and other analytics.</p>
-            <button class="pill-button terracotta">View Analytics →</button>
-        </div>
-
-        <!-- Lower Detail Panels -->
-        <div class="card journal-details-card">
-            <h3>Journal Details</h3>
-            <div class="prompt-box">Prompt of the Week: Reflect on your day.</div>
-            <div class="entry-preview">Recent Entry: Feeling great today!</div>
-        </div>
-
-        <div class="card medication-details-card">
-            <h3>Medication Details</h3>
-            <ul>
-                <li>Taken - 09:00 AM</li>
-                <li>Due Soon - 10:30 AM</li>
-                <li>Scheduled - 2:00 PM</li>
-            </ul>
-        </div>
-
-        <div class="card analytics-chart-card">
-            <h3>Trends & Analytics</h3>
-            <div class="metric-summary">
-                <div><strong>Average Mood:</strong> 3.2</div>
-                <div><strong>Total Entries:</strong> 10</div>
+        <!-- Row 2 Right: Medication Details -->
+        <div class="card detail-card med-details-card">
+            <div class="card-header-flex">
+                <h3>Medication Tracker</h3>
+                <button class="text-btn">View All</button>
             </div>
+
+            <div class="med-list">
+                <div class="med-item">
+                    <div class="med-icon-bg">☀️</div>
+                    <div class="med-info">
+                        <strong>Levothyroxine</strong>
+                        <span>200 mcg</span>
+                    </div>
+                    <span class="status-badge taken">Taken</span>
+                    <span class="med-time">7:30 AM ›</span>
+                </div>
+
+                <div class="med-item">
+                    <div class="med-icon-bg gold-bg">🌅</div>
+                    <div class="med-info">
+                        <strong>Lamotrigine</strong>
+                        <span>200 mg</span>
+                    </div>
+                    <span class="status-badge due">Due Soon</span>
+                    <span class="med-time">8:00 PM ›</span>
+                </div>
+
+                <div class="med-item">
+                    <div class="med-icon-bg terracotta-bg">🌙</div>
+                    <div class="med-info">
+                        <strong>Trazodone</strong>
+                        <span>50 mg</span>
+                    </div>
+                    <span class="status-badge scheduled">Scheduled</span>
+                    <span class="med-time">10:00 PM ›</span>
+                </div>
+            </div>
+
+            <button class="outline-btn">View Full Schedule →</button>
         </div>
+
+        <!-- Row 3 Left: Journal & Prompts Detail -->
+        <div class="card detail-card journal-details-card">
+            <div class="card-header-flex">
+                <h3>Journal & Prompts</h3>
+                <button class="accent-pill-btn">New Entry</button>
+            </div>
+
+            <div class="prompt-box">
+                <span class="prompt-title">Prompt of the Week</span>
+                <p>What is one small win from this week that I want to celebrate?</p>
+            </div>
+
+            <div class="recent-entries">
+                <span class="section-subtitle">Recent Entries</span>
+                <div class="entry-row">
+                    <div>
+                        <strong>May 12, 2024</strong>
+                        <p>Felt more present today...</p>
+                    </div>
+                    <span class="chevron">›</span>
+                </div>
+                <div class="entry-row">
+                    <div>
+                        <strong>May 5, 2024</strong>
+                        <p>Music really helped my mood...</p>
+                    </div>
+                    <span class="chevron">›</span>
+                </div>
+            </div>
+
+            <button class="outline-btn">Open Journal →</button>
+        </div>
+
+        <!-- Row 3 Right: Trends & Analytics Detail -->
+        <div class="card detail-card analytics-card">
+            <div class="card-header-flex">
+                <h3>Trends & Analytics</h3>
+                <button class="text-btn">View All</button>
+            </div>
+
+            <span class="section-subtitle">This Week's Overview</span>
+
+            <!-- SVG Chart Placeholder -->
+            <div class="chart-container">
+                <svg viewBox="0 0 350 100" class="trend-svg">
+                    <polyline fill="none" stroke="#A7AF8B" stroke-width="3" points="10,80 60,60 110,70 160,30 210,60 260,40 310,20" />
+                    <circle cx="310" cy="20" r="5" fill="#56613B" />
+                </svg>
+                <div class="chart-labels">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box sage-box">
+                    <span class="stat-value">3.6</span>
+                    <span class="stat-label">Avg Mood</span>
+                </div>
+                <div class="stat-box gold-box">
+                    <span class="stat-value">68%</span>
+                    <span class="stat-label">Positive Days</span>
+                </div>
+                <div class="stat-box terracotta-box">
+                    <span class="stat-value">12</span>
+                    <span class="stat-label">Tracks Logged</span>
+                </div>
+            </div>
+
+            <button class="outline-btn">View Detailed Analytics →</button>
+        </div>
+
     </div>
 
     <script src="app.js"></script>
