@@ -107,44 +107,6 @@
   </div>
 </div>
 
-}
-
-  simulateBtn.addEventListener('click', openMedModal);
-  closeModal.addEventListener('click', () => medModal.style.display = 'none');
-  window.addEventListener('click', (e) => {
-    if (e.target === medModal) medModal.style.display = 'none';
-  });
-
-  medForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    let timeOfDay = document.querySelector('input[name="time"]:checked').value;
-    let timestamp = new Date().toISOString();
-
-    // Save to localStorage
-    let logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
-    logs.push({ timeOfDay, timestamp });
-    localStorage.setItem('medicationLogs', JSON.stringify(logs));
-
-    // Close modal and refresh logs
-    medModal.style.display = 'none';
-    renderMedLogs();
-  });
-
-  // Render medication logs
-  function renderMedLogs() {
-    let logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
-    let logContainer = document.getElementById('med-log-history');
-    logContainer.innerHTML = '';
-
-    logs.forEach((log, index) => {
-      let date = new Date(log.timestamp).toLocaleString();
-      let logItem = document.createElement('div');
-      logItem.className = 'log-item';
-      logItem.textContent = `(${log.timeOfDay}) meds taken at ${date}`;
-      logContainer.appendChild(logItem);
-    });
-  }
-
   // Initial render
   renderMedLogs();
 </script>
