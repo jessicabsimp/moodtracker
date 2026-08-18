@@ -210,6 +210,9 @@
     };
     reader.start();
   }
+function openMedModal() {
+  medModal.style.display = 'block';
+}
 
   simulateBtn.addEventListener('click', openMedModal);
   closeModal.addEventListener('click', () => medModal.style.display = 'none');
