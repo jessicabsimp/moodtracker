@@ -77,120 +77,35 @@
             <div id="history"></div>
         </div>
 
-        <!-- Row 2 Right: Medication Details -->
-        <div class="card detail-card med-details-card">
-            <div class="card-header-flex">
-                <h3>Medication Tracker</h3>
-                <button class="text-btn">View All</button>
-            </div>
+<!-- Row 2 Right: Medication Details -->
+<div class="card detail-card med-details-card">
+    <div class="card-header-flex">
+        <h3>Medication Tracker</h3>
+        <button class="text-btn">View All</button>
+    </div>
 
-            <div class="med-list">
-                <div class="med-item">
-                    <div class="med-icon-bg">☀️</div>
-                    <div class="med-info">
-                        <strong>Levothyroxine</strong>
-                        <span>200 mcg</span>
-                    </div>
-                    <span class="status-badge taken">Taken</span>
-                    <span class="med-time">7:30 AM ›</span>
-                </div>
+    <!-- Dynamic Log Container -->
+    <div id="med-log-history"></div>
 
-                <div class="med-item">
-                    <div class="med-icon-bg gold-bg">🌅</div>
-                    <div class="med-info">
-                        <strong>Lamotrigine</strong>
-                        <span>200 mg</span>
-                    </div>
-                    <span class="status-badge due">Due Soon</span>
-                    <span class="med-time">8:00 PM ›</span>
-                </div>
+    <button id="simulateNFC" class="outline-btn">Simulate NFC Scan →</button>
+</div>
 
-                <div class="med-item">
-                    <div class="med-icon-bg terracotta-bg">🌙</div>
-                    <div class="med-info">
-                        <strong>Trazodone</strong>
-                        <span>50 mg</span>
-                    </div>
-                    <span class="status-badge scheduled">Scheduled</span>
-                    <span class="med-time">10:00 PM ›</span>
-                </div>
-            </div>
-
+<!-- NFC Modal (Placed outside grid at bottom of body) -->
 <div id="medModal" class="modal">
   <div class="modal-content">
     <span class="close">&times;</span>
     <h3>Log Medication Dose</h3>
     <form id="medForm">
-      <label><input type="radio" name="time" value="Morning" required> Morning</label>
-      <label><input type="radio" name="time" value="Lunch"> Lunch</label>
-      <label><input type="radio" name="time" value="Dinner"> Dinner</label>
-      <label><input type="radio" name="time" value="Bedtime"> Bedtime</label>
+      <div class="radio-group">
+        <label><input type="radio" name="time" value="Morning" required> Morning</label>
+        <label><input type="radio" name="time" value="Lunch"> Lunch</label>
+        <label><input type="radio" name="time" value="Dinner"> Dinner</label>
+        <label><input type="radio" name="time" value="Bedtime"> Bedtime</label>
+      </div>
       <button type="submit" class="save-btn">Log Dose</button>
     </form>
   </div>
 </div>
-<style>
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-.modal-content { background-color: #FFFDF8; margin: 15% auto; padding: 20px; border-radius: 20px; width: 300px; }
-.close { float: right; cursor: pointer; }
-</style>
-<button id="simulateNFC" class="outline-btn">Simulate NFC Scan →</button>
-            <button class="outline-btn">View Full Schedule →</button>
-        </div>
-
-        <!-- Row 3 Left: Journal & Prompts Detail -->
-        <div class="card detail-card journal-details-card">
-            <div class="card-header-flex">
-                <h3>Journal & Prompts</h3>
-                <button class="accent-pill-btn">New Entry</button>
-            </div>
-
-            <div class="prompt-box">
-                <span class="prompt-title">Prompt of the Week</span>
-                <p>What is one small win from this week that I want to celebrate?</p>
-            </div>
-
-            <div class="recent-entries">
-                <span class="section-subtitle">Recent Entries</span>
-                <div class="entry-row">
-                    <div>
-                        <strong>May 12, 2024</strong>
-                        <p>Felt more present today...</p>
-                    </div>
-                    <span class="chevron">›</span>
-                </div>
-                <div class="entry-row">
-                    <div>
-                        <strong>May 5, 2024</strong>
-                        <p>Music really helped my mood...</p>
-                    </div>
-                    <span class="chevron">›</span>
-                </div>
-            </div>
-
-            <button class="outline-btn">Open Journal →</button>
-        </div>
-
-        <!-- Row 3 Right: Trends & Analytics Detail -->
-        <div class="card detail-card analytics-card">
-            <div class="card-header-flex">
-                <h3>Trends & Analytics</h3>
-                <button class="text-btn">View All</button>
-            </div>
-
-            <span class="section-subtitle">This Week's Overview</span>
-
-            <!-- SVG Chart Placeholder -->
-            <div class="chart-container">
-                <svg viewBox="0 0 350 100" class="trend-svg">
-                    <polyline fill="none" stroke="#A7AF8B" stroke-width="3" points="10,80 60,60 110,70 160,30 210,60 260,40 310,20" />
-                    <circle cx="310" cy="20" r="5" fill="#56613B" />
-                </svg>
-                <div class="chart-labels">
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                </div>
-            </div>
-
 
 <script>
   // NFC Medication Logging
