@@ -14,17 +14,13 @@
     --leaf-divider: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20' fill='%23A7AF8B' opacity='0.4'%3E%3Cpath d='M10,10 Q50,0 100,10 T190,10' stroke='%23A7AF8B' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='10' r='3'/%3E%3Cpath d='M85,10 Q92,3 95,10'/%3E%3Cpath d='M115,10 Q108,3 105,10'/%3E%3C/svg%3E");
 }
 
-/* Page Background with Large Organic Botanical Watermarks & Watercolor Wash */
+/* Page Background */
 body {
     background-color: var(--bg-color);
     background-image: 
-        /* Top-Left Soft Watercolor Wash */
         radial-gradient(circle at 5% 10%, rgba(201, 111, 74, 0.08) 0%, transparent 40%),
-        /* Bottom-Right Soft Olive Wash */
         radial-gradient(circle at 95% 90%, rgba(86, 97, 59, 0.08) 0%, transparent 45%),
-        /* Left Margin Large Botanical Line Art */
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 600' fill='none' stroke='%2356613B' stroke-width='1.2' opacity='0.08'%3E%3Cpath d='M-50,600 Q100,300 50,0'/%3E%3Cpath d='M25,450 Q120,400 150,420 Q80,470 25,450 Z' fill='%2356613B' fill-opacity='0.03'/%3E%3Cpath d='M50,300 Q160,230 180,260 Q100,320 50,300 Z' fill='%2356613B' fill-opacity='0.03'/%3E%3Cpath d='M40,150 Q130,80 160,110 Q80,170 40,150 Z' fill='%2356613B' fill-opacity='0.03'/%3E%3C/svg%3E"),
-        /* Right Margin Large Botanical Line Art */
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 600' fill='none' stroke='%23C96F4A' stroke-width='1.2' opacity='0.08'%3E%3Cpath d='M350,600 Q200,300 250,0'/%3E%3Cpath d='M275,450 Q180,400 150,420 Q220,470 275,450 Z' fill='%23C96F4A' fill-opacity='0.03'/%3E%3Cpath d='M250,300 Q140,230 120,260 Q200,320 250,300 Z' fill='%23C96F4A' fill-opacity='0.03'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: top left, bottom right, left center, right center;
@@ -36,7 +32,7 @@ body {
     padding: 32px;
 }
 
-/* Dashboard Bento Grid Sizing */
+/* Dashboard Grid Architecture */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -45,12 +41,10 @@ body {
     margin: 0 auto;
 }
 
-/* Make top nav cards span 1 column, main detail cards span 1 column */
 .nav-card { grid-column: span 1; }
 .mood-tracker-card, .detail-card { grid-column: span 1; }
-}
 
-/* Base Card Styling with Subtle Botanical Corners */
+/* Base Card Styling */
 .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -64,7 +58,6 @@ body {
     overflow: hidden;
 }
 
-/* Leaf Accent in Top-Right Corner of Cards */
 .card::after {
     content: '';
     position: absolute;
@@ -99,24 +92,12 @@ h2, h3 {
     display: block;
 }
 
-/* Top Navigation Cards - Individual Watercolor Bottom Gradients */
+/* Top Navigation Cards */
 .nav-card { min-height: 160px; }
-
-.olive-card {
-    background: linear-gradient(180deg, #FFFDF8 60%, rgba(167, 175, 139, 0.18) 100%);
-}
-
-.sage-card {
-    background: linear-gradient(180deg, #FFFDF8 60%, rgba(86, 97, 59, 0.12) 100%);
-}
-
-.terracotta-card {
-    background: linear-gradient(180deg, #FFFDF8 60%, rgba(201, 111, 74, 0.15) 100%);
-}
-
-.gold-card {
-    background: linear-gradient(180deg, #FFFDF8 60%, rgba(216, 166, 70, 0.18) 100%);
-}
+.olive-card { background: linear-gradient(180deg, #FFFDF8 60%, rgba(167, 175, 139, 0.18) 100%); }
+.sage-card { background: linear-gradient(180deg, #FFFDF8 60%, rgba(86, 97, 59, 0.12) 100%); }
+.terracotta-card { background: linear-gradient(180deg, #FFFDF8 60%, rgba(201, 111, 74, 0.15) 100%); }
+.gold-card { background: linear-gradient(180deg, #FFFDF8 60%, rgba(216, 166, 70, 0.18) 100%); }
 
 .nav-card .card-header {
     display: flex;
@@ -133,7 +114,7 @@ h2, h3 {
 
 .nav-icon { font-size: 1.2rem; }
 
-/* Navigation Buttons */
+/* Buttons */
 .pill-btn {
     border: none;
     border-radius: 50px;
@@ -142,7 +123,6 @@ h2, h3 {
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
-    text-align: center;
     width: fit-content;
     transition: transform 0.2s ease, opacity 0.2s ease;
     z-index: 1;
@@ -158,11 +138,7 @@ h2, h3 {
 .terracotta-btn { background-color: var(--terracotta); }
 .gold-btn { background-color: var(--gold); }
 
-/* Mood Tracker Form Layout */
-.mood-tracker-card {
-    grid-column: span 2;
-}
-
+/* Mood Tracker Form */
 #moodForm {
     display: flex;
     flex-direction: column;
@@ -247,81 +223,78 @@ h2, h3 {
     padding-right: 6px;
 }
 
-#history .entry {
+.entry {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    justify-content: space-between;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.85rem;
 }
 
-#history .mood {
-    padding: 2px 8px;
-    border-radius: 6px;
-    color: white;
+.entry .mood {
+    color: white !important;
     font-weight: 600;
-}
-
-/* Detail Cards (Lower Section) */
-.detail-card {
-    grid-column: span 2;
-    min-height: 280px;
-}
-
-.med-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.med-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
-    background: #FAF8F3;
-    border-radius: 12px;
-}
-
-.med-icon-bg {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #EAE6D9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-}
-
-.gold-bg { background: #F5E8C7; }
-.terracotta-bg { background: #F2D5C8; }
-
-.med-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.med-info strong { font-size: 0.85rem; }
-.med-info span { font-size: 0.75rem; color: var(--secondary-text); }
-
-.status-badge {
     font-size: 0.75rem;
     padding: 4px 10px;
     border-radius: 20px;
-    font-weight: 600;
+    text-transform: capitalize;
 }
 
-.status-badge.taken { background: #E2E8D5; color: var(--olive); }
-.status-badge.due { background: #FAF0D7; color: #8C6A1D; }
-.status-badge.scheduled { background: #F7E3DA; color: var(--terracotta); }
+.entry .mood.great { background-color: var(--olive); }
+.entry .mood.good { background-color: var(--sage); }
+.entry .mood.okay { background-color: var(--gold); }
+.entry .mood.bad { background-color: var(--terracotta); }
+.entry .mood.terrible { background-color: #8B4A3E; }
 
-.med-time { font-size: 0.8rem; color: var(--secondary-text); margin-left: 8px; }
+.entry p {
+    margin: 0;
+    color: var(--primary-text);
+    flex: 1;
+    padding: 0 12px;
+}
 
-/* Prompt Box with Botanical Divider Line */
+.entry .dateTime {
+    color: var(--secondary-text);
+    font-size: 0.8rem;
+    margin-right: 12px;
+}
+
+.entry button.delete {
+    background: transparent;
+    border: none;
+    color: var(--terracotta);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+/* Medication Logs & Detail Cards */
+.detail-card {
+    min-height: 280px;
+}
+
+#med-log-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.log-item {
+    padding: 10px 12px;
+    background: #FAF8F3;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    border-left: 3px solid var(--olive);
+    color: var(--primary-text);
+}
+
+/* Prompts & Journal */
 .prompt-box {
     background: #FAF8F3;
     padding: 14px 16px;
@@ -419,7 +392,6 @@ h2, h3 {
     font-weight: 600;
     color: var(--primary-text);
     cursor: pointer;
-    z-index: 1;
 }
 
 .text-btn {
@@ -439,95 +411,9 @@ h2, h3 {
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    z-index: 1;
 }
 
-/* Responsive Grid */
-@media (max-width: 1024px) {
-    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-    .mood-tracker-card { grid-column: span 2; }
-}
-
-@media (max-width: 600px) {
-    body { padding: 16px; }
-    .dashboard-grid { grid-template-columns: 1fr; }
-    .card, .mood-tracker-card, .detail-card { grid-column: span 1; }
-}
-.entry {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 0.85rem;
-}
-
-/* Background colors for mood badges in history */
-.entry .mood {
-    color: white !important;
-    font-weight: 600;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    text-transform: capitalize;
-}
-
-.entry .mood.great { background-color: var(--olive); }
-.entry .mood.good { background-color: var(--sage); }
-.entry .mood.okay { background-color: var(--gold); }
-.entry .mood.bad { background-color: var(--terracotta); }
-.entry .mood.terrible { background-color: #8B4A3E; }
-
-.entry p {
-    margin: 0;
-    color: var(--primary-text);
-    flex: 1;
-    padding: 0 12px;
-}
-
-.entry .dateTime {
-    color: var(--secondary-text);
-    font-size: 0.8rem;
-    margin-right: 12px;
-}
-
-/* Styled Delete Button */
-.entry button.delete {
-    background: transparent;
-    border: none;
-    color: var(--terracotta);
-    font-weight: 600;
-    font-size: 0.8rem;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background 0.2s ease;
-}
-
-.entry button.delete:hover {
-    background: rgba(201, 111, 74, 0.1);
-}
-
-/* Dynamic Medication History List */
-#med-log-history {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-    max-height: 180px;
-    overflow-y: auto;
-}
-
-.log-item {
-    padding: 10px 12px;
-    background: #FAF8F3;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    border-left: 3px solid var(--olive);
-    color: var(--primary-text);
-}
-
-/* Fixed Centered Modal Overlay */
+/* Modal Overlay */
 .modal {
     display: none;
     position: fixed;
@@ -580,3 +466,13 @@ h2, h3 {
     gap: 8px;
 }
 
+/* Responsive Rules */
+@media (max-width: 1024px) {
+    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    body { padding: 16px; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .nav-card, .mood-tracker-card, .detail-card { grid-column: span 1; }
+}
