@@ -448,31 +448,56 @@ h2, h3 {
     .card, .mood-tracker-card, .detail-card { grid-column: span 1; }
 }
 .entry {
-    color: var(--primary-text);
-    font-size: 1rem;
-    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
 }
 
+/* Background colors for mood badges in history */
 .entry .mood {
-    color: white;
-    font-weight: bold;
-    text-transform: uppercase;
-    padding: 4px 8px;
-    border-radius: 4px;
+    color: white !important;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: capitalize;
 }
+
+.entry .mood.great { background-color: var(--olive); }
+.entry .mood.good { background-color: var(--sage); }
+.entry .mood.okay { background-color: var(--gold); }
+.entry .mood.bad { background-color: var(--terracotta); }
+.entry .mood.terrible { background-color: #8B4A3E; }
 
 .entry p {
-    margin: 8px 0;
-    color: var(--secondary-text);
+    margin: 0;
+    color: var(--primary-text);
+    flex: 1;
+    padding: 0 12px;
 }
 
 .entry .dateTime {
     color: var(--secondary-text);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    margin-right: 12px;
 }
 
-.entry .delete {
-    margin-left: 8px;
+/* Styled Delete Button */
+.entry button.delete {
+    background: transparent;
+    border: none;
     color: var(--terracotta);
-    font-weight: bold;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.entry button.delete:hover {
+    background: rgba(201, 111, 74, 0.1);
 }
