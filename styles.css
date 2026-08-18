@@ -36,12 +36,18 @@ body {
     padding: 32px;
 }
 
+/* Dashboard Bento Grid Sizing */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     max-width: 1300px;
     margin: 0 auto;
+}
+
+/* Make top nav cards span 1 column, main detail cards span 1 column */
+.nav-card { grid-column: span 1; }
+.mood-tracker-card, .detail-card { grid-column: span 1; }
 }
 
 /* Base Card Styling with Subtle Botanical Corners */
