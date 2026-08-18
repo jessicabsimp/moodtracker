@@ -12,7 +12,7 @@
 
     <div class="dashboard-grid">
 
-        <!-- Top Row Feature Navigation Cards -->
+        <!-- Top Row Navigation Cards -->
         <div class="card nav-card olive-card">
             <div class="card-header">
                 <h3>Music & Mood Insights</h3>
@@ -77,39 +77,64 @@
             <div id="history"></div>
         </div>
 
-<!-- Row 2 Right: Medication Details -->
-<div class="card detail-card med-details-card">
-    <div class="card-header-flex">
-        <h3>Medication Tracker</h3>
-        <button class="text-btn">View All</button>
-    </div>
+        <!-- Row 2 Right: Medication Details -->
+        <div class="card detail-card med-details-card">
+            <div class="card-header-flex">
+                <h3>Medication Tracker</h3>
+                <button class="text-btn">View All</button>
+            </div>
 
-    <!-- Dynamic Log Container -->
-    <div id="med-log-history"></div>
+            <!-- Dynamic Log Container -->
+            <div id="med-log-history"></div>
 
-    <button id="simulateNFC" class="outline-btn">Log Medication →</button>
-</div>
+            <button id="simulateNFC" class="outline-btn">Log Medication →</button>
+        </div>
 
-<!-- NFC Modal (Placed outside grid at bottom of body) -->
-<div id="medModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h3>Log Medication Dose</h3>
-    <form id="medForm">
-      <div class="radio-group">
-        <label><input type="radio" name="time" value="Morning" required> Morning</label>
-        <label><input type="radio" name="time" value="Lunch"> Lunch</label>
-        <label><input type="radio" name="time" value="Dinner"> Dinner</label>
-        <label><input type="radio" name="time" value="Bedtime"> Bedtime</label>
-      </div>
-      <button type="submit" class="save-btn">Log Dose</button>
-    </form>
-  </div>
-</div>
+        <!-- Row 3 Left: Journal & Prompts Detail -->
+        <div class="card detail-card journal-details-card">
+            <div class="card-header-flex">
+                <h3>Journal & Prompts</h3>
+                <button class="accent-pill-btn">New Entry</button>
+            </div>
 
-  // Initial render
-  renderMedLogs();
-</script>
+            <div class="prompt-box">
+                <span class="prompt-title">Prompt of the Week</span>
+                <p>What is one small win from this week that I want to celebrate?</p>
+            </div>
+
+            <div class="recent-entries">
+                <span class="section-subtitle">Recent Entries</span>
+                <div class="entry-row">
+                    <div>
+                        <strong>May 12, 2024</strong>
+                        <p>Felt more present today...</p>
+                    </div>
+                    <span class="chevron">›</span>
+                </div>
+            </div>
+
+            <button class="outline-btn">Open Journal →</button>
+        </div>
+
+        <!-- Row 3 Right: Trends & Analytics Detail -->
+        <div class="card detail-card analytics-card">
+            <div class="card-header-flex">
+                <h3>Trends & Analytics</h3>
+                <button class="text-btn">View All</button>
+            </div>
+
+            <span class="section-subtitle">This Week's Overview</span>
+
+            <div class="chart-container">
+                <svg viewBox="0 0 350 100" class="trend-svg">
+                    <polyline fill="none" stroke="#A7AF8B" stroke-width="3" points="10,80 60,60 110,70 160,30 210,60 260,40 310,20" />
+                    <circle cx="310" cy="20" r="5" fill="#56613B" />
+                </svg>
+                <div class="chart-labels">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-box sage-box">
                     <span class="stat-value">3.6</span>
@@ -128,6 +153,23 @@
             <button class="outline-btn">View Detailed Analytics →</button>
         </div>
 
+    </div>
+
+    <!-- Modal for Medication Logging -->
+    <div id="medModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Log Medication Dose</h3>
+        <form id="medForm">
+          <div class="radio-group">
+            <label><input type="radio" name="time" value="Morning" required> Morning</label>
+            <label><input type="radio" name="time" value="Lunch"> Lunch</label>
+            <label><input type="radio" name="time" value="Dinner"> Dinner</label>
+            <label><input type="radio" name="time" value="Bedtime"> Bedtime</label>
+          </div>
+          <button type="submit" class="save-btn">Log Dose</button>
+        </form>
+      </div>
     </div>
 
     <script src="app.js"></script>
