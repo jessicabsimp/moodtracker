@@ -107,26 +107,6 @@
   </div>
 </div>
 
-<script>
-  // NFC Medication Logging
-  let nfcSupported = 'NDEFReader' in window;
-  let medModal = document.getElementById('medModal');
-  let closeModal = document.querySelector('.close');
-  let medForm = document.getElementById('medForm');
-  let simulateBtn = document.getElementById('simulateNFC');
-
-  // Open modal on NFC scan or simulate button click
-  if (nfcSupported) {
-    let reader = new NDEFReader();
-    reader.ondiscovered = async (event) => {
-      // In real implementation, parse NDEF data here
-      // For demo, just trigger modal
-      openMedModal();
-    };
-    reader.start();
-  }
-function openMedModal() {
-  medModal.style.display = 'block';
 }
 
   simulateBtn.addEventListener('click', openMedModal);
