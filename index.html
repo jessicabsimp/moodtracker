@@ -116,6 +116,25 @@
                 </div>
             </div>
 
+<div id="medModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Log Medication Dose</h3>
+    <form id="medForm">
+      <label><input type="radio" name="time" value="Morning" required> Morning</label>
+      <label><input type="radio" name="time" value="Lunch"> Lunch</label>
+      <label><input type="radio" name="time" value="Dinner"> Dinner</label>
+      <label><input type="radio" name="time" value="Bedtime"> Bedtime</label>
+      <button type="submit" class="save-btn">Log Dose</button>
+    </form>
+  </div>
+</div>
+<style>
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+.modal-content { background-color: #FFFDF8; margin: 15% auto; padding: 20px; border-radius: 20px; width: 300px; }
+.close { float: right; cursor: pointer; }
+</style>
+<button id="simulateNFC" class="outline-btn">Simulate NFC Scan →</button>
             <button class="outline-btn">View Full Schedule →</button>
         </div>
 
@@ -172,6 +191,65 @@
                 </div>
             </div>
 
+
+<script>
+  // NFC Medication Logging
+  let nfcSupported = 'NDEFReader' in window;
+  let medModal = document.getElementById('medModal');
+  let closeModal = document.querySelector('.close');
+  let medForm = document.getElementById('medForm');
+  let simulateBtn = document.getElementById('simulateNFC');
+
+  // Open modal on NFC scan or simulate button click
+  if (nfcSupported) {
+    let reader = new NDEFReader();
+    reader.ondiscovered = async (event) => {
+      // In real implementation, parse NDEF data here
+      // For demo, just trigger modal
+      openMedModal();
+    };
+    reader.start();
+  }
+
+  simulateBtn.addEventListener('click', openMedModal);
+  closeModal.addEventListener('click', () => medModal.style.display = 'none');
+  window.addEventListener('click', (e) => {
+    if (e.target === medModal) medModal.style.display = 'none';
+  });
+
+  medForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    let timeOfDay = document.querySelector('input[name="time"]:checked').value;
+    let timestamp = new Date().toISOString();
+
+    // Save to localStorage
+    let logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
+    logs.push({ timeOfDay, timestamp });
+    localStorage.setItem('medicationLogs', JSON.stringify(logs));
+
+    // Close modal and refresh logs
+    medModal.style.display = 'none';
+    renderMedLogs();
+  });
+
+  // Render medication logs
+  function renderMedLogs() {
+    let logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
+    let logContainer = document.getElementById('med-log-history');
+    logContainer.innerHTML = '';
+
+    logs.forEach((log, index) => {
+      let date = new Date(log.timestamp).toLocaleString();
+      let logItem = document.createElement('div');
+      logItem.className = 'log-item';
+      logItem.textContent = `(${log.timeOfDay}) meds taken at ${date}`;
+      logContainer.appendChild(logItem);
+    });
+  }
+
+  // Initial render
+  renderMedLogs();
+</script>
             <div class="stats-grid">
                 <div class="stat-box sage-box">
                     <span class="stat-value">3.6</span>
