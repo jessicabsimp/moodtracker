@@ -447,3 +447,32 @@ h2, h3 {
     .dashboard-grid { grid-template-columns: 1fr; }
     .card, .mood-tracker-card, .detail-card { grid-column: span 1; }
 }
+.entry {
+    color: var(--primary-text);
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.entry .mood {
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.entry p {
+    margin: 8px 0;
+    color: var(--secondary-text);
+}
+
+.entry .dateTime {
+    color: var(--secondary-text);
+    font-size: 0.85rem;
+}
+
+.entry .delete {
+    margin-left: 8px;
+    color: var(--terracotta);
+    font-weight: bold;
+}
