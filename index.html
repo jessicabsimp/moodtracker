@@ -12,47 +12,10 @@
 
     <div class="dashboard-grid">
 
-        <!-- Top Row Navigation Cards -->
-        <div class="card nav-card olive-card">
-            <div class="card-header">
-                <h3>Music & Mood Insights</h3>
-                <span class="nav-icon">🎵</span>
-            </div>
-            <p>Your recent tracks and mood correlations.</p>
-            <button class="pill-btn olive-btn">View Insights →</button>
-        </div>
-
-        <div class="card nav-card sage-card">
-            <div class="card-header">
-                <h3>Medication Tracker</h3>
-                <span class="nav-icon">💊</span>
-            </div>
-            <p>NFC-logged medication status and upcoming schedules.</p>
-            <button class="pill-btn sage-btn">View Medications →</button>
-        </div>
-
-        <div class="card nav-card terracotta-card">
-            <div class="card-header">
-                <h3>Journal & Prompts</h3>
-                <span class="nav-icon">📖</span>
-            </div>
-            <p>Weekly reflective prompts and journal entries.</p>
-            <button class="pill-btn terracotta-btn">Open Journal →</button>
-        </div>
-
-        <div class="card nav-card gold-card">
-            <div class="card-header">
-                <h3>Trends & Analytics</h3>
-                <span class="nav-icon">📊</span>
-            </div>
-            <p>Behavioral trends, mood patterns, and insights.</p>
-            <button class="pill-btn gold-btn">View Analytics →</button>
-        </div>
-
-        <!-- Row 2 Left: Mood Tracker Form -->
+        <!-- Row 1 Left: Mood Tracker Form (Spans 2 Columns) -->
         <div class="card mood-tracker-card">
-            <div class="card-header">
-                <h2>Mood Tracker <span class="icon">🌿</span></h2>
+            <div class="card-header-flex">
+                <h2>Mood Tracker <img src="assets/mood tracker icon.svg" alt="Mood Tracker Icon" class="nav-icon"></h2>
             </div>
             
             <form id="moodForm">
@@ -77,10 +40,10 @@
             <div id="history"></div>
         </div>
 
-        <!-- Row 2 Right: Medication Details -->
+        <!-- Row 1 Right: Medication Tracker Details (Spans 2 Columns) -->
         <div class="card detail-card med-details-card">
             <div class="card-header-flex">
-                <h3>Medication Tracker</h3>
+                <h3>Medication Tracker <img src="assets/medication icon.svg" alt="Medication Icon" class="nav-icon"></h3>
                 <button class="text-btn">View All</button>
             </div>
 
@@ -90,11 +53,21 @@
             <button id="simulateNFC" class="outline-btn">Log Medication →</button>
         </div>
 
-        <!-- Row 3 Left: Journal & Prompts Detail -->
+        <!-- Row 2 Column 1: Music Insights -->
+       <div class="card nav-card music-card">
+            <div class="card-header-flex">
+                <h3>Music Insights</h3>
+            <img src="assets/music icon.svg" alt="Music Icon" class="nav-icon">
+    </div>
+            <p>Your recent tracks and mood correlations.</p>
+            <button class="pill-btn olive-btn">View Insights →</button>
+        </div>
+
+        <!-- Row 2 Column 2: Journal & Prompts -->
         <div class="card detail-card journal-details-card">
             <div class="card-header-flex">
-                <h3>Journal & Prompts</h3>
-                <button class="accent-pill-btn">New Entry</button>
+                <h3>Journal</h3>
+                <img src="assets/journal icon.svg" alt="Journal Icon" class="nav-icon">
             </div>
 
             <div class="prompt-box">
@@ -116,11 +89,11 @@
             <button class="outline-btn">Open Journal →</button>
         </div>
 
-        <!-- Row 3 Right: Trends & Analytics Detail -->
+        <!-- Row 2 Column 3: Trends & Analytics -->
         <div class="card detail-card analytics-card">
             <div class="card-header-flex">
                 <h3>Trends & Analytics</h3>
-                <button class="text-btn">View All</button>
+                <img src="assets/trends icon.svg" alt="Trends Icon" class="nav-icon">
             </div>
 
             <span class="section-subtitle">This Week's Overview</span>
@@ -151,6 +124,15 @@
             </div>
 
             <button class="outline-btn">View Detailed Analytics →</button>
+        </div>
+
+        <!-- Row 2 Column 4: Open Slot -->
+        <div class="card nav-card extra-card">
+            <div class="card-header">
+                <h3>Open Slot</h3>
+            </div>
+            <p>Something else i haven't decided yet.</p>
+            <button class="pill-btn gold-btn">Configure →</button>
         </div>
 
     </div>
