@@ -140,7 +140,7 @@ if (medForm) {
     const timestamp = new Date().toISOString();
 
     const { error } = await supabaseClient
-        .from('medication_logs')
+        .from('medication_log')
         .insert([{ time_of_day: timeOfDay, timestamp: timestamp }]);
 
     if (error) {
@@ -159,7 +159,7 @@ async function renderMedLogs() {
   if (!logContainer) return;
 
   const { data: logs, error } = await supabaseClient
-      .from('medication_logs')
+      .from('medication_log')
       .select('*')
       .order('timestamp', { ascending: false });
 
@@ -194,7 +194,7 @@ if (medLogHistory) {
       const id = e.target.getAttribute('data-id');
 
       const { error } = await supabaseClient
-          .from('medication_logs')
+          .from('medication_log')
           .delete()
           .eq('id', id);
 
