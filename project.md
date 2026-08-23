@@ -1,14 +1,14 @@
 # Warm & Organic Health & Mood Dashboard
 
 ## Project Overview
-A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, and CSS Grid. Features an earthy, warm cream visual aesthetic (`#F8F4EC`), persistent local storage, and modular cards designed for future API and hardware integrations.
+A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, and CSS Grid. Features an earthy, warm cream visual aesthetic (`#F8F4EC`), persistent cloud storage powered by Supabase, and modular cards designed for future API and hardware integrations.
 
 ---
 
 ## Core File Architecture
 - `index.html`: Dashboard UI structure containing top feature cards, mood logging form, dynamic history list, medication status widget, journal prompts, and analytics view.
 - `styles.css`: Responsive CSS Grid layout (`.dashboard-grid`), design variables (`--olive`, `--sage`, `--terracotta`, `--gold`), typography rules ('DM Serif Display' + 'Inter'), and botanical SVG accents.
-- `app.js`: Application logic handling local storage persistence, dynamic DOM rendering, date/time formatting, and event handlers.
+- `app.js`: Application logic handling Supabase Cloud DB interactions, Web NFC scanning, dynamic DOM rendering, and event handlers.
 - `PROJECT.md`: Source of truth for project architecture, current state, and development roadmap.
 
 ---
@@ -27,13 +27,13 @@ A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, an
 ---
 
 ## Technical Stack & State Management
-- **Persistence**: Browser `localStorage` using JSON keys:
-  - `moodEntries`: Array of `{ mood, notes, dateTime }`
-  - `medicationLogs`: Array of `{ timeOfDay, timestamp }`
-  - `journalEntries`: Array of `{ prompt, response, timestamp }`
+- **Persistence**: Remote Database via Supabase:
+  - Table `mood_entries`: `id`, `created_at`, `mood`, `notes`, `date_time`
+  - Table `medication_logs`: `id`, `created_at`, `time_of_day`, `timestamp`
+  - Table `journal_entries`: `id`, `created_at`, `prompt`, `response`, `timestamp`
 - **DOM Targets**:
   - Mood Form: `#moodForm`, `.mood-buttons button`, `#notes`, `#dateTime`, `#history`
-  - Medication Widget: `#medication-card`, `#med-log-history`, `#nfc-modal`
+  - Medication Widget: `#medication-card`, `#med-log-history`, `#medModal`
   - Journal Widget: `.prompt-box`, `.recent-entries`, `#journal-modal`
   - Analytics Widget: `.stats-grid`, `.stat-value`, `.trend-svg`
 
@@ -41,44 +41,35 @@ A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, an
 
 ## Feature Roadmap (Ordered Logic)
 
-### Phase 1: Core Foundation & Mood Tracking (COMPLETED)
+### Phase 1: Core Foundation & Cloud Data Storage (COMPLETED)
 - [x] Responsive bento grid layout and warm organic CSS theme.
-- [x] Interactive mood selector buttons with persistent state selection.
-- [x] Dynamic mood entry logging to `localStorage` with date/time formatting and notes.
-- [x] Render history list with color-coded badges (`great`, `good`, `okay`, `bad`, `terrible`) and delete capability.
+- [x] Interactive mood selector buttons with dynamic state selection.
+- [x] Cloud persistent logging via Supabase DB (`mood_entries` and `medication_logs`).
+- [x] Render history list dynamically with real-time UI updates upon insert/delete operations.
 - [x] Inner scroll boundary (`max-height: 200px`) for entry history.
 
 ---
 
-### Phase 2: Web NFC Medication Tracker (NEXT STEP)
-*Logical Priority: Clean up local card interactions before external APIs.*
-- [ ] **Remove Hardcoded List**: Strip static default medication lists from `index.html`.
-- [ ] **NFC Tag Listener & Modal Trigger**:
-  - Listen for Web NFC scan events (`NDEFReader`).
-  - Fallback/testing trigger button for desktop debugging ("Simulate NFC Scan").
-- [ ] **Logging Modal**:
-  - Open a pop-up modal on scan asking for dose timing: `Morning`, `Lunch`, `Dinner`, or `Bedtime`.
-  - Save log entry (`timeOfDay` + current timestamp) to `localStorage.medicationLogs`.
-- [ ] **Card Display**:
-  - Display clean timeline list: `"[Morning] meds taken at [8:15 AM, Oct 24]"`.
+### Phase 2: Web NFC Medication Tracker (COMPLETED)
+- [x] Web NFC scan event hook (`NDEFReader`) with fallback simulation button.
+- [x] Interactive dose timing popup modal (`Morning`, `Lunch`, `Dinner`, `Bedtime`).
+- [x] Asynchronous database persistence and deletion for dose history.
 
 ---
 
-### Phase 3: Weekly Guided Journal & Prompts
-*Logical Priority: Completes all local user-input modules before analytics/integrations.*
+### Phase 3: Weekly Guided Journal & Prompts (NEXT STEP)
 - [ ] **Journal Input Modal**:
   - Interactive "New Entry" button opening a reflective prompt popup.
-- [ ] **Local Persistence**:
-  - Save journal entries to `localStorage.journalEntries`.
+- [ ] **Supabase Integration**:
+  - Save journal entries to `journal_entries` table.
 - [ ] **Display Recent Entries**:
   - Render latest reflections dynamically inside the Journal card's `.recent-entries` container.
 
 ---
 
 ### Phase 4: Dynamic Analytics Engine
-*Logical Priority: Relies on data collected in Phases 1, 2, and 3.*
 - [ ] **Real-Time Calculations**:
-  - Compute `Avg Mood` score dynamically from logged mood values.
+  - Compute `Avg Mood` score dynamically from logged Supabase entries.
   - Calculate `% Positive Days` (ratio of Great/Good logs over total logged days).
   - Calculate total logged activities (meds taken + journal entries).
 - [ ] **Dynamic Trend Graph**:
@@ -87,7 +78,6 @@ A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, an
 ---
 
 ### Phase 5: Client-Side Spotify Web API Integration
-*Logical Priority: External authentication builds on top of a fully working local dashboard.*
 - [ ] **Client-Side OAuth Authentication**:
   - Add "Connect Spotify" button using PKCE / Implicit Grant flow (no server backend required).
 - [ ] **Recently Played Tracks Fetch**:

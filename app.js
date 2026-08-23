@@ -1,23 +1,27 @@
+const SUPABASE_URL = 'https://exghnybsjhxnmydktqch.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4Z2hueWJzamh4bm15ZGt0cWNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NDAyNDMsImV4cCI6MjEwMzAxNjI0M30.Xz9OEWkUy1RRYR8hxLkGJFnxBUvyZLLV-J89v5emIco';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const moodForm = document.getElementById('moodForm');
 const historyDiv = document.getElementById('history');
-
-const moods = ['Great', 'Good', 'Okay', 'Bad', 'Terrible'];
-
-function getLocalStorageData() {
-    return JSON.parse(localStorage.getItem('moodEntries')) || [];
-}
-
-function setLocalStorageData(data) {
-    localStorage.setItem('moodEntries', JSON.stringify(data));
-}
 
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleString();
 }
 
-function renderHistory() {
-    const entries = getLocalStorageData().sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+// Fetch and Render Mood Entries from Supabase
+async function renderHistory() {
+    const { data: entries, error } = await supabase
+        .from('mood_entries')
+        .select('*')
+        .order('date_time', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching mood history:', error);
+        return;
+    }
+
     historyDiv.innerHTML = '';
 
     entries.forEach(entry => {
@@ -26,15 +30,16 @@ function renderHistory() {
 
         entryElement.innerHTML = `
             <span class="mood ${entry.mood.toLowerCase()}">${entry.mood}</span>
-            <p>${entry.notes}</p>
-            <span class="dateTime">${formatDate(entry.dateTime)}</span>
-            <button class="delete" data-id="${entries.indexOf(entry)}">Delete</button>
+            <p>${entry.notes || ''}</p>
+            <span class="dateTime">${formatDate(entry.date_time)}</span>
+            <button class="delete" data-id="${entry.id}">Delete</button>
         `;
 
         historyDiv.appendChild(entryElement);
     });
 }
 
+// Mood Selection Listener
 moodForm.addEventListener('click', (e) => {
     if (e.target.tagName === 'BUTTON' && e.target.name === 'mood') {
         const selectedMoodButton = e.target;
@@ -45,15 +50,14 @@ moodForm.addEventListener('click', (e) => {
     }
 });
 
-moodForm.addEventListener('submit', (e) => {
+// Mood Form Submission Handler
+moodForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const moodButtons = document.querySelectorAll('#moodForm .mood-buttons button.selected');
-    let selectedMood = null;
+    let selectedMood = moodButtons.length > 0 ? moodButtons[0].value : null;
 
-    if (moodButtons.length > 0) {
-        selectedMood = moodButtons[0].value;
-    } else {
+    if (!selectedMood) {
         alert('Please select a mood.');
         return;
     }
@@ -61,28 +65,38 @@ moodForm.addEventListener('submit', (e) => {
     const notes = document.getElementById('notes').value.trim();
     const dateTime = document.getElementById('dateTime').value || new Date().toISOString();
 
-    const entry = { mood: selectedMood, notes, dateTime };
-    let entries = getLocalStorageData();
-    entries.push(entry);
-    setLocalStorageData(entries);
+    const { error } = await supabase
+        .from('mood_entries')
+        .insert([{ mood: selectedMood, notes: notes, date_time: dateTime }]);
 
-    renderHistory();
+    if (error) {
+        console.error('Error saving mood entry:', error);
+        return;
+    }
+
+    await renderHistory();
     moodForm.reset();
     document.querySelectorAll('#moodForm .mood-buttons button').forEach(button => button.classList.remove('selected'));
 });
 
-historyDiv.addEventListener('click', (e) => {
+// Delete Mood Entry Handler
+historyDiv.addEventListener('click', async (e) => {
     if (e.target && e.target.classList.contains('delete')) {
-        const entries = getLocalStorageData();
-        const id = parseInt(e.target.getAttribute('data-id'));
-        entries.splice(id, 1);
-        setLocalStorageData(entries);
+        const id = e.target.getAttribute('data-id');
 
-        renderHistory();
+        const { error } = await supabase
+            .from('mood_entries')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting mood entry:', error);
+            return;
+        }
+
+        await renderHistory();
     }
 });
-
-renderHistory();
 
 // Medication Tracker Logic
 const medModal = document.getElementById('medModal');
@@ -102,7 +116,7 @@ window.addEventListener('click', (e) => {
   if (e.target === medModal) medModal.style.display = 'none';
 });
 
-// Handle NFC Web API Scan
+// Handle Web NFC Scan API
 if ('NDEFReader' in window) {
   try {
     const reader = new NDEFReader();
@@ -110,12 +124,13 @@ if ('NDEFReader' in window) {
       reader.ondiscovered = () => openMedModal();
     });
   } catch (error) {
-    console.log("NFC permission/device unsupported.");
+    console.log("NFC permission or device unsupported.");
   }
 }
 
+// Medication Submission Handler
 if (medForm) {
-  medForm.addEventListener('submit', function(e) {
+  medForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     const timeRadio = document.querySelector('input[name="time"]:checked');
     if (!timeRadio) return;
@@ -123,34 +138,49 @@ if (medForm) {
     const timeOfDay = timeRadio.value;
     const timestamp = new Date().toISOString();
 
-    const logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
-    logs.push({ timeOfDay, timestamp });
-    localStorage.setItem('medicationLogs', JSON.stringify(logs));
+    const { error } = await supabase
+        .from('medication_logs')
+        .insert([{ time_of_day: timeOfDay, timestamp: timestamp }]);
+
+    if (error) {
+        console.error('Error logging medication:', error);
+        return;
+    }
 
     medModal.style.display = 'none';
-    renderMedLogs();
+    await renderMedLogs();
   });
 }
 
-function renderMedLogs() {
+// Fetch and Render Medication Logs
+async function renderMedLogs() {
   const logContainer = document.getElementById('med-log-history');
   if (!logContainer) return;
-  
-  const logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
+
+  const { data: logs, error } = await supabase
+      .from('medication_logs')
+      .select('*')
+      .order('timestamp', { ascending: false });
+
+  if (error) {
+      console.error('Error fetching medication logs:', error);
+      return;
+  }
+
   logContainer.innerHTML = '';
 
-  if (logs.length === 0) {
+  if (!logs || logs.length === 0) {
     logContainer.innerHTML = '<p class="empty-state" style="color:var(--secondary-text); font-size:0.85rem;">No doses logged today.</p>';
     return;
   }
 
-  logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach((log, index) => {
+  logs.forEach((log) => {
     const date = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const logItem = document.createElement('div');
     logItem.className = 'log-item';
     logItem.innerHTML = `
-      <span><strong>${log.timeOfDay}</strong> meds taken at ${date}</span>
-      <button class="delete-med" data-index="${index}">Delete</button>
+      <span><strong>${log.time_of_day}</strong> meds taken at ${date}</span>
+      <button class="delete-med" data-id="${log.id}">Delete</button>
     `;
     logContainer.appendChild(logItem);
   });
@@ -158,20 +188,25 @@ function renderMedLogs() {
 
 // Delete Medication Log Handler
 if (medLogHistory) {
-  medLogHistory.addEventListener('click', (e) => {
+  medLogHistory.addEventListener('click', async (e) => {
     if (e.target && e.target.classList.contains('delete-med')) {
-      const index = parseInt(e.target.getAttribute('data-index'));
-      let logs = JSON.parse(localStorage.getItem('medicationLogs') || '[]');
-      
-      // Sort array to match rendering order before deletion
-      logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      logs.splice(index, 1);
-      
-      localStorage.setItem('medicationLogs', JSON.stringify(logs));
-      renderMedLogs();
+      const id = e.target.getAttribute('data-id');
+
+      const { error } = await supabase
+          .from('medication_logs')
+          .delete()
+          .eq('id', id);
+
+      if (error) {
+          console.error('Error deleting medication log:', error);
+          return;
+      }
+
+      await renderMedLogs();
     }
   });
 }
 
-// Initial render
+// Initial Data Renders
+renderHistory();
 renderMedLogs();

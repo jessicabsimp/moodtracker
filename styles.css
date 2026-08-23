@@ -24,27 +24,30 @@ body {
     padding: 32px;
 }
 
-/* Dashboard Grid Architecture (4 Columns) */
+/* Dashboard Grid Architecture (3 Columns) */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     max-width: 1300px;
     margin: 0 auto;
 }
 
-/* Top Row Cards Span 2 Columns */
+/* Card Column Spans */
 .mood-tracker-card,
-.med-details-card {
-    grid-column: span 2;
+.med-details-card,
+.journal-details-card,
+.music-card {
+    grid-column: span 1;
 }
 
-/* Bottom Row Cards Span 1 Column */
-.music-card,
-.journal-details-card,
-.analytics-card,
-.extra-card {
+/* Tall Analytics Card Spanning 2 Rows */
+.analytics-card {
     grid-column: span 1;
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 /* Base Card Styling */
@@ -92,6 +95,24 @@ h2, h3 {
     object-fit: contain;
 }
 
+/* Header Title & Icon Alignment */
+.title-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-with-icon h2,
+.title-with-icon h3 {
+    margin: 0;
+}
+
+.wide-card-icon {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+}
+
 /* Buttons */
 .pill-btn {
     border: none;
@@ -126,20 +147,25 @@ h2, h3 {
 
 .mood-buttons {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
 }
 
 .mood-btn {
+    flex: 1;
     border: none;
-    padding: 8px 16px;
+    padding: 6px 2px;
     border-radius: 20px;
     font-weight: 600;
     color: white;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    text-align: center;
     opacity: 0.85;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .mood-btn:hover, .mood-btn.selected {
@@ -441,31 +467,46 @@ h2, h3 {
 
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
-    .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-    .mood-tracker-card, .med-details-card { grid-column: span 2; }
-    .music-card, .journal-details-card, .analytics-card, .extra-card { grid-column: span 1; }
+    .dashboard-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    .analytics-card { 
+        grid-row: span 1; 
+    }
 }
 
 @media (max-width: 600px) {
-    body { padding: 16px; }
-    .dashboard-grid { grid-template-columns: 1fr; }
-    .mood-tracker-card, .med-details-card, .music-card, .journal-details-card, .analytics-card, .extra-card { grid-column: span 1; }
+    body { 
+        padding: 16px; 
+    }
+    .dashboard-grid { 
+        grid-template-columns: 1fr; 
+    }
+    .analytics-card { 
+        grid-row: span 1; 
+    }
 }
-/* Header Title & Icon Alignment */
-.title-with-icon {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.title-with-icon h2,
-.title-with-icon h3 {
+/* Uniform Heading Sizes */
+.card h2, 
+.card h3 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--primary-text);
+    font-size: 1.25rem;
     margin: 0;
 }
 
-/* Larger Icon for 2-Column Wide Cards */
-.wide-card-icon {
-    width: 42px;
-    height: 42px;
+/* Uniform Header Layout */
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+/* Uniform Icon Sizes */
+.nav-icon {
+    width: 40px;
+    height: 40px;
     object-fit: contain;
 }
