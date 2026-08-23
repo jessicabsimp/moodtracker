@@ -556,3 +556,32 @@ body {
         grid-row: span 1; 
     }
 }
+
+/* Time Filter Buttons */
+.time-filter-btn {
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Active State: Olive Background with Crisp White Text */
+.time-filter-btn.active-btn {
+    background-color: var(--olive);
+    color: #FFFFFF !important;
+    border-color: var(--olive);
+}
+
+/* Inactive State: Light Cream Background with Dark Text */
+.time-filter-btn.inactive-btn {
+    background-color: #FAF8F3;
+    color: var(--primary-text) !important;
+    border-color: var(--border-color);
+}
+
+.time-filter-btn:hover {
+    transform: translateY(-1px);
+}

@@ -1,14 +1,18 @@
+// ==========================================
+// 1. DASHBOARD ANALYTICS WIDGET ENGINE
+// ==========================================
+
 async function updateAnalytics() {
     const statValues = document.querySelectorAll('.analytics-card .stat-value');
     if (!statValues || statValues.length < 3) return;
 
-    // 1. Calculate 7-day rolling window
+    // A. Define 7-Day Rolling Window (6 days ago through today)
     const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(now.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // 2. Fetch dataset across all three Supabase tables (Corrected to 'medication_log')
+    // B. Query Supabase Datasets (Corrected to 'medication_log')
     const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
         supabaseClient.from('mood_entries').select('mood, date_time').gte('date_time', sevenDaysAgo.toISOString()),
         supabaseClient.from('medication_log').select('timestamp').gte('timestamp', sevenDaysAgo.toISOString()),
@@ -42,7 +46,7 @@ async function updateAnalytics() {
     if (medLogs) medLogs.forEach(m => m.timestamp && loggedDaysSet.add(new Date(m.timestamp).toISOString().split('T')[0]));
     if (journalEntries) journalEntries.forEach(j => j.timestamp && loggedDaysSet.add(new Date(j.timestamp).toISOString().split('T')[0]));
 
-    // 3. Compute High-Level Metrics
+    // C. Compute Summary Stat Cards
     const totalMoodDays = Object.keys(dailyMoodMap).length;
     let sumOfDailyAverages = 0;
     let positiveDaysCount = 0;
@@ -60,7 +64,7 @@ async function updateAnalytics() {
     statValues[1].textContent = `${positiveDaysPercent}%`;
     statValues[2].textContent = loggedDaysSet.size;
 
-    // 4. Mood Breakdown Bar Updates
+    // D. Render Mood Distribution Bar
     const totalMoodEntries = highCount + medCount + lowCount;
     const barGreat = document.getElementById('barGreat');
     const barGood = document.getElementById('barGood');
@@ -84,7 +88,7 @@ async function updateAnalytics() {
     if (elemMed) elemMed.textContent = medCount;
     if (elemLow) elemLow.textContent = lowCount;
 
-    // 5. Dynamic Weekly Insight Text
+    // E. Dynamic Insight Text
     const insightElem = document.getElementById('weeklyInsightText');
     if (insightElem) {
         if (totalMoodEntries === 0) {
@@ -98,7 +102,7 @@ async function updateAnalytics() {
         }
     }
 
-    // 6. Badges & Curved SVG Chart
+    // F. Badges & SVG Graph
     updateBadges(loggedDaysSet, medLogs || []);
     renderTrendLine(moodEntries || []);
 }
@@ -107,6 +111,7 @@ function updateBadges(loggedDaysSet, medLogs) {
     const streakBadge = document.getElementById('streakBadge');
     const medBadge = document.getElementById('medAdherenceBadge');
 
+    // Active Consecutive Days Streak
     let streak = 0;
     const checkDate = new Date();
     while (true) {
@@ -119,6 +124,7 @@ function updateBadges(loggedDaysSet, medLogs) {
 
     if (streakBadge) streakBadge.textContent = `🔥 ${streak}-Day Streak`;
 
+    // Med Adherence Percentage
     const medDays = new Set(medLogs.map(m => new Date(m.timestamp).toISOString().split('T')[0])).size;
     const medAdherence = Math.round((medDays / 7) * 100);
     if (medBadge) medBadge.textContent = `💊 ${medAdherence}% Med Adherence`;
@@ -186,7 +192,7 @@ function renderTrendLine(moodEntries) {
     const areaD = `${pathD} L 350,140 L 0,140 Z`;
     if (chartArea) chartArea.setAttribute('d', areaD);
 
-    // Dynamic SVG Nodes
+    // Interactive Hover Nodes
     if (chartNodes) {
         chartNodes.innerHTML = '';
         points.forEach(pt => {
@@ -213,6 +219,12 @@ function renderTrendLine(moodEntries) {
         });
     }
 }
+
+
+// ==========================================
+// 2. DETAILED ANALYTICS SUBPAGE ENGINE (#analytics)
+// ==========================================
+
 async function renderFullAnalyticsPage(daysFilter = 30) {
     const pageTitle = document.getElementById('page-title');
     const pageContent = document.getElementById('page-content');
@@ -220,20 +232,23 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
 
     pageTitle.textContent = 'Detailed Analytics & Insights';
 
-    // 1. Calculate Date Threshold
+    // A. Parse Date Boundaries
     const now = new Date();
     const startDate = new Date();
-    if (daysFilter !== 'all') {
-        startDate.setDate(now.getDate() - parseInt(daysFilter));
+    const filterKey = String(daysFilter).toLowerCase();
+
+    if (filterKey !== 'all') {
+        const numDays = parseInt(filterKey, 10) || 30;
+        startDate.setDate(now.getDate() - numDays);
         startDate.setHours(0, 0, 0, 0);
     }
 
-    // 2. Query Datasets
+    // B. Query Filtered Supabase Datasets
     let moodQuery = supabaseClient.from('mood_entries').select('*');
     let medQuery = supabaseClient.from('medication_log').select('*');
     let journalQuery = supabaseClient.from('journal_entries').select('*');
 
-    if (daysFilter !== 'all') {
+    if (filterKey !== 'all') {
         moodQuery = moodQuery.gte('date_time', startDate.toISOString());
         medQuery = medQuery.gte('timestamp', startDate.toISOString());
         journalQuery = journalQuery.gte('timestamp', startDate.toISOString());
@@ -260,16 +275,16 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
     const totalMoods = moodEntries ? moodEntries.length : 0;
     const avgScore = totalMoods > 0 ? (totalScore / totalMoods).toFixed(2) : '0.00';
 
-    // 3. Render HTML Subpage Structure
+    // C. Render Subpage Layout
     pageContent.innerHTML = `
-        <!-- Timeframe Switcher -->
-        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-            <button class="time-filter-btn pill-btn ${daysFilter === 7 ? 'olive-btn' : 'sage-btn'}" data-days="7">Last 7 Days</button>
-            <button class="time-filter-btn pill-btn ${daysFilter === 30 ? 'olive-btn' : 'sage-btn'}" data-days="30">Last 30 Days</button>
-            <button class="time-filter-btn pill-btn ${daysFilter === 'all' ? 'olive-btn' : 'sage-btn'}" data-days="all">All Time</button>
-        </div>
+<!-- Filter Switcher Bar -->
+<div style="display: flex; gap: 8px; margin-bottom: 20px;">
+    <button class="time-filter-btn ${filterKey === '7' ? 'active-btn' : 'inactive-btn'}" data-days="7">Last 7 Days</button>
+    <button class="time-filter-btn ${filterKey === '30' ? 'active-btn' : 'inactive-btn'}" data-days="30">Last 30 Days</button>
+    <button class="time-filter-btn ${filterKey === 'all' ? 'active-btn' : 'inactive-btn'}" data-days="all">All Time</button>
+</div>
 
-        <!-- High Level Summary Cards -->
+        <!-- Metric Summary Cards -->
         <div class="stats-grid" style="margin-bottom: 20px;">
             <div class="stat-box sage-box">
                 <span class="stat-value">${avgScore}</span>
@@ -285,11 +300,12 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
             </div>
         </div>
 
-        <!-- Granular Breakdown -->
+        <!-- Mood Breakdown Bars -->
         <h4 style="font-family: 'DM Serif Display', serif; margin: 20px 0 10px 0;">Mood Distribution Breakdown</h4>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
             ${Object.entries(counts).map(([mood, count]) => {
                 const pct = totalMoods > 0 ? Math.round((count / totalMoods) * 100) : 0;
+                const barColor = mood === 'great' ? 'var(--olive)' : mood === 'good' ? 'var(--sage)' : mood === 'okay' ? 'var(--gold)' : 'var(--terracotta)';
                 return `
                     <div>
                         <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
@@ -297,7 +313,7 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
                             <span>${count} logs (${pct}%)</span>
                         </div>
                         <div style="height: 8px; background: #FAF8F3; border-radius: 10px; overflow: hidden;">
-                            <div style="height: 100%; width: ${pct}%; background: var(--${mood === 'great' ? 'olive' : mood === 'good' ? 'sage' : mood === 'okay' ? 'gold' : 'terracotta'});"></div>
+                            <div style="height: 100%; width: ${pct}%; background: ${barColor}; transition: width 0.3s ease;"></div>
                         </div>
                     </div>
                 `;
@@ -310,11 +326,11 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
         </div>
     `;
 
-    // 4. Attach Event Handlers
+    // D. Attach Dynamic Handlers
     document.querySelectorAll('.time-filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const filter = e.target.getAttribute('data-days');
-            renderFullAnalyticsPage(filter === 'all' ? 'all' : parseInt(filter));
+            const daysAttr = e.currentTarget.getAttribute('data-days');
+            renderFullAnalyticsPage(daysAttr);
         });
     });
 
