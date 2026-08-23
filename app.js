@@ -1,6 +1,7 @@
+// Initialize Supabase Client
 const SUPABASE_URL = 'https://exghnybsjhxnmydktqch.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4Z2hueWJzamh4bm15ZGt0cWNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NDAyNDMsImV4cCI6MjEwMzAxNjI0M30.Xz9OEWkUy1RRYR8hxLkGJFnxBUvyZLLV-J89v5emIco';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const moodForm = document.getElementById('moodForm');
 const historyDiv = document.getElementById('history');
@@ -12,7 +13,7 @@ function formatDate(dateString) {
 
 // Fetch and Render Mood Entries from Supabase
 async function renderHistory() {
-    const { data: entries, error } = await supabase
+    const { data: entries, error } = await supabaseClient
         .from('mood_entries')
         .select('*')
         .order('date_time', { ascending: false });
@@ -65,7 +66,7 @@ moodForm.addEventListener('submit', async (e) => {
     const notes = document.getElementById('notes').value.trim();
     const dateTime = document.getElementById('dateTime').value || new Date().toISOString();
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('mood_entries')
         .insert([{ mood: selectedMood, notes: notes, date_time: dateTime }]);
 
@@ -84,7 +85,7 @@ historyDiv.addEventListener('click', async (e) => {
     if (e.target && e.target.classList.contains('delete')) {
         const id = e.target.getAttribute('data-id');
 
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('mood_entries')
             .delete()
             .eq('id', id);
@@ -138,7 +139,7 @@ if (medForm) {
     const timeOfDay = timeRadio.value;
     const timestamp = new Date().toISOString();
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('medication_logs')
         .insert([{ time_of_day: timeOfDay, timestamp: timestamp }]);
 
@@ -157,7 +158,7 @@ async function renderMedLogs() {
   const logContainer = document.getElementById('med-log-history');
   if (!logContainer) return;
 
-  const { data: logs, error } = await supabase
+  const { data: logs, error } = await supabaseClient
       .from('medication_logs')
       .select('*')
       .order('timestamp', { ascending: false });
@@ -192,7 +193,7 @@ if (medLogHistory) {
     if (e.target && e.target.classList.contains('delete-med')) {
       const id = e.target.getAttribute('data-id');
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
           .from('medication_logs')
           .delete()
           .eq('id', id);
