@@ -144,5 +144,23 @@ pageContent.addEventListener('click', async (e) => {
     }
 });
 
+// Add inside router listener in js/router.js:
+window.addEventListener('hashchange', handleRoute);
+
+function handleRoute() {
+    const hash = window.location.hash;
+    const dashboardView = document.getElementById('dashboard-view');
+    const subpageView = document.getElementById('subpage-view');
+
+    if (hash === '#analytics') {
+        dashboardView.style.display = 'none';
+        subpageView.style.display = 'block';
+        renderFullAnalyticsPage(30); // Default to 30 days view
+    } else if (hash === '' || hash === '#') {
+        dashboardView.style.display = 'block';
+        subpageView.style.display = 'none';
+    }
+}
+
 window.addEventListener('hashchange', handleRouting);
 window.addEventListener('DOMContentLoaded', handleRouting);
