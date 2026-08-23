@@ -68,17 +68,22 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-h2, h3 {
+/* Uniform Card Headings */
+.card h2, 
+.card h3 {
     font-family: 'DM Serif Display', serif;
     color: var(--primary-text);
-    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+    margin: 0;
 }
 
+/* Uniform Header Layout */
 .card-header-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    width: 100%;
 }
 
 .section-subtitle {
@@ -89,9 +94,10 @@ h2, h3 {
     display: block;
 }
 
+/* Uniform Icon Sizes */
 .nav-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
 }
 
@@ -340,6 +346,15 @@ h2, h3 {
 .entry-row p { margin: 0; font-size: 0.8rem; color: var(--secondary-text); }
 .chevron { color: var(--secondary-text); }
 
+#journalModal textarea#journalResponse,
+#journalEditModal textarea#editJournalResponse {
+    width: 100%;
+    min-height: 220px;
+    font-size: 0.95rem;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
 /* Analytics Stats Grid */
 .chart-container {
     background: #FAF8F3;
@@ -411,29 +426,42 @@ h2, h3 {
     cursor: pointer;
 }
 
-/* Modal Overlay */
+/* Modal Overlay Base */
 .modal {
     display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background-color: rgba(34, 30, 20, 0.5);
     -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
+
+    /* Centering Rules */
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
+/* Overrides inline JS setting "display: block" or "display: flex" so it stays centered */
+.modal[style*="display: block"],
+.modal[style*="display: flex"] {
+    display: flex !important;
+}
+
+/* Modal Window Content */
 .modal-content {
-    background-color: var(--card-bg);
-    margin: 15vh auto;
-    padding: 24px;
-    border-radius: 20px;
-    width: 320px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    background-color: var(--bg-color);
     position: relative;
+    width: 90%;
+    max-width: 650px;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    margin: auto;
 }
 
 .modal-content h3 {
@@ -485,28 +513,4 @@ h2, h3 {
     .analytics-card { 
         grid-row: span 1; 
     }
-}
-/* Uniform Heading Sizes */
-.card h2, 
-.card h3 {
-    font-family: 'DM Serif Display', serif;
-    color: var(--primary-text);
-    font-size: 1.25rem;
-    margin: 0;
-}
-
-/* Uniform Header Layout */
-.card-header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    width: 100%;
-}
-
-/* Uniform Icon Sizes */
-.nav-icon {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
 }

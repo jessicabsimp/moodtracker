@@ -10,125 +10,144 @@
 </head>
 <body>
 
-    <div class="dashboard-grid">
-        <!-- Row 1 Column 1: Mood Tracker -->
-        <div class="card mood-tracker-card">
-            <div class="card-header-flex">
-                <h3>Mood Tracker</h3>
-                <img src="assets/mood tracker icon.svg" alt="Mood Tracker Icon" class="nav-icon">
-            </div>
-            
-            <form id="moodForm">
-                <div class="mood-buttons">
-                    <button type="button" name="mood" value="Great" class="mood-btn great">Great</button>
-                    <button type="button" name="mood" value="Good" class="mood-btn good">Good</button>
-                    <button type="button" name="mood" value="Okay" class="mood-btn okay">Okay</button>
-                    <button type="button" name="mood" value="Bad" class="mood-btn bad">Bad</button>
-                    <button type="button" name="mood" value="Terrible" class="mood-btn terrible">Terrible</button>
+    <!-- MAIN DASHBOARD VIEW -->
+    <div id="dashboard-view">
+        <div class="dashboard-grid">
+            <!-- Row 1 Column 1: Mood Tracker -->
+            <div class="card mood-tracker-card" style="display: flex; flex-direction: column;">
+                <div class="card-header-flex">
+                    <h3>Mood Tracker</h3>
+                    <img src="assets/mood tracker icon.svg" alt="Mood Tracker Icon" class="nav-icon">
                 </div>
+                
+                <form id="moodForm">
+                    <div class="mood-buttons">
+                        <button type="button" name="mood" value="Great" class="mood-btn great">Great</button>
+                        <button type="button" name="mood" value="Good" class="mood-btn good">Good</button>
+                        <button type="button" name="mood" value="Okay" class="mood-btn okay">Okay</button>
+                        <button type="button" name="mood" value="Bad" class="mood-btn bad">Bad</button>
+                        <button type="button" name="mood" value="Terrible" class="mood-btn terrible">Terrible</button>
+                    </div>
 
-                <div class="notes">
-                    <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
-                </div>
+                    <div class="notes">
+                        <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
+                    </div>
 
-                <div class="datetime-submit">
-                    <input type="datetime-local" id="dateTime" name="dateTime">
-                    <button type="submit" id="saveEntry" class="save-btn">Save Entry</button>
-                </div>
-            </form>
+                    <div class="datetime-submit">
+                        <input type="datetime-local" id="dateTime" name="dateTime">
+                        <button type="submit" id="saveEntry" class="save-btn">Save Entry</button>
+                    </div>
+                </form>
 
-            <div id="history"></div>
-        </div>
-
-        <!-- Row 1 Column 2: Medication Tracker -->
-        <div class="card detail-card med-details-card">
-            <div class="card-header-flex">
-                <h3>Medication Tracker</h3>
-                <img src="assets/medication icon.svg" alt="Medication Icon" class="nav-icon">
+                <div id="history"></div>
+                <a href="#mood" style="margin-top: auto; align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 10px;">View All →</a>
             </div>
 
-            <!-- Dynamic Log Container -->
-            <div id="med-log-history"></div>
+            <!-- Row 1 Column 2: Medication Tracker -->
+            <div class="card detail-card med-details-card" style="display: flex; flex-direction: column;">
+                <div class="card-header-flex">
+                    <h3>Medication Tracker</h3>
+                    <img src="assets/medication icon.svg" alt="Medication Icon" class="nav-icon">
+                </div>
 
-            <button id="simulateNFC" class="outline-btn">Log Medication →</button>
-        </div>
+                <!-- Dynamic Log Container -->
+                <div id="med-log-history"></div>
 
-        <!-- Columns 3 (Spans Rows 1 & 2): Trends & Analytics -->
-        <div class="card detail-card analytics-card">
-            <div class="card-header-flex">
-                <h3>Trends & Analytics</h3>
-                <img src="assets/trends icon.svg" alt="Trends Icon" class="nav-icon">
-            </div>
-
-            <span class="section-subtitle">This Week's Overview</span>
-
-            <div class="chart-container">
-                <svg viewBox="0 0 350 100" class="trend-svg">
-                    <polyline fill="none" stroke="#A7AF8B" stroke-width="3" points="10,80 60,60 110,70 160,30 210,60 260,40 310,20" />
-                    <circle cx="310" cy="20" r="5" fill="#56613B" />
-                </svg>
-                <div class="chart-labels">
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px;">
+                    <button id="simulateNFC" class="save-btn" style="width: 100%;">Log Medication →</button>
+                    <a href="#medication" style="align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 4px;">View All →</a>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-box sage-box">
-                    <span class="stat-value">3.6</span>
-                    <span class="stat-label">Avg Mood</span>
+            <!-- Columns 3 (Spans Rows 1 & 2): Trends & Analytics -->
+            <div class="card detail-card analytics-card" style="display: flex; flex-direction: column;">
+                <div class="card-header-flex">
+                    <h3>Trends & Analytics</h3>
+                    <img src="assets/trends icon.svg" alt="Trends Icon" class="nav-icon">
                 </div>
-                <div class="stat-box gold-box">
-                    <span class="stat-value">68%</span>
-                    <span class="stat-label">Positive Days</span>
-                </div>
-                <div class="stat-box terracotta-box">
-                    <span class="stat-value">12</span>
-                    <span class="stat-label">Tracks Logged</span>
-                </div>
-            </div>
 
-            <button class="outline-btn">View Detailed Analytics →</button>
-        </div>
+                <span class="section-subtitle">This Week's Overview</span>
+
+                <div class="chart-container">
+                    <svg viewBox="0 0 350 100" class="trend-svg">
+                        <polyline fill="none" stroke="#A7AF8B" stroke-width="3" points="10,80 60,60 110,70 160,30 210,60 260,40 310,20" />
+                        <circle cx="310" cy="20" r="5" fill="#56613B" />
+                    </svg>
+                    <div class="chart-labels">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box sage-box">
+                        <span class="stat-value">3.6</span>
+                        <span class="stat-label">Avg Mood</span>
+                    </div>
+                    <div class="stat-box gold-box">
+                        <span class="stat-value">68%</span>
+                        <span class="stat-label">Positive Days</span>
+                    </div>
+                    <div class="stat-box terracotta-box">
+                        <span class="stat-value">12</span>
+                        <span class="stat-label">Tracks Logged</span>
+                    </div>
+                </div>
+
+                <a href="#analytics" style="margin-top: auto; align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 10px;">View Detailed Analytics →</a>
+            </div>
 
         <!-- Row 2 Column 1: Journal & Prompts -->
-        <div class="card detail-card journal-details-card">
+        <div class="card detail-card journal-details-card" style="display: flex; flex-direction: column;">
             <div class="card-header-flex">
                 <h3>Journal</h3>
                 <img src="assets/journal icon.svg" alt="Journal Icon" class="nav-icon">
             </div>
 
-            <div class="prompt-box">
-                <span class="prompt-title">Prompt of the Week</span>
-                <p>What is one small win from this week that I want to celebrate?</p>
+            <!-- Active Prompt Box -->
+            <div class="prompt-box" style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span class="prompt-title">NEED INSPIRATION?</span>
+                    <button type="button" id="shufflePromptBtn" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.8rem; font-weight: 600;"> Shuffle</button>
+                </div>
+                <p id="dashboardPromptText" style="font-style: italic; margin-bottom: 8px;">What is one small win from today that I want to celebrate?</p>
+                <button id="writeWithPromptBtn" class="outline-btn" style="width: 100%; font-size: 0.8rem; padding: 6px; color: var(--olive); border-color: var(--sage);">Write about this →</button>
             </div>
 
+            <!-- Recent Entries Container -->
             <div class="recent-entries">
                 <span class="section-subtitle">Recent Entries</span>
-                <div class="entry-row">
-                    <div>
-                        <strong>May 12, 2024</strong>
-                        <p>Felt more present today...</p>
-                    </div>
-                    <span class="chevron">›</span>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px;">
+                <button id="freeWriteBtn" class="save-btn" style="width: 100%;">Free Write →</button>
+                <a href="#journal" style="align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 4px;">View All →</a>
+            </div>
+        </div>
+
+            <!-- Row 2 Column 2: Music Insights -->
+            <div class="card nav-card music-card" style="display: flex; flex-direction: column;">
+                <div class="card-header-flex">
+                    <h3>Music Insights</h3>
+                    <img src="assets/music icon.svg" alt="Music Icon" class="nav-icon">
                 </div>
+                <p style="font-size: 0.85rem;">Your recent tracks and mood correlations.</p>
+                <a href="#music" style="margin-top: auto; align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600;">View Insights →</a>
             </div>
-
-            <button class="outline-btn">Open Journal →</button>
         </div>
-
-        <!-- Row 2 Column 2: Music Insights -->
-        <div class="card nav-card music-card">
-            <div class="card-header-flex">
-                <h3>Music Insights</h3>
-                <img src="assets/music icon.svg" alt="Music Icon" class="nav-icon">
-            </div>
-            <p>Your recent tracks and mood correlations.</p>
-            <button class="pill-btn olive-btn">View Insights →</button>
-        </div>
-
     </div>
 
-    <!-- Modal for Medication Logging -->
+    <!-- HASH SUB-PAGES -->
+    <div id="subpage-view" style="display: none; padding: 20px; max-width: 800px; margin: 0 auto; font-size: 0.85rem;">
+        <a href="#" class="save-btn" style="display: inline-block; margin-bottom: 20px; text-decoration: none; font-size: 0.85rem;">← Back to Dashboard</a>
+        <div class="card" style="padding: 20px;">
+            <h2 id="page-title" style="margin-bottom: 15px; font-size: 1.15rem; color: var(--olive);">History</h2>
+            <div id="page-content"></div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Log Medication Modal -->
     <div id="medModal" class="modal">
       <div class="modal-content">
         <span class="close">&times;</span>
@@ -145,7 +164,53 @@
       </div>
     </div>
 
-    <!-- Supabase Client Library -->
+<!-- Modal for New Journal Entry -->
+<div id="journalModal" class="modal">
+  <div class="modal-content">
+    <span class="close-journal close">&times;</span>
+    <h3>Journal Entry</h3>
+    
+    <!-- Dynamic Prompt Banner (Shown when writing with prompt) -->
+    <div id="modalPromptContainer" class="prompt-box" style="margin-bottom: 15px;">
+      <span class="prompt-title">INSPIRATION PROMPT</span>
+      <p id="modalPromptText" style="margin-top: 4px; font-style: italic; color: var(--primary-text);"></p>
+    </div>
+
+    <form id="journalForm">
+      <div class="notes">
+        <textarea id="journalResponse" rows="5" placeholder="Write your reflection here..." required style="width: 100%; box-sizing: border-box;"></textarea>
+      </div>
+      <button type="submit" class="save-btn" style="margin-top: 15px; width: 100%;">Save Reflection</button>
+    </form>
+  </div>
+</div>
+
+    <!-- View & Edit Single Journal Entry Modal (Read-Only Prompt) -->
+    <div id="journalEditModal" class="modal">
+      <div class="modal-content">
+        <span id="closeEditJournal" class="close">&times;</span>
+        <h3 id="editModalDate">Journal Entry</h3>
+        
+        <!-- Read-Only Prompt Box -->
+        <div class="prompt-box" style="margin-bottom: 15px;">
+          <span class="prompt-title">PROMPT</span>
+          <p id="editJournalPromptText" style="margin-top: 4px; font-style: italic; color: var(--primary-text);"></p>
+        </div>
+
+        <form id="editJournalForm">
+          <input type="hidden" id="editJournalId">
+          <div class="notes">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--olive);">Your Reflection</label>
+            <textarea id="editJournalResponse" rows="5" style="width: 100%; margin-top: 4px;" required></textarea>
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button type="submit" class="save-btn" style="flex: 2;">Update Entry</button>
+            <button type="button" id="deleteModalEntryBtn" style="flex: 1; background: var(--terracotta); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
