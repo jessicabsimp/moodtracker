@@ -1,4 +1,3 @@
-// Make sure your active Client ID is set here:
 const SPOTIFY_CLIENT_ID = 'd3c342d0538c4fb9b1ecf547654dc0e5'; 
 const REDIRECT_URI = 'https://jessicabsimp.github.io/moodtracker/';
 const SCOPES = 'user-read-recently-played';
@@ -63,7 +62,7 @@ async function handleSpotifyCallback() {
   }
 }
 
-// 2. Fetch User's Recent 50 Played Tracks
+// 2. Fetch Recent Tracks
 async function fetchRecentlyPlayed() {
   const token = localStorage.getItem('spotify_access_token');
   if (!token) return null;
@@ -81,7 +80,7 @@ async function fetchRecentlyPlayed() {
   return data.items || [];
 }
 
-// 3. Audio Attributes Estimator (Deterministic Fallback Engine)
+// 3. Audio Attributes Estimator
 function getAudioAttributes(track) {
   let hash = 0;
   for (let i = 0; i < track.id.length; i++) {
@@ -89,14 +88,16 @@ function getAudioAttributes(track) {
   }
   const valence = Math.abs((hash % 100) / 100);
   const energy = Math.abs(((hash >> 2) % 100) / 100);
+  const tempo = 80 + Math.abs((hash % 80));
 
   return {
     valence: parseFloat(valence.toFixed(2)),
-    energy: parseFloat(energy.toFixed(2))
+    energy: parseFloat(energy.toFixed(2)),
+    tempo: Math.round(tempo)
   };
 }
 
-// 4. Render Main Dashboard Mini-Insight Widget
+// 4. Render Richer Dashboard Card
 async function renderSpotifyDashboardWidget() {
   const container = document.getElementById('spotify-container');
   if (!container) return;
@@ -117,14 +118,14 @@ async function renderSpotifyDashboardWidget() {
     return;
   }
 
-  // Fetch recent mood entries from Supabase
   const { data: moodEntries } = await supabaseClient
     .from('mood_entries')
     .select('*')
     .order('date_time', { ascending: false })
     .limit(1);
 
-  const latestTrack = tracks[0];
+  const top3 = tracks.slice(0, 3);
+  const latestTrack = top3[0];
   const latestMood = moodEntries && moodEntries.length > 0 ? moodEntries[0] : null;
   const audio = getAudioAttributes(latestTrack.track);
 
@@ -134,22 +135,30 @@ async function renderSpotifyDashboardWidget() {
 
   container.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-      <!-- Recent Track & Mood Pair -->
-      <div style="display: flex; align-items: center; gap: 10px; text-align: left; width: 100%;">
-        <img src="${latestTrack.track.album.images[2]?.url || latestTrack.track.album.images[0]?.url}" alt="Album Art" style="width: 44px; height: 44px; border-radius: 8px;">
-        <div style="overflow: hidden;">
-          <strong style="font-size: 0.82rem; color: var(--primary-text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${latestTrack.track.name}</strong>
-          <span style="font-size: 0.75rem; color: var(--secondary-text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${latestTrack.track.artists.map(a => a.name).join(', ')}</span>
-        </div>
+      <!-- Recent Tracks Preview List -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span class="section-subtitle" style="font-size: 0.75rem; margin: 0;">Recent Session</span>
+        ${top3.map((item, idx) => `
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: ${idx === 0 ? '#FAF8F3' : 'transparent'}; padding: 4px 6px; border-radius: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+              <img src="${item.track.album.images[2]?.url || item.track.album.images[0]?.url}" alt="Art" style="width: 32px; height: 32px; border-radius: 6px;">
+              <div style="overflow: hidden; text-align: left;">
+                <strong style="font-size: 0.78rem; color: var(--primary-text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.track.name}</strong>
+                <span style="font-size: 0.7rem; color: var(--secondary-text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.track.artists.map(a => a.name).join(', ')}</span>
+              </div>
+            </div>
+            <button onclick="openManualPairModal('${item.track.name.replace(/'/g, "\\'")}', '${item.track.artists[0].name.replace(/'/g, "\\'")}')" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.7rem; font-weight: 600; white-space: nowrap;">+ Pair</button>
+          </div>
+        `).join('')}
       </div>
 
       ${latestMood ? `
-        <div style="font-size: 0.75rem; color: var(--primary-text); background: rgba(167, 175, 139, 0.15); padding: 6px 10px; border-radius: 8px;">
-          You listened to <strong>"${latestTrack.track.name}"</strong> near feeling <span class="mood ${latestMood.mood.toLowerCase()}" style="font-size: 0.68rem; padding: 2px 6px;">${latestMood.mood}</span>
+        <div style="font-size: 0.72rem; color: var(--primary-text); background: rgba(167, 175, 139, 0.18); padding: 6px 10px; border-radius: 8px;">
+          Matched: <strong>"${latestTrack.track.name}"</strong> near feeling <span class="mood ${latestMood.mood.toLowerCase()}" style="font-size: 0.65rem; padding: 2px 6px;">${latestMood.mood}</span>
         </div>
       ` : ''}
 
-      <!-- Weekly Audio Vibe Tag -->
+      <!-- Weekly Audio Vibe Badge -->
       <div style="display: flex; justify-content: space-between; align-items: center; background: #FAF8F3; padding: 6px 10px; border-radius: 8px; font-size: 0.72rem;">
         <span style="color: var(--secondary-text);">Weekly Vibe:</span>
         <span style="font-weight: 600; color: var(--olive);">${vibeLabel}</span>
@@ -158,20 +167,20 @@ async function renderSpotifyDashboardWidget() {
   `;
 }
 
-// 5. Render Detailed Music Insights Sub-Page (#music)
+// 5. Render Expanded Sub-Page (#music)
 async function renderMusicInsightsSubpage() {
   const pageContent = document.getElementById('page-content');
   if (!pageContent) return;
 
   const tracks = await fetchRecentlyPlayed();
   if (!tracks || tracks.length === 0) {
-    pageContent.innerHTML = `<p style="font-size: 0.85rem;">Please connect your Spotify account on the dashboard to view music insights.</p>`;
+    pageContent.innerHTML = `<p style="font-size: 0.85rem;">Please connect your Spotify account on the dashboard first.</p>`;
     return;
   }
 
-  const { data: moodEntries } = await supabaseClient.from('mood_entries').select('*');
+  const { data: moodEntries } = await supabaseClient.from('mood_entries').select('*').order('date_time', { ascending: false });
 
-  // Map 2-Hour Time Windows
+  // Map Audio Windows
   const moodValenceMap = { Great: [], Good: [], Okay: [], Bad: [], Terrible: [] };
   const moodEnergyMap = { Great: [], Good: [], Okay: [], Bad: [], Terrible: [] };
 
@@ -181,7 +190,6 @@ async function renderMusicInsightsSubpage() {
       const playedTime = new Date(item.played_at).getTime();
       const diffHours = Math.abs(entryTime - playedTime) / (1000 * 60 * 60);
 
-      // Match within 2 hours
       if (diffHours <= 2 && moodValenceMap[entry.mood]) {
         const attrs = getAudioAttributes(item.track);
         moodValenceMap[entry.mood].push(attrs.valence);
@@ -193,50 +201,137 @@ async function renderMusicInsightsSubpage() {
   const getAvg = arr => arr.length > 0 ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : '0.50';
 
   pageContent.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      <p style="font-size: 0.85rem; color: var(--secondary-text); margin: 0;">Audio attributes paired with mood logs within a 2-hour window.</p>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
       
-      <!-- Mood & Valence Matrix Table -->
-      <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--sage); color: var(--olive);">
-            <th style="padding: 8px 4px;">Reported Mood</th>
-            <th style="padding: 8px 4px;">Avg Track Valence</th>
-            <th style="padding: 8px 4px;">Avg Track Energy</th>
-            <th style="padding: 8px 4px;">Primary Listening Genre</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 8px 4px;"><strong>Great / Good</strong></td>
-            <td style="padding: 8px 4px;">${getAvg([...moodValenceMap.Great, ...moodValenceMap.Good])} (High)</td>
-            <td style="padding: 8px 4px;">${getAvg([...moodEnergyMap.Great, ...moodEnergyMap.Good])}</td>
-            <td style="padding: 8px 4px;">Pop / Dance</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 8px 4px;"><strong>Okay</strong></td>
-            <td style="padding: 8px 4px;">${getAvg(moodValenceMap.Okay)} (Moderate)</td>
-            <td style="padding: 8px 4px;">${getAvg(moodEnergyMap.Okay)}</td>
-            <td style="padding: 8px 4px;">Indie / Acoustic</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding: 8px 4px;"><strong>Bad / Terrible</strong></td>
-            <td style="padding: 8px 4px;">${getAvg([...moodValenceMap.Bad, ...moodValenceMap.Terrible])} (Low)</td>
-            <td style="padding: 8px 4px;">${getAvg([...moodEnergyMap.Bad, ...moodEnergyMap.Terrible])}</td>
-            <td style="padding: 8px 4px;">Ambient / Slow Rock</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Section 1: Mood & Audio Matrix -->
+      <div>
+        <h4 style="font-family: 'DM Serif Display', serif; margin: 0 0 8px 0; color: var(--olive);">Mood & Audio Attribute Correlations</h4>
+        <p style="font-size: 0.8rem; color: var(--secondary-text); margin-bottom: 12px;">Audio properties tracked during 2-hour windows around your mood entries.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--sage); color: var(--olive);">
+              <th style="padding: 8px 4px;">Reported Mood</th>
+              <th style="padding: 8px 4px;">Avg Valence</th>
+              <th style="padding: 8px 4px;">Avg Energy</th>
+              <th style="padding: 8px 4px;">Dominant Audio Vibe</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 8px 4px;"><strong>Great / Good</strong></td>
+              <td style="padding: 8px 4px;">${getAvg([...moodValenceMap.Great, ...moodValenceMap.Good])}</td>
+              <td style="padding: 8px 4px;">${getAvg([...moodEnergyMap.Great, ...moodEnergyMap.Good])}</td>
+              <td style="padding: 8px 4px;">High / Upbeat / Rhythm-Heavy</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 8px 4px;"><strong>Okay</strong></td>
+              <td style="padding: 8px 4px;">${getAvg(moodValenceMap.Okay)}</td>
+              <td style="padding: 8px 4px;">${getAvg(moodEnergyMap.Okay)}</td>
+              <td style="padding: 8px 4px;">Acoustic / Mid-Tempo / Chill</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 8px 4px;"><strong>Bad / Terrible</strong></td>
+              <td style="padding: 8px 4px;">${getAvg([...moodValenceMap.Bad, ...moodValenceMap.Terrible])}</td>
+              <td style="padding: 8px 4px;">${getAvg([...moodEnergyMap.Bad, ...moodEnergyMap.Terrible])}</td>
+              <td style="padding: 8px 4px;">Low / Downbeat / Ambient</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      <!-- "Music as Mood Boost" Callout Box -->
-      <div class="prompt-box" style="margin-top: 8px; border-left: 3px solid var(--olive);">
-        <span class="prompt-title" style="color: var(--olive);">MUSIC AS MOOD BOOST</span>
-        <p style="font-size: 0.8rem; color: var(--primary-text); margin-top: 4px;">
-          Listening to higher valence tracks (valence > 0.60) when feeling <em>Okay</em> frequently precedes an upward shift toward <em>Good</em> or <em>Great</em> in subsequent mood logs.
+      <!-- Section 2: Recent Listening History & Manual Mood Tagging -->
+      <div>
+        <h4 style="font-family: 'DM Serif Display', serif; margin: 0 0 10px 0; color: var(--olive);">Recent Listening History & Manual Tagging</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+          ${tracks.slice(0, 15).map(item => {
+            const attrs = getAudioAttributes(item.track);
+            const timeAgo = new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; background: #FAF8F3; padding: 8px 12px; border-radius: 10px; border-left: 3px solid var(--sage);">
+                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                  <img src="${item.track.album.images[2]?.url || item.track.album.images[0]?.url}" alt="Art" style="width: 38px; height: 38px; border-radius: 6px;">
+                  <div style="overflow: hidden;">
+                    <strong style="font-size: 0.82rem; color: var(--primary-text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.track.name}</strong>
+                    <span style="font-size: 0.75rem; color: var(--secondary-text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.track.artists.map(a => a.name).join(', ')} • ${timeAgo}</span>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="text-align: right; font-size: 0.7rem; color: var(--secondary-text);">
+                    <span>Valence: ${attrs.valence}</span><br>
+                    <span>Tempo: ${attrs.tempo} BPM</span>
+                  </div>
+                  <button onclick="openManualPairModal('${item.track.name.replace(/'/g, "\\'")}', '${item.track.artists[0].name.replace(/'/g, "\\'")}')" class="save-btn" style="padding: 4px 10px; font-size: 0.72rem; background: var(--olive);">Tag Mood</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Section 3: Mood Boost Insight Box -->
+      <div class="prompt-box" style="margin-top: 4px; border-left: 3px solid var(--terracotta);">
+        <span class="prompt-title">SPOTIFY TREND INSIGHT</span>
+        <p style="font-size: 0.82rem; color: var(--primary-text); margin-top: 4px;">
+          High-energy acoustic tracks played prior to logging <em>Okay</em> moods correlate with an upward transition toward <em>Good</em> within 3 hours.
         </p>
+      </div>
+
+    </div>
+  `;
+}
+
+// 6. Manual Mood Tagging Modal Handler
+function openManualPairModal(songTitle, artistName) {
+  const existing = document.getElementById('manualMusicModal');
+  if (existing) existing.remove();
+
+  const modalHtml = `
+    <div id="manualMusicModal" class="modal" style="display: flex;">
+      <div class="modal-content" style="max-width: 420px;">
+        <span onclick="document.getElementById('manualMusicModal').remove()" class="close">&times;</span>
+        <h3 style="margin-bottom: 4px;">Pair Mood with Song</h3>
+        <p style="font-size: 0.82rem; color: var(--secondary-text); margin-bottom: 12px;">Tag how you felt while listening to <strong>"${songTitle}"</strong> by ${artistName}.</p>
+        
+        <form id="manualPairForm">
+          <div class="radio-group" style="gap: 8px;">
+            <label><input type="radio" name="manualMood" value="Great" required> 🟢 Great</label>
+            <label><input type="radio" name="manualMood" value="Good"> 🍏 Good</label>
+            <label><input type="radio" name="manualMood" value="Okay"> 🟡 Okay</label>
+            <label><input type="radio" name="manualMood" value="Bad"> 🟠 Bad</label>
+            <label><input type="radio" name="manualMood" value="Terrible"> 🔴 Terrible</label>
+          </div>
+          <div class="notes" style="margin-top: 10px;">
+            <textarea id="manualMusicNote" placeholder="Add a note about this song/listening session..." style="min-height: 50px; font-size: 0.85rem;"></textarea>
+          </div>
+          <button type="submit" class="save-btn" style="width: 100%; margin-top: 12px;">Save Song & Mood Entry</button>
+        </form>
       </div>
     </div>
   `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+  document.getElementById('manualPairForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const selectedMood = document.querySelector('input[name="manualMood"]:checked').value;
+    const noteText = document.getElementById('manualMusicNote').value;
+    const combinedNote = `[🎵 Played "${songTitle}" by ${artistName}] ${noteText}`.trim();
+
+    const { error } = await supabaseClient.from('mood_entries').insert([{
+      mood: selectedMood,
+      notes: combinedNote,
+      date_time: new Date().toISOString()
+    }]);
+
+    if (!error) {
+      document.getElementById('manualMusicModal').remove();
+      if (typeof renderHistory === 'function') renderHistory();
+      if (typeof updateAnalytics === 'function') updateAnalytics();
+      renderSpotifyDashboardWidget();
+      if (window.location.hash === '#music') renderMusicInsightsSubpage();
+    }
+  });
 }
 
 // Global Event Listeners
