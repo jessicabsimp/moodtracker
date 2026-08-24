@@ -1,4 +1,4 @@
-const SPOTIFY_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID'; // Replace with your Spotify Client ID
+const SPOTIFY_CLIENT_ID = 'd3c342d0538c4fb9b1ecf547654dc0e5'; // Replace with your Spotify Client ID
 const REDIRECT_URI = 'https://jessicabsimp.github.io/moodtracker/';
 const SCOPES = 'user-read-recently-played';
 
