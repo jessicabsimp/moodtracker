@@ -6,6 +6,18 @@ const pageContent = document.getElementById('page-content');
 async function handleRouting() {
     const hash = window.location.hash;
 
+    // Handle NFC tag modal opening without switching to a subpage view
+    if (hash === '#log-dose') {
+        dashboardView.style.display = 'block';
+        subpageView.style.display = 'none';
+        
+        const medModal = document.getElementById('medModal');
+        if (medModal) {
+            medModal.style.display = 'flex';
+        }
+        return;
+    }
+
     if (!hash || hash === '#') {
         dashboardView.style.display = 'block';
         subpageView.style.display = 'none';
@@ -27,7 +39,7 @@ async function handleRouting() {
         renderFullMoodList();
     } else if (hash === '#analytics') {
         pageTitle.textContent = 'Detailed Analytics';
-        pageContent.innerHTML = '<p style="font-size: 0.85rem;">Detailed analytics and correlation views active!</p>';
+        renderFullAnalyticsPage(30);
     } else if (hash === '#music') {
         pageTitle.textContent = 'Music Insights';
         pageContent.innerHTML = '<p style="font-size: 0.85rem;">Spotify integrations coming soon in Phase 5!</p>';
@@ -143,24 +155,6 @@ pageContent.addEventListener('click', async (e) => {
         await updateAnalytics();
     }
 });
-
-// Add inside router listener in js/router.js:
-window.addEventListener('hashchange', handleRoute);
-
-function handleRoute() {
-    const hash = window.location.hash;
-    const dashboardView = document.getElementById('dashboard-view');
-    const subpageView = document.getElementById('subpage-view');
-
-    if (hash === '#analytics') {
-        dashboardView.style.display = 'none';
-        subpageView.style.display = 'block';
-        renderFullAnalyticsPage(30); // Default to 30 days view
-    } else if (hash === '' || hash === '#') {
-        dashboardView.style.display = 'block';
-        subpageView.style.display = 'none';
-    }
-}
 
 window.addEventListener('hashchange', handleRouting);
 window.addEventListener('DOMContentLoaded', handleRouting);
