@@ -84,3 +84,11 @@ A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, an
   - Fetch user's recent 50 played tracks via Spotify REST API (`/v1/me/player/recently-played`).
 - [ ] **Mood & Music Correlation**:
   - Match track play timestamps with mood entry timestamps to display song/mood pairs in the Music card.
+
+
+
+
+
+
+
+  Change the icons for the notes section on the mood log, pair mood with song option, 

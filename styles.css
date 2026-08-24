@@ -585,3 +585,24 @@ body {
 .time-filter-btn:hover {
     transform: translateY(-1px);
 }
+
+.note-toggle {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.note-toggle summary {
+    list-style: none; /* Hides standard arrow icon */
+    font-size: 1rem;
+    user-select: none;
+}
+
+.note-toggle summary::-webkit-details-marker {
+    display: none; /* Hides Safari arrow */
+}
+
+.note-content {
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: var(--olive); /* Uses dashboard theme palette */
+}

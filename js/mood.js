@@ -17,9 +17,18 @@ async function renderHistory() {
     entries.forEach(entry => {
         const entryElement = document.createElement('div');
         entryElement.className = 'entry';
+        
+        // Conditionally render the note toggle only if entry.notes exists
+        const notesHTML = entry.notes 
+            ? `<details class="note-toggle">
+                 <summary title="View Note">📝</summary>
+                 <p class="note-content">${entry.notes}</p>
+               </details>`
+            : '';
+
         entryElement.innerHTML = `
             <span class="mood ${entry.mood.toLowerCase()}">${entry.mood}</span>
-            <p>${entry.notes || ''}</p>
+            ${notesHTML}
             <span class="dateTime">${formatDate(entry.date_time)}</span>
             <button class="delete" data-id="${entry.id}">Delete</button>
         `;
