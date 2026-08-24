@@ -40,9 +40,9 @@ async function handleRouting() {
     } else if (hash === '#analytics') {
         pageTitle.textContent = 'Detailed Analytics';
         renderFullAnalyticsPage(30);
-    } else if (hash === '#music') {
-        pageTitle.textContent = 'Music Insights';
-        pageContent.innerHTML = '<p style="font-size: 0.85rem;">Spotify integrations coming soon in Phase 5!</p>';
+   } else if (hash === '#music') {
+    pageTitle.textContent = 'Music & Mood Correlation Insights';
+    renderMusicInsightsSubpage();
     }
 }
 
