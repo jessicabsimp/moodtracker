@@ -158,32 +158,50 @@
                             </div>
                         </div>
 
-                        <!-- Dynamic Habit Rows Container (Spans Full Width) -->
+                        <!-- Dynamic Habit Rows Container -->
                         <div id="habitMatrixRows" style="display: flex; flex-direction: column; gap: 10px; background: #FAF8F3; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; overflow-x: auto;">
                             <!-- Dynamic Rows rendered via JavaScript -->
                         </div>
                     </div>
 
-                    <!-- EMBEDDED MUSIC INSIGHTS SECTION (COMPACT BOTTOM STRIP) -->
+                    <!-- EMBEDDED SPOTIFY SECTION (1-2 COLUMN SPLIT LAYOUT) -->
                     <div class="music-analytics-section" style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span class="section-subtitle" style="margin: 0;">Audio & Mood Correlations</span>
                             <a href="#music" style="color: var(--terracotta); text-decoration: none; font-size: 0.78rem; font-weight: 600;">Full Music Insights →</a>
                         </div>
 
-                        <div id="spotify-container" style="display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; background: #FAF8F3; border-radius: 12px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #1DB954; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">🎵</div>
+                        <!-- 1-2 Split: Left Vibe (1/3) vs Right Sessions (2/3) -->
+                        <div class="spotify-split-grid">
+                            
+                            <!-- Left Column: Weekly Vibe Badge Card (1/3 Width) -->
+                            <div class="spotify-vibe-card">
+                                <span class="prompt-title" style="font-size: 0.68rem; color: #1DB954;">AUDIO VIBE</span>
+                                <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.4rem;">🎧</span>
                                     <div>
-                                        <strong style="font-size: 0.8rem; color: var(--primary-text); display: block;">Connect Spotify</strong>
-                                        <span style="font-size: 0.7rem; color: var(--secondary-text);">Discover audio & mood correlations</span>
+                                        <strong id="spotifyVibeTitle" style="font-size: 0.85rem; color: var(--primary-text); display: block;">Mellow Acoustic</strong>
+                                        <span id="spotifyVibeSubtitle" style="font-size: 0.7rem; color: var(--secondary-text);">High correlation with "Great" mood</span>
                                     </div>
                                 </div>
-                                <button id="connectSpotifyBtn" class="pill-btn" style="background-color: #1DB954; font-size: 0.75rem; padding: 6px 14px;">
-                                    Connect Account
-                                </button>
                             </div>
+
+                            <!-- Right Column: Recent Sessions Container (2/3 Width) -->
+                            <div id="spotify-container" class="spotify-session-card">
+                                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #1DB954; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; flex-shrink: 0;">🎵</div>
+                                        <div>
+                                            <strong style="font-size: 0.8rem; color: var(--primary-text); display: block;">Recent Sessions</strong>
+                                            <span style="font-size: 0.7rem; color: var(--secondary-text);">Connect account to fetch 50 recently played tracks</span>
+                                        </div>
+                                    </div>
+                                    <button id="connectSpotifyBtn" class="pill-btn" style="background-color: #1DB954; font-size: 0.75rem; padding: 6px 14px; flex-shrink: 0;">
+                                        Connect Account
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 

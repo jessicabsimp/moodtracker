@@ -347,13 +347,40 @@ body {
 .matrix-dot.active-journal { background-color: var(--terracotta); }
 .matrix-dot.active-custom { background-color: var(--sage); }
 
-/* Embedded Spotify Section (Compact Bottom Strip) */
+/* Embedded Spotify Section Split Layout (1/3 vs 2/3 Split) */
 .music-analytics-section {
     display: flex;
     flex-direction: column;
     margin-top: auto;
     padding-top: 10px;
     border-top: 1px solid var(--border-color);
+}
+
+.spotify-split-grid {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    width: 100%;
+}
+
+.spotify-vibe-card {
+    flex: 1;
+    background: #FAF8F3;
+    border-radius: 12px;
+    padding: 10px 12px;
+    border-left: 3px solid #1DB954;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.spotify-session-card {
+    flex: 2;
+    background: #FAF8F3;
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
 }
 
 /* Compact Mood Tracker Form */
@@ -665,7 +692,8 @@ body {
     body { 
         padding: 16px; 
     }
-    .analytics-split-container {
+    .analytics-split-container,
+    .spotify-split-grid {
         flex-direction: column;
     }
 }
