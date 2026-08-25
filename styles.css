@@ -21,31 +21,39 @@ body {
     color: var(--primary-text);
     font-family: 'Inter', sans-serif;
     margin: 0;
-    padding: 32px;
+    padding: 24px;
 }
 
-/* Dashboard Grid Architecture (3 Columns) */
+/* Dashboard Grid Architecture (2 Columns, 3 Rows Layout) */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
     max-width: 1300px;
     margin: 0 auto;
     align-items: stretch;
 }
 
-/* Card Column Spans */
-.mood-tracker-card,
-.med-details-card,
-.journal-details-card,
-.music-card {
-    grid-column: span 1;
+/* Left Column Cards (Stacked Vertically in Column 1) */
+.mood-tracker-card {
+    grid-column: 1;
+    grid-row: 1;
 }
 
-/* Tall Analytics Card Spanning 2 Rows */
+.med-details-card {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.journal-details-card {
+    grid-column: 1;
+    grid-row: 3;
+}
+
+/* Right Column Card (Spans All 3 Rows) */
 .analytics-card {
-    grid-column: span 1;
-    grid-row: span 2;
+    grid-column: 2;
+    grid-row: 1 / span 3;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -53,21 +61,21 @@ body {
     box-sizing: border-box;
 }
 
-/* Base Card Styling */
+/* Compact Base Card Styling for Left Column */
 .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 24px;
+    border-radius: 18px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
     overflow: hidden;
-    min-height: 280px;
+    min-height: auto;
 
     /* Warm Organic Soft Shadow */
-    box-shadow: 0 8px 24px rgba(44, 48, 34, 0.07), 0 2px 6px rgba(44, 48, 34, 0.04);
+    box-shadow: 0 6px 20px rgba(44, 48, 34, 0.06), 0 2px 4px rgba(44, 48, 34, 0.03);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -76,7 +84,7 @@ body {
 .card h3 {
     font-family: 'DM Serif Display', serif;
     color: var(--primary-text);
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     margin: 0;
 }
 
@@ -85,35 +93,65 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     width: 100%;
 }
 
 .section-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--secondary-text);
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: block;
 }
 
 /* Uniform Icon Sizes */
 .nav-icon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     object-fit: contain;
 }
 
-/* Header Title & Icon Alignment */
-.title-with-icon {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.card-view-all {
+    margin-top: auto;
+    align-self: flex-end;
+    color: var(--terracotta);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding-top: 6px;
 }
 
-.title-with-icon h2,
-.title-with-icon h3 {
-    margin: 0;
+/* Analytics Card Layout Infrastructure */
+.analytics-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+/* Analytics Split Container (Top Row: 2/3 Graph vs 1/3 Stats Side) */
+.analytics-split-container {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    width: 100%;
+}
+
+/* Left Main Column (2/3 width) */
+.analytics-main-col {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Right Side Column (1/3 width) */
+.analytics-side-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-start;
 }
 
 /* Analytics Badges */
@@ -124,33 +162,32 @@ body {
 }
 
 .analytics-badge {
-    padding: 4px 10px;
+    padding: 3px 8px;
     border-radius: 12px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
 }
 
 .sage-badge { background: #EFEFE9; color: var(--olive); }
 .gold-badge { background: #FAF3E3; color: #9E7422; }
 
-/* Expanded SVG Chart Styling */
+/* SVG Chart Styling (140px Canvas) */
 .chart-container {
     background: #FAF8F3;
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
-    margin-bottom: 16px;
 }
 
 .trend-svg { 
     width: 100%; 
-    height: 120px; 
+    height: 140px; 
 }
 
 .y-axis-labels {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 120px;
+    height: 140px;
     font-size: 0.65rem;
     color: var(--secondary-text);
     font-weight: 600;
@@ -199,9 +236,15 @@ body {
     margin-bottom: 16px;
 }
 
+.stats-grid-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
 .stat-box {
-    padding: 12px;
-    border-radius: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -211,8 +254,8 @@ body {
 .gold-box { background: #FAF3E3; }
 .terracotta-box { background: #F8EBE6; }
 
-.stat-value { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--primary-text); }
-.stat-label { font-size: 0.7rem; color: var(--secondary-text); text-align: center; }
+.stat-value { font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--primary-text); }
+.stat-label { font-size: 0.65rem; color: var(--secondary-text); text-align: center; }
 
 /* Mood Distribution Bar */
 .mood-bar-container {
@@ -234,20 +277,91 @@ body {
 .good-seg { background-color: var(--sage); }
 .low-seg { background-color: var(--terracotta); }
 
-/* Weekly Insight Box */
+/* Compact Weekly Insight Box */
 .insight-box {
     background: #FAF8F3;
-    padding: 12px 14px;
-    border-radius: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
     border-left: 3px solid var(--sage);
+    height: auto !important;
+    flex: 0 0 auto !important;
 }
 
-/* Mood Tracker Form */
+/* Full-Width Minimalist Habit Dot Matrix Styling */
+.habit-matrix-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.habit-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--primary-text);
+    width: 110px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.habit-dots-flex {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Faint Vertical Line Separator Between Calendar Weeks */
+.week-separator {
+    width: 1px;
+    height: 14px;
+    background-color: var(--border-color);
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+.matrix-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #EFEFE9;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.matrix-dot:hover {
+    transform: scale(1.35);
+}
+
+/* Habit Fill Colors */
+.matrix-dot.active-mood { background-color: var(--olive); }
+.matrix-dot.active-med { background-color: var(--gold); }
+.matrix-dot.active-journal { background-color: var(--terracotta); }
+.matrix-dot.active-custom { background-color: var(--sage); }
+
+/* Embedded Spotify Section (Compact Bottom Strip) */
+.music-analytics-section {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Compact Mood Tracker Form */
 #moodForm {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-top: 12px;
+    gap: 10px;
+    margin-top: 6px;
 }
 
 .mood-buttons {
@@ -261,12 +375,12 @@ body {
 .mood-btn {
     flex: 1;
     border: none;
-    padding: 6px 2px;
-    border-radius: 20px;
+    padding: 5px 2px;
+    border-radius: 16px;
     font-weight: 600;
     color: white;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-align: center;
     opacity: 0.85;
     transition: all 0.2s ease;
@@ -288,29 +402,30 @@ body {
 .notes textarea {
     width: 100%;
     box-sizing: border-box;
-    padding: 12px;
-    border-radius: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
     background-color: #FAF8F3;
     color: var(--primary-text);
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     resize: vertical;
-    min-height: 70px;
+    min-height: 48px;
 }
 
 .datetime-submit {
     display: flex;
-    gap: 12px;
+    gap: 8px;
 }
 
 .datetime-submit input {
     flex: 1;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     background-color: #FAF8F3;
     font-family: inherit;
+    font-size: 0.8rem;
     color: var(--primary-text);
 }
 
@@ -318,16 +433,17 @@ body {
     background-color: var(--olive);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 8px 14px;
+    border-radius: 8px;
     font-weight: 600;
+    font-size: 0.82rem;
     cursor: pointer;
 }
 
 /* History List */
 #history {
-    margin-top: 16px;
-    max-height: 200px;
+    margin-top: 12px;
+    max-height: 160px;
     overflow-y: auto;
     padding-right: 6px;
 }
@@ -336,17 +452,17 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
 
 .entry .mood {
     color: white !important;
     font-weight: 600;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 20px;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 16px;
     text-transform: capitalize;
 }
 
@@ -360,13 +476,13 @@ body {
     margin: 0;
     color: var(--primary-text);
     flex: 1;
-    padding: 0 12px;
+    padding: 0 10px;
 }
 
 .entry .dateTime {
     color: var(--secondary-text);
-    font-size: 0.8rem;
-    margin-right: 12px;
+    font-size: 0.75rem;
+    margin-right: 8px;
 }
 
 .entry button.delete,
@@ -375,10 +491,10 @@ body {
     border: none;
     color: var(--terracotta);
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
     transition: background 0.2s ease;
 }
 
@@ -391,17 +507,17 @@ body {
 #med-log-history {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-    max-height: 180px;
+    gap: 6px;
+    margin-bottom: 10px;
+    max-height: 140px;
     overflow-y: auto;
 }
 
 .log-item {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background: #FAF8F3;
-    border-radius: 10px;
-    font-size: 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
     border-left: 3px solid var(--olive);
     color: var(--primary-text);
     display: flex;
@@ -412,55 +528,55 @@ body {
 /* Prompts & Journal */
 .prompt-box {
     background: #FAF8F3;
-    padding: 14px 16px;
-    border-radius: 12px;
-    margin-bottom: 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
     border-left: 3px solid var(--terracotta);
 }
 
 .prompt-title {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--terracotta);
     font-weight: 700;
     text-transform: uppercase;
 }
 
 .prompt-box p {
-    margin: 4px 0 0 0;
+    margin: 3px 0 0 0;
     font-style: italic;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
-.recent-entries { margin-bottom: 16px; }
+.recent-entries { margin-bottom: 12px; }
 
 .entry-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid var(--border-color);
 }
 
-.entry-row strong { font-size: 0.8rem; display: block; }
-.entry-row p { margin: 0; font-size: 0.8rem; color: var(--secondary-text); }
+.entry-row strong { font-size: 0.78rem; display: block; }
+.entry-row p { margin: 0; font-size: 0.78rem; color: var(--secondary-text); }
 .chevron { color: var(--secondary-text); }
 
 #journalModal textarea#journalResponse,
 #journalEditModal textarea#editJournalResponse {
     width: 100%;
-    min-height: 220px;
-    font-size: 0.95rem;
-    padding: 12px;
+    min-height: 200px;
+    font-size: 0.9rem;
+    padding: 10px;
     box-sizing: border-box;
 }
 
 /* Buttons */
 .outline-btn {
     width: 100%;
-    padding: 10px;
+    padding: 8px;
     border: 1px solid var(--border-color);
     background: var(--card-bg);
-    border-radius: 10px;
+    border-radius: 8px;
     font-weight: 600;
     color: var(--primary-text);
     cursor: pointer;
@@ -469,10 +585,10 @@ body {
 .pill-btn {
     border: none;
     border-radius: 50px;
-    padding: 10px 18px;
+    padding: 8px 14px;
     color: white;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -503,8 +619,8 @@ body {
     background-color: var(--bg-color);
     position: relative;
     width: 90%;
-    max-width: 650px;
-    padding: 30px;
+    max-width: 600px;
+    padding: 24px;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
@@ -523,12 +639,12 @@ body {
 .radio-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin: 16px 0;
+    gap: 8px;
+    margin: 14px 0;
 }
 
 .radio-group label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -538,18 +654,6 @@ body {
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
     .dashboard-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-    }
-    .analytics-card { 
-        grid-row: span 1; 
-    }
-}
-
-@media (max-width: 600px) {
-    body { 
-        padding: 16px; 
-    }
-    .dashboard-grid { 
         grid-template-columns: 1fr; 
     }
     .analytics-card { 
@@ -557,12 +661,21 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    body { 
+        padding: 16px; 
+    }
+    .analytics-split-container {
+        flex-direction: column;
+    }
+}
+
 /* Time Filter Buttons */
 .time-filter-btn {
     border: 1px solid var(--border-color);
     border-radius: 50px;
-    padding: 8px 16px;
-    font-size: 0.8rem;
+    padding: 6px 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -592,17 +705,17 @@ body {
 }
 
 .note-toggle summary {
-    list-style: none; /* Hides standard arrow icon */
-    font-size: 1rem;
+    list-style: none;
+    font-size: 0.9rem;
     user-select: none;
 }
 
 .note-toggle summary::-webkit-details-marker {
-    display: none; /* Hides Safari arrow */
+    display: none;
 }
 
 .note-content {
     margin-top: 4px;
-    font-size: 0.875rem;
-    color: var(--olive); /* Uses dashboard theme palette */
+    font-size: 0.82rem;
+    color: var(--olive);
 }

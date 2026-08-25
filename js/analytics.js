@@ -2,17 +2,17 @@
 // 1. DASHBOARD ANALYTICS WIDGET ENGINE
 // ==========================================
 
-async function updateAnalytics() {
-    const statValues = document.querySelectorAll('.analytics-card .stat-value');
-    if (!statValues || statValues.length < 3) return;
+let selectedMonthOffset = 0; // 0 = This Month, -1 = Last Month
+let customHabits = JSON.parse(localStorage.getItem('user_custom_habits')) || ['Hydration 💧', 'Meditation 🧘'];
 
+async function updateAnalytics() {
     // A. Define 7-Day Rolling Window (6 days ago through today)
     const now = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(now.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // B. Query Supabase Datasets (Corrected to 'medication_log')
+    // B. Query Supabase Datasets
     const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
         supabaseClient.from('mood_entries').select('mood, date_time').gte('date_time', sevenDaysAgo.toISOString()),
         supabaseClient.from('medication_log').select('timestamp').gte('timestamp', sevenDaysAgo.toISOString()),
@@ -58,11 +58,14 @@ async function updateAnalytics() {
     });
 
     const overallAvgMood = totalMoodDays > 0 ? (sumOfDailyAverages / totalMoodDays).toFixed(1) : '0.0';
-    const positiveDaysPercent = totalMoodDays > 0 ? Math.round((positiveDaysCount / totalMoodDays) * 100) : 0;
 
-    statValues[0].textContent = overallAvgMood;
-    statValues[1].textContent = `${positiveDaysPercent}%`;
-    statValues[2].textContent = loggedDaysSet.size;
+    // Update target stat elements
+    const statValues = document.querySelectorAll('.analytics-card .stat-value');
+    const elemAvgMood = document.getElementById('avgMoodValue') || (statValues.length > 0 ? statValues[0] : null);
+    const elemDaysLogged = document.getElementById('daysLoggedValue') || (statValues.length > 1 ? statValues[1] : null);
+
+    if (elemAvgMood) elemAvgMood.textContent = overallAvgMood;
+    if (elemDaysLogged) elemDaysLogged.textContent = loggedDaysSet.size;
 
     // D. Render Mood Distribution Bar
     const totalMoodEntries = highCount + medCount + lowCount;
@@ -102,9 +105,10 @@ async function updateAnalytics() {
         }
     }
 
-    // F. Badges & SVG Graph
+    // F. Badges, SVG Graph & Monthly Habit Matrix
     updateBadges(loggedDaysSet, medLogs || []);
     renderTrendLine(moodEntries || []);
+    await renderHabitMatrix(selectedMonthOffset);
 }
 
 function updateBadges(loggedDaysSet, medLogs) {
@@ -172,12 +176,11 @@ function renderTrendLine(moodEntries) {
         if (day.scores.length > 0) {
             lastValidAvg = day.scores.reduce((a, b) => a + b, 0) / day.scores.length;
         }
-        // Scaled for 140px height canvas (Score 5 -> Y=15, Score 1 -> Y=125)
+        // Scaled for 140px height canvas
         const y = 125 - ((lastValidAvg - 1) / 4) * 110;
         return { x: xPositions[i], y: Math.round(y), score: lastValidAvg.toFixed(1), day: day.label };
     });
 
-    // Curved Bezier Spline
     let pathD = `M ${points[0].x},${points[0].y}`;
     for (let i = 0; i < points.length - 1; i++) {
         const p0 = points[i];
@@ -188,11 +191,9 @@ function renderTrendLine(moodEntries) {
 
     chartPath.setAttribute('d', pathD);
 
-    // Area Path Closing at Y=140
     const areaD = `${pathD} L 350,140 L 0,140 Z`;
     if (chartArea) chartArea.setAttribute('d', areaD);
 
-    // Interactive Hover Nodes
     if (chartNodes) {
         chartNodes.innerHTML = '';
         points.forEach(pt => {
@@ -220,9 +221,149 @@ function renderTrendLine(moodEntries) {
     }
 }
 
+// ==========================================
+// 2. CALENDAR MONTH HABIT MATRIX ENGINE
+// ==========================================
+
+async function renderHabitMatrix(monthOffset = 0) {
+    selectedMonthOffset = monthOffset;
+    const container = document.getElementById('habitMatrixRows');
+    const labelElem = document.getElementById('habitMatrixMonthLabel');
+    if (!container) return;
+
+    const btnThis = document.getElementById('thisMonthBtn');
+    const btnLast = document.getElementById('lastMonthBtn');
+
+    if (btnThis && btnLast) {
+        btnThis.className = monthOffset === 0 ? 'time-filter-btn active-btn' : 'time-filter-btn inactive-btn';
+        btnLast.className = monthOffset === -1 ? 'time-filter-btn active-btn' : 'time-filter-btn inactive-btn';
+    }
+
+    // A. Parse Start & End boundaries for selected month
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() + monthOffset);
+
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+
+    const monthName = targetDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    if (labelElem) labelElem.textContent = `Habit Matrix — ${monthName}`;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const totalDaysInMonth = lastDay.getDate();
+
+    const startDate = new Date(firstDay);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(lastDay);
+    endDate.setHours(23, 59, 59, 999);
+
+    // B. Fetch Supabase Data within target calendar month
+    const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
+        supabaseClient.from('mood_entries').select('date_time').gte('date_time', startDate.toISOString()).lte('date_time', endDate.toISOString()),
+        supabaseClient.from('medication_log').select('timestamp').gte('timestamp', startDate.toISOString()).lte('timestamp', endDate.toISOString()),
+        supabaseClient.from('journal_entries').select('timestamp').gte('timestamp', startDate.toISOString()).lte('timestamp', endDate.toISOString())
+    ]);
+
+    const logsMap = { mood: new Set(), med: new Set(), journal: new Set() };
+    
+    if (moodEntries) moodEntries.forEach(m => m.date_time && logsMap.mood.add(new Date(m.date_time).toISOString().split('T')[0]));
+    if (medLogs) medLogs.forEach(m => m.timestamp && logsMap.med.add(new Date(m.timestamp).toISOString().split('T')[0]));
+    if (journalEntries) journalEntries.forEach(j => j.timestamp && logsMap.journal.add(new Date(j.timestamp).toISOString().split('T')[0]));
+
+    const defaultHabits = [
+        { id: 'mood', name: 'Mood Logs', colorClass: 'active-mood' },
+        { id: 'med', name: 'Medication', colorClass: 'active-med' },
+        { id: 'journal', name: 'Journaling', colorClass: 'active-journal' }
+    ];
+
+    container.innerHTML = '';
+
+    const allHabits = [
+        ...defaultHabits, 
+        ...customHabits.map((h, idx) => ({ id: `custom_${idx}`, name: h, colorClass: 'active-custom', isCustom: true }))
+    ];
+
+    // C. Render Habit Matrix Rows with Faint Week Separators
+    allHabits.forEach(habit => {
+        const row = document.createElement('div');
+        row.className = 'habit-matrix-row';
+
+        let dotsHtml = '<div class="habit-dots-flex">';
+        
+        for (let dayNum = 1; dayNum <= totalDaysInMonth; dayNum++) {
+            const currentDayDate = new Date(year, month, dayNum);
+            const dateStr = currentDayDate.toISOString().split('T')[0];
+
+            // Check if day is a Sunday (start of week) and insert faint vertical line separator
+            if (currentDayDate.getDay() === 0 && dayNum !== 1) {
+                dotsHtml += `<div class="week-separator" title="Week Divider"></div>`;
+            }
+            
+            let isLogged = false;
+            if (habit.id === 'mood' || habit.id === 'med' || habit.id === 'journal') {
+                isLogged = logsMap[habit.id].has(dateStr);
+            } else {
+                const customLogs = JSON.parse(localStorage.getItem(`habit_log_${habit.name}`)) || [];
+                isLogged = customLogs.includes(dateStr);
+            }
+
+            const activeClass = isLogged ? habit.colorClass : '';
+            const dayFormatted = currentDayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            dotsHtml += `<div class="matrix-dot ${activeClass}" title="${habit.name} — ${dayFormatted}" onclick="toggleCustomHabit('${habit.name}', '${dateStr}')"></div>`;
+        }
+        dotsHtml += '</div>';
+
+        row.innerHTML = `
+            <span class="habit-label">
+                ${habit.name}
+                ${habit.isCustom ? `<span onclick="deleteCustomHabit('${habit.name}')" style="cursor:pointer; color:var(--terracotta); font-size:0.65rem;">✕</span>` : ''}
+            </span>
+            ${dotsHtml}
+        `;
+        container.appendChild(row);
+    });
+}
+
+// Add & Toggle Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('thisMonthBtn')?.addEventListener('click', () => renderHabitMatrix(0));
+    document.getElementById('lastMonthBtn')?.addEventListener('click', () => renderHabitMatrix(-1));
+
+    document.getElementById('addHabitBtn')?.addEventListener('click', () => {
+        const habitName = prompt('Enter a new habit to track (e.g., Water 💧, Exercise 🏃):');
+        if (habitName && habitName.trim() !== '') {
+            customHabits.push(habitName.trim());
+            localStorage.setItem('user_custom_habits', JSON.stringify(customHabits));
+            renderHabitMatrix(selectedMonthOffset);
+        }
+    });
+});
+
+function deleteCustomHabit(habitName) {
+    if (confirm(`Remove custom habit "${habitName}"?`)) {
+        customHabits = customHabits.filter(h => h !== habitName);
+        localStorage.setItem('user_custom_habits', JSON.stringify(customHabits));
+        renderHabitMatrix(selectedMonthOffset);
+    }
+}
+
+function toggleCustomHabit(habitName, dateStr) {
+    if (['Mood Logs', 'Medication', 'Journaling'].includes(habitName)) return;
+
+    let customLogs = JSON.parse(localStorage.getItem(`habit_log_${habitName}`)) || [];
+    if (customLogs.includes(dateStr)) {
+        customLogs = customLogs.filter(d => d !== dateStr);
+    } else {
+        customLogs.push(dateStr);
+    }
+    localStorage.setItem(`habit_log_${habitName}`, JSON.stringify(customLogs));
+    renderHabitMatrix(selectedMonthOffset);
+}
+
 
 // ==========================================
-// 2. DETAILED ANALYTICS SUBPAGE ENGINE (#analytics)
+// 3. DETAILED ANALYTICS SUBPAGE ENGINE (#analytics)
 // ==========================================
 
 async function renderFullAnalyticsPage(daysFilter = 30) {
@@ -232,7 +373,6 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
 
     pageTitle.textContent = 'Detailed Analytics & Insights';
 
-    // A. Parse Date Boundaries
     const now = new Date();
     const startDate = new Date();
     const filterKey = String(daysFilter).toLowerCase();
@@ -243,7 +383,6 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
         startDate.setHours(0, 0, 0, 0);
     }
 
-    // B. Query Filtered Supabase Datasets
     let moodQuery = supabaseClient.from('mood_entries').select('*');
     let medQuery = supabaseClient.from('medication_log').select('*');
     let journalQuery = supabaseClient.from('journal_entries').select('*');
@@ -275,7 +414,17 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
     const totalMoods = moodEntries ? moodEntries.length : 0;
     const avgScore = totalMoods > 0 ? (totalScore / totalMoods).toFixed(2) : '0.00';
 
-    // C. Render Subpage Layout
+    // Calculate Habit Summary Totals
+    const habitSummaryList = [
+        { name: 'Mood Logs', count: totalMoods },
+        { name: 'Medication Logs', count: medLogs ? medLogs.length : 0 },
+        { name: 'Journal Reflections', count: journalEntries ? journalEntries.length : 0 },
+        ...customHabits.map(h => {
+            const logs = JSON.parse(localStorage.getItem(`habit_log_${h}`)) || [];
+            return { name: h, count: logs.length };
+        })
+    ];
+
     pageContent.innerHTML = `
 <!-- Filter Switcher Bar -->
 <div style="display: flex; gap: 8px; margin-bottom: 20px;">
@@ -300,8 +449,27 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
             </div>
         </div>
 
+        <!-- Habit Summary Data Table -->
+        <h4 style="font-family: 'DM Serif Display', serif; margin: 20px 0 10px 0; color: var(--olive);">Habit & Activity Data Summary</h4>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 25px;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--sage); color: var(--olive); text-align: left;">
+                    <th style="padding: 6px;">Habit / Activity Name</th>
+                    <th style="padding: 6px; text-align: right;">Total Logs</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${habitSummaryList.map(h => `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 8px 6px; font-weight: 600;">${h.name}</td>
+                        <td style="padding: 8px 6px; text-align: right; color: var(--olive); font-weight: 700;">${h.count} logged</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
         <!-- Mood Breakdown Bars -->
-        <h4 style="font-family: 'DM Serif Display', serif; margin: 20px 0 10px 0;">Mood Distribution Breakdown</h4>
+        <h4 style="font-family: 'DM Serif Display', serif; margin: 20px 0 10px 0; color: var(--olive);">Mood Distribution Breakdown</h4>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
             ${Object.entries(counts).map(([mood, count]) => {
                 const pct = totalMoods > 0 ? Math.round((count / totalMoods) * 100) : 0;
@@ -326,7 +494,6 @@ async function renderFullAnalyticsPage(daysFilter = 30) {
         </div>
     `;
 
-    // D. Attach Dynamic Handlers
     document.querySelectorAll('.time-filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const daysAttr = e.currentTarget.getAttribute('data-days');

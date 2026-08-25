@@ -39,11 +39,12 @@
                     </div>
                 </form>
 
-                <div id="history"></div>
-                <a href="#mood" style="margin-top: auto; align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 10px;">View All →</a>
+                <!-- Hidden on card to hide visible log items while preserving functionality -->
+                <div id="history" style="display: none;"></div>
+                <a href="#mood" class="card-view-all">View All →</a>
             </div>
 
-            <!-- Row 1 Column 2: Medication Tracker -->
+            <!-- Row 2 Column 1: Medication Tracker -->
             <div class="card detail-card med-details-card" style="display: flex; flex-direction: column;">
                 <div class="card-header-flex">
                     <h3>Medication Tracker</h3>
@@ -53,97 +54,145 @@
                 <!-- Dynamic Log Container -->
                 <div id="med-log-history"></div>
 
-                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px;">
+                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px;">
                     <button id="simulateNFC" class="save-btn" style="width: 100%;">Log Medication →</button>
-                    <a href="#medication" style="align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 4px;">View All →</a>
+                    <a href="#medication" class="card-view-all">View All →</a>
                 </div>
             </div>
 
-            <!-- Columns 3 (Spans Rows 1 & 2): Trends & Analytics -->
+            <!-- Column 2 (Spans Rows 1, 2, & 3): Combined Trends, Analytics & Music Insights -->
             <div class="card detail-card analytics-card">
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div class="card-header-flex">
-                        <h3>Trends & Analytics</h3>
-                        <img src="assets/trends icon.svg" alt="Trends Icon" class="nav-icon">
-                    </div>
+                <div class="card-header-flex">
+                    <h3>Trends & Analytics</h3>
+                    <img src="assets/trends icon.svg" alt="Trends Icon" class="nav-icon">
+                </div>
 
+                <!-- Main Flex Body Wrapper -->
+                <div class="analytics-card-body">
+                    
                     <!-- Insights Highlight Badges -->
                     <div class="analytics-badge-row">
                         <span id="streakBadge" class="analytics-badge sage-badge">🔥 0-Day Streak</span>
                         <span id="medAdherenceBadge" class="analytics-badge gold-badge">💊 0% Med Adherence</span>
                     </div>
 
-                    <span class="section-subtitle">Last 7 Days Overview</span>
+                    <!-- 2-Column Split TOP ROW: Graph Side (2/3) vs Stats Side (1/3) -->
+                    <div class="analytics-split-container">
+                        
+                        <!-- LEFT SIDE: Taller Graph (~2/3 Width) -->
+                        <div class="analytics-main-col">
+                            <span class="section-subtitle">Last 7 Days Overview</span>
 
-                    <!-- Taller Dynamic Chart Container -->
-                    <div class="chart-container" style="display: flex; gap: 8px; align-items: flex-start; position: relative;">
-                        <!-- Y-Axis Labels -->
-                        <div class="y-axis-labels">
-                            <span>Great</span>
-                            <span>Okay</span>
-                            <span>Terrible</span>
+                            <div class="chart-container" style="display: flex; gap: 8px; align-items: flex-start; position: relative;">
+                                <div class="y-axis-labels" style="height: 140px;">
+                                    <span>Great</span>
+                                    <span>Okay</span>
+                                    <span>Terrible</span>
+                                </div>
+
+                                <div style="flex: 1; position: relative;">
+                                    <svg viewBox="0 0 350 140" class="trend-svg" preserveAspectRatio="none" style="width: 100%; height: 140px;">
+                                        <defs>
+                                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stop-color="#A7AF8B" stop-opacity="0.5" />
+                                                <stop offset="100%" stop-color="#A7AF8B" stop-opacity="0.0" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path id="chartArea" fill="url(#chartGradient)" d="" />
+                                        <path id="chartPath" fill="none" stroke="#56613B" stroke-width="3" stroke-linecap="round" d="" />
+                                        <g id="chartNodes"></g>
+                                    </svg>
+                                    <div class="chart-labels" id="dynamicChartLabels"></div>
+                                    <div id="chartTooltip" class="chart-tooltip"></div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Expanded SVG Canvas -->
-                        <div style="flex: 1; position: relative;">
-                            <svg viewBox="0 0 350 140" class="trend-svg" preserveAspectRatio="none">
-                                <defs>
-                                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stop-color="#A7AF8B" stop-opacity="0.5" />
-                                        <stop offset="100%" stop-color="#A7AF8B" stop-opacity="0.0" />
-                                    </linearGradient>
-                                </defs>
-                                <path id="chartArea" fill="url(#chartGradient)" d="" />
-                                <path id="chartPath" fill="none" stroke="#56613B" stroke-width="3" stroke-linecap="round" d="" />
-                                <g id="chartNodes"></g>
-                            </svg>
-                            <div class="chart-labels" id="dynamicChartLabels"></div>
-                            <div id="chartTooltip" class="chart-tooltip"></div>
+                        <!-- RIGHT SIDE: Stats & Weekly Insights (~1/3 Width) -->
+                        <div class="analytics-side-col">
+                            <div class="stats-grid-two">
+                                <div class="stat-box terracotta-box">
+                                    <span class="stat-value" id="daysLoggedValue">0</span>
+                                    <span class="stat-label">Days Logged</span>
+                                </div>
+                                <div class="stat-box sage-box">
+                                    <span class="stat-value" id="avgMoodValue">0.0</span>
+                                    <span class="stat-label">Avg Mood</span>
+                                </div>
+                            </div>
+
+                            <div class="insight-box">
+                                <span class="prompt-title">WEEKLY INSIGHT</span>
+                                <p id="weeklyInsightText" style="margin: 6px 0 0 0; font-size: 0.82rem; color: var(--primary-text); line-height: 1.35;">
+                                    Log entries to generate weekly wellness insights.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Stats Grid -->
-                    <div class="stats-grid">
-                        <div class="stat-box sage-box">
-                            <span class="stat-value">0.0</span>
-                            <span class="stat-label">Avg Mood</span>
-                        </div>
-                        <div class="stat-box gold-box">
-                            <span class="stat-value">0%</span>
-                            <span class="stat-label">Positive Days</span>
-                        </div>
-                        <div class="stat-box terracotta-box">
-                            <span class="stat-value">0</span>
-                            <span class="stat-label">Days Logged</span>
-                        </div>
-                    </div>
-
-                    <!-- Mood Distribution Progress Bar -->
-                    <div>
+                    <!-- FULL-WIDTH SECTION 1: Mood Distribution Progress Bar -->
+                    <div style="width: 100%;">
                         <span class="section-subtitle" style="margin-bottom: 6px;">Mood Distribution</span>
                         <div class="mood-bar-container">
                             <div id="barGreat" class="mood-bar-seg great-seg" style="width: 0%;"></div>
                             <div id="barGood" class="mood-bar-seg good-seg" style="width: 0%;"></div>
                             <div id="barLow" class="mood-bar-seg low-seg" style="width: 0%;"></div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--secondary-text); margin-top: 4px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--secondary-text); margin-top: 6px;">
                             <span>🟢 High (<span id="countHigh">0</span>)</span>
                             <span>🟡 Medium (<span id="countMed">0</span>)</span>
                             <span>🔴 Low (<span id="countLow">0</span>)</span>
                         </div>
                     </div>
 
-                    <!-- Weekly Insight Box -->
-                    <div class="insight-box">
-                        <span class="prompt-title">WEEKLY INSIGHT</span>
-                        <p id="weeklyInsightText" style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--primary-text);">Log entries to generate weekly wellness insights.</p>
+                    <!-- FULL-WIDTH SECTION 2: MONTHLY HABIT MATRIX WITH WEEK DIVIDERS -->
+                    <div class="dot-matrix-container" style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span class="section-subtitle" id="habitMatrixMonthLabel" style="margin: 0;">Habit Matrix — August 2026</span>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button id="addHabitBtn" style="background: none; border: 1px dashed var(--olive); color: var(--olive); padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer;">+ Add Habit</button>
+                                <div style="display: flex; gap: 4px;">
+                                    <button id="thisMonthBtn" class="time-filter-btn active-btn" style="padding: 2px 10px; font-size: 0.7rem;">This Month</button>
+                                    <button id="lastMonthBtn" class="time-filter-btn inactive-btn" style="padding: 2px 10px; font-size: 0.7rem;">Last Month</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Habit Rows Container (Spans Full Width) -->
+                        <div id="habitMatrixRows" style="display: flex; flex-direction: column; gap: 10px; background: #FAF8F3; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; overflow-x: auto;">
+                            <!-- Dynamic Rows rendered via JavaScript -->
+                        </div>
                     </div>
+
+                    <!-- EMBEDDED MUSIC INSIGHTS SECTION (COMPACT BOTTOM STRIP) -->
+                    <div class="music-analytics-section" style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span class="section-subtitle" style="margin: 0;">Audio & Mood Correlations</span>
+                            <a href="#music" style="color: var(--terracotta); text-decoration: none; font-size: 0.78rem; font-weight: 600;">Full Music Insights →</a>
+                        </div>
+
+                        <div id="spotify-container" style="display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; background: #FAF8F3; border-radius: 12px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #1DB954; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">🎵</div>
+                                    <div>
+                                        <strong style="font-size: 0.8rem; color: var(--primary-text); display: block;">Connect Spotify</strong>
+                                        <span style="font-size: 0.7rem; color: var(--secondary-text);">Discover audio & mood correlations</span>
+                                    </div>
+                                </div>
+                                <button id="connectSpotifyBtn" class="pill-btn" style="background-color: #1DB954; font-size: 0.75rem; padding: 6px 14px;">
+                                    Connect Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <a href="#analytics" style="margin-top: auto; align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 12px;">View Detailed Analytics →</a>
+                <a href="#analytics" style="align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 10px;">View Detailed Analytics →</a>
             </div>
 
-            <!-- Row 2 Column 1: Journal & Prompts -->
+            <!-- Row 3 Column 1: Journal & Prompts -->
             <div class="card detail-card journal-details-card" style="display: flex; flex-direction: column;">
                 <div class="card-header-flex">
                     <h3>Journal</h3>
@@ -151,49 +200,23 @@
                 </div>
 
                 <!-- Active Prompt Box -->
-                <div class="prompt-box" style="margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div class="prompt-box" style="margin-bottom: 8px; padding: 10px 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <span class="prompt-title">NEED INSPIRATION?</span>
-                        <button type="button" id="shufflePromptBtn" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.8rem; font-weight: 600;"> Shuffle</button>
+                        <button type="button" id="shufflePromptBtn" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.78rem; font-weight: 600;"> Shuffle</button>
                     </div>
-                    <p id="dashboardPromptText" style="font-style: italic; margin-bottom: 8px;">What is one small win from today that I want to celebrate?</p>
-                    <button id="writeWithPromptBtn" class="outline-btn" style="width: 100%; font-size: 0.8rem; padding: 6px; color: var(--olive); border-color: var(--sage);">Write about this →</button>
+                    <p id="dashboardPromptText" style="font-style: italic; margin-bottom: 6px; font-size: 0.8rem;">What is one small win from today that I want to celebrate?</p>
+                    <button id="writeWithPromptBtn" class="outline-btn" style="width: 100%; font-size: 0.78rem; padding: 5px; color: var(--olive); border-color: var(--sage);">Write about this →</button>
                 </div>
 
-                <!-- Recent Entries Container -->
-                <div class="recent-entries">
-                    <span class="section-subtitle">Recent Entries</span>
-                </div>
+                <!-- Hidden on card to hide visible entry items while preserving functionality -->
+                <div class="recent-entries" style="display: none;"></div>
 
                 <!-- Bottom Actions -->
-                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px;">
+                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px;">
                     <button id="freeWriteBtn" class="save-btn" style="width: 100%;">Free Write →</button>
-                    <a href="#journal" style="align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 4px;">View All →</a>
+                    <a href="#journal" class="card-view-all">View All →</a>
                 </div>
-            </div>
-
-            <!-- Row 2 Column 2: Music Insights (Phase 5 Placeholder) -->
-            <div class="card nav-card music-card" style="display: flex; flex-direction: column;">
-                <div class="card-header-flex">
-                    <h3>Music Insights</h3>
-                    <img src="assets/music icon.svg" alt="Music Icon" class="nav-icon">
-                </div>
-
-                <!-- Spotify OAuth Placeholder -->
-                <div id="spotify-container" style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; margin: auto 0; text-align: center; padding: 12px 0;">
-                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #1DB954; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">
-                        🎵
-                    </div>
-                    <div>
-                        <strong style="font-size: 0.85rem; color: var(--primary-text); display: block;">Connect Spotify</strong>
-                        <span style="font-size: 0.75rem; color: var(--secondary-text);">Discover audio & mood correlations</span>
-                    </div>
-                    <button id="connectSpotifyBtn" class="pill-btn" style="background-color: #1DB954; width: 100%; margin-top: 4px; font-size: 0.8rem;">
-                        Connect Account
-                    </button>
-                </div>
-
-                <a href="#music" style="margin-top: auto; align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600;">View Insights →</a>
             </div>
         </div>
     </div>
@@ -280,7 +303,6 @@
     <script src="js/router.js" defer></script>
     <script src="js/mood.js" defer></script>
     <script src="js/medication.js" defer></script>
-    <script src="js/journal.js" defer></script>
     <script src="js/journal.js" defer></script>
     <script src="js/spotify.js" defer></script>
     <script src="js/app.js" defer></script>

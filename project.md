@@ -91,4 +91,4 @@ A modern, responsive wellness dashboard built with vanilla JavaScript, HTML5, an
 
 
 
-  Change the icons for the notes section on the mood log, pair mood with song option, 
+  Change the icons for the notes section on the mood log, pair mood with song option, icons for analytics
