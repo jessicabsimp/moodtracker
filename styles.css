@@ -747,3 +747,34 @@ body {
     font-size: 0.82rem;
     color: var(--olive);
 }
+
+/* Responsive Mobile Breakpoints */
+@media (max-width: 1024px) {
+    .dashboard-grid { 
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* Force Natural Mobile Stacking Order: Mood -> Meds -> Journal -> Analytics */
+    .mood-tracker-card { order: 1; }
+    .med-details-card  { order: 2; }
+    .journal-details-card { order: 3; }
+    .analytics-card    { order: 4; }
+}
+
+@media (max-width: 768px) {
+    body { 
+        padding: 16px; 
+    }
+
+    .analytics-split-container,
+    .spotify-split-grid {
+        flex-direction: column;
+    }
+
+    .habit-dots-flex {
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+}
