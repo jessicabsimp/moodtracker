@@ -1,307 +1,151 @@
-const SPOTIFY_CLIENT_ID = 'd3c342d0538c4fb9b1ecf547654dc0e5'; 
-const REDIRECT_URI = 'https://jessicabsimp.github.io/moodtracker/';
-const SCOPES = 'user-read-recently-played';
+// ==========================================
+// SPOTIFY INTEGRATION & AUDIO PULSE ENGINE
+// ==========================================
 
-// ------------------------------------------
-// 1. PKCE HELPER FUNCTIONS
-// ------------------------------------------
-
-function generateRandomString(length) {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-    for (let i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-}
-
-async function generateCodeChallenge(codeVerifier) {
-    const data = new TextEncoder().encode(codeVerifier);
-    const digest = await window.crypto.subtle.digest('SHA-256', data);
-    return btoa(String.fromCharCode.apply(null, new Uint8Array(digest)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-}
-
-// ------------------------------------------
-// 2. OAUTH 2.0 PKCE AUTHENTICATION FLOW
-// ------------------------------------------
-
-async function redirectToSpotifyAuth() {
-    if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-        alert('Please update SPOTIFY_CLIENT_ID in js/spotify.js with your Spotify Client ID.');
-        return;
-    }
-
-    const codeVerifier = generateRandomString(128);
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-    localStorage.setItem('spotify_code_verifier', codeVerifier);
-
-    const args = new URLSearchParams({
-        response_type: 'code',
-        client_id: SPOTIFY_CLIENT_ID,
-        scope: SCOPES,
-        redirect_uri: REDIRECT_URI,
-        code_challenge_method: 'S256',
-        code_challenge: codeChallenge
-    });
-
-    window.location.href = `https://accounts.spotify.com/authorize?${args.toString()}`;
-}
-
-async function handleSpotifyCallback(code) {
-    const codeVerifier = localStorage.getItem('spotify_code_verifier');
-    if (!codeVerifier) return;
-
-    const body = new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: REDIRECT_URI,
-        client_id: SPOTIFY_CLIENT_ID,
-        code_verifier: codeVerifier
-    });
-
+async function fetchRecentlyPlayedTracks(accessToken) {
     try {
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: body
-        });
-
-        if (!response.ok) throw new Error('Failed to exchange code for token');
-
-        const data = await response.json();
-        const expiresAt = Date.now() + (data.expires_in * 1000);
-
-        localStorage.setItem('spotify_access_token', data.access_token);
-        localStorage.setItem('spotify_refresh_token', data.refresh_token);
-        localStorage.setItem('spotify_expires_at', expiresAt);
-        localStorage.removeItem('spotify_code_verifier');
-
-        // Clean query parameters from address bar
-        window.history.replaceState({}, document.title, window.location.pathname);
-
-        initSpotifyIntegration();
-    } catch (err) {
-        console.error('Spotify Token Error:', err);
-    }
-}
-
-async function getValidAccessToken() {
-    const accessToken = localStorage.getItem('spotify_access_token');
-    const refreshToken = localStorage.getItem('spotify_refresh_token');
-    const expiresAt = localStorage.getItem('spotify_expires_at');
-
-    if (!accessToken || !expiresAt) return null;
-
-    if (Date.now() < parseInt(expiresAt, 10)) {
-        return accessToken;
-    }
-
-    // Refresh token if expired
-    if (refreshToken) {
-        try {
-            const body = new URLSearchParams({
-                grant_type: 'refresh_token',
-                refresh_token: refreshToken,
-                client_id: SPOTIFY_CLIENT_ID
-            });
-
-            const response = await fetch('https://accounts.spotify.com/api/token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: body
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const newExpiresAt = Date.now() + (data.expires_in * 1000);
-                localStorage.setItem('spotify_access_token', data.access_token);
-                localStorage.setItem('spotify_expires_at', newExpiresAt);
-                if (data.refresh_token) localStorage.setItem('spotify_refresh_token', data.refresh_token);
-                return data.access_token;
+        const response = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=30', {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
             }
-        } catch (err) {
-            console.error('Token refresh failed:', err);
-        }
-    }
-
-    return null;
-}
-
-// ------------------------------------------
-// 3. FETCH RECENT TRACKS & CORRELATION LOGIC
-// ------------------------------------------
-
-async function fetchRecentlyPlayedTracks(token) {
-    try {
-        const response = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=50', {
-            headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (response.status === 401) {
+            localStorage.removeItem('spotify_access_token');
+            renderSpotifyRecentSessions([]);
+            return null;
+        }
 
         if (!response.ok) {
-            if (response.status === 401) disconnectSpotify();
+            console.error('Failed to fetch Spotify tracks:', response.statusText);
             return null;
         }
 
         const data = await response.json();
         return data.items || [];
     } catch (err) {
-        console.error('Failed to fetch Spotify recent tracks:', err);
+        console.error('Error fetching Spotify data:', err);
         return null;
     }
 }
 
-async function analyzeMoodMusicCorrelations(spotifyItems) {
-    if (!supabaseClient || !spotifyItems || spotifyItems.length === 0) return;
-
-    // Fetch mood entries for context correlation
-    const { data: moodEntries } = await supabaseClient
-        .from('mood_entries')
-        .select('mood, date_time')
-        .order('date_time', { ascending: false });
-
-    if (!moodEntries || moodEntries.length === 0) return;
-
-    const matchedPairs = [];
-
-    // Match tracks within 2 hours of a logged mood entry
-    spotifyItems.forEach(item => {
-        const playedAt = new Date(item.played_at).getTime();
-
-        moodEntries.forEach(entry => {
-            if (!entry.date_time) return;
-            const moodTime = new Date(entry.date_time).getTime();
-            const diffHours = Math.abs(playedAt - moodTime) / (1000 * 60 * 60);
-
-            if (diffHours <= 2) {
-                matchedPairs.push({
-                    trackName: item.track.name,
-                    artistName: item.track.artists.map(a => a.name).join(', '),
-                    mood: entry.mood,
-                    playedAt: item.played_at
-                });
-            }
-        });
-    });
-
-    updateVibeCard(matchedPairs, spotifyItems);
-}
-
-function updateVibeCard(matchedPairs, rawItems) {
-    const vibeTitle = document.getElementById('spotifyVibeTitle');
-    const vibeSubtitle = document.getElementById('spotifyVibeSubtitle');
-
-    if (!vibeTitle || !vibeSubtitle) return;
-
-    if (matchedPairs.length > 0) {
-        const topMood = matchedPairs[0].mood;
-        vibeTitle.textContent = `${topMood} Harmonies`;
-        vibeSubtitle.textContent = `Correlated with recent "${topMood}" logs`;
-    } else if (rawItems.length > 0) {
-        vibeTitle.textContent = "Listening Active";
-        vibeSubtitle.textContent = `${rawItems.length} tracks logged recently`;
-    } else {
-        vibeTitle.textContent = "Calm & Centered";
-        vibeSubtitle.textContent = "No active playback detected";
-    }
-}
-
-// ------------------------------------------
-// 4. UI RENDERING & SPOTIFY DOM WRAPPER
-// ------------------------------------------
-
 function renderSpotifyRecentSessions(tracks) {
     const container = document.getElementById('spotify-container');
+    const tokenExists = !!localStorage.getItem('spotify_access_token');
     
-    // Update Today Card Spotify Row Status if present
+    // Target Audio Pulse Bar UI Elements
+    const elemTitle = document.getElementById('dashboardListeningTitle');
+    const elemArtist = document.getElementById('dashboardListeningArtist');
+    const elemLabel = document.getElementById('dashboardListeningLabel');
+    const elemPulseText = document.getElementById('audioPulseLevel');
+    const elemArtContainer = document.getElementById('dashboardAlbumArt');
+    const pulseDots = document.querySelectorAll('#audioPulseDots .pulse-dot');
+    const waveformVisualizer = document.getElementById('audioWaveformVisualizer');
+
     const todayStr = new Date().toISOString().split('T')[0];
     const todayTracks = (tracks || []).filter(i => i.played_at && new Date(i.played_at).toISOString().split('T')[0] === todayStr);
-    
+
+    // Update Left-Column Today Card Status Subtitle
     const elemAudioDesc = document.getElementById('spotifyVibeSubtitle');
     const connectBtn = document.getElementById('connectSpotifyBtn');
+    
     if (elemAudioDesc) {
         elemAudioDesc.textContent = todayTracks.length > 0 
             ? `${todayTracks.length} tracks logged today` 
-            : `${tracks ? tracks.length : 0} recent tracks synced`;
+            : (tokenExists ? `${tracks ? tracks.length : 0} recent tracks synced` : 'Spotify not connected');
     }
-    if (connectBtn) {
+    if (connectBtn && tokenExists) {
         connectBtn.textContent = 'Active';
-        connectBtn.style.color = 'var(--olive)';
+        connectBtn.style.color = 'var(--signal-listening-hover)';
+    }
+
+    // Populate Audio Pulse Bar with Dynamic Spotify Data
+    if (tokenExists && tracks && tracks.length > 0) {
+        const latestTrack = tracks[0];
+        const trackName = latestTrack.track ? latestTrack.track.name : 'Recently Played Track';
+        const artistName = latestTrack.track && latestTrack.track.artists ? latestTrack.track.artists.map(a => a.name).join(', ') : 'Spotify Artist';
+        const albumImg = latestTrack.track && latestTrack.track.album && latestTrack.track.album.images.length > 0 ? latestTrack.track.album.images[0].url : null;
+
+        if (elemTitle) elemTitle.textContent = trackName;
+        if (elemArtist) elemArtist.innerHTML = `${artistName} <span class="spotify-badge-icon">🟢</span>`;
+        if (elemLabel) elemLabel.textContent = todayTracks.length > 0 ? 'Recently played' : 'Last synced track';
+
+        if (albumImg && elemArtContainer) {
+            elemArtContainer.innerHTML = `<img src="${albumImg}" alt="Album Art" style="width:100%; height:100%; border-radius:var(--phase-radius-sm); object-fit:cover;">`;
+        }
+
+        // Calculate Audio Pulse Level based on today's listening density
+        let pulseLevel = 'Low';
+        let activeDotsCount = 3;
+
+        if (todayTracks.length >= 25) {
+            pulseLevel = 'High';
+            activeDotsCount = 9;
+        } else if (todayTracks.length >= 10) {
+            pulseLevel = 'Moderate';
+            activeDotsCount = 6;
+        }
+
+        if (elemPulseText) elemPulseText.textContent = pulseLevel;
+
+        pulseDots.forEach((dot, idx) => {
+            if (idx < activeDotsCount) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+
+        if (waveformVisualizer) waveformVisualizer.style.opacity = '1';
+    } else if (!tokenExists) {
+        if (elemTitle) elemTitle.textContent = 'Spotify Disconnected';
+        if (elemArtist) elemArtist.textContent = 'Connect Spotify to sync audio pulse';
+        if (elemLabel) elemLabel.textContent = 'Listening status';
+        if (elemPulseText) elemPulseText.textContent = 'Idle';
+        
+        pulseDots.forEach(dot => dot.classList.remove('active'));
+        if (waveformVisualizer) waveformVisualizer.style.opacity = '0.3';
     }
 
     if (!container) return;
 
-    if (!tracks || tracks.length === 0) {
+    if (tracks && tracks.length > 0) {
         container.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-                <span style="font-size:0.75rem; color:var(--secondary-text);">No recent Spotify tracks found.</span>
-                <button id="disconnectSpotifyBtn" style="background:none; border:none; color:var(--terracotta); cursor:pointer; font-size:0.72rem; font-weight:600;">Disconnect</button>
-            </div>
-        `;
-        document.getElementById('disconnectSpotifyBtn')?.addEventListener('click', disconnectSpotify);
-        return;
-    }
-
-    container.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                <strong style="font-size: 0.78rem; color: var(--primary-text);">Recent Sessions</strong>
-                <button id="disconnectSpotifyBtn" style="background:none; border:none; color:var(--secondary-text); cursor:pointer; font-size:0.68rem; font-weight:600;">Disconnect</button>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; padding-right: 4px;">
-                ${tracks.slice(0, 5).map(item => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 3px;">
-                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 72%;">
-                            <strong style="color: var(--primary-text);">${item.track.name}</strong>
-                            <span style="color: var(--secondary-text);"> — ${item.track.artists.map(a => a.name).join(', ')}</span>
+            <div class="spotify-track-list">
+                ${tracks.map(item => `
+                    <div class="spotify-track-item">
+                        <img src="${item.track.album.images[2]?.url || item.track.album.images[0]?.url || ''}" alt="Cover" class="track-thumb">
+                        <div class="track-info">
+                            <span class="track-name">${item.track.name}</span>
+                            <span class="track-artist">${item.track.artists.map(a => a.name).join(', ')}</span>
                         </div>
-                        <span style="font-size: 0.65rem; color: var(--secondary-text);">${new Date(item.played_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                 `).join('')}
             </div>
-        </div>
-    `;
-
-    document.getElementById('disconnectSpotifyBtn')?.addEventListener('click', disconnectSpotify);
+        `;
+    }
 }
 
-function disconnectSpotify() {
-    localStorage.removeItem('spotify_access_token');
-    localStorage.removeItem('spotify_refresh_token');
-    localStorage.removeItem('spotify_expires_at');
-    location.reload();
-}
-
-// ------------------------------------------
-// 5. INITIALIZATION HOOKS
-// ------------------------------------------
-
-async function initSpotifyIntegration() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const authCode = urlParams.get('code');
-
-    if (authCode) {
-        await handleSpotifyCallback(authCode);
-        return;
+function initSpotifyAuth() {
+    const connectBtn = document.getElementById('connectSpotifyBtn');
+    if (connectBtn) {
+        connectBtn.addEventListener('click', () => {
+            const tokenExists = !!localStorage.getItem('spotify_access_token');
+            if (!tokenExists && typeof redirectToSpotifyAuth === 'function') {
+                redirectToSpotifyAuth();
+            }
+        });
     }
 
-    const token = await getValidAccessToken();
-
+    // Auto-sync bottom bar on initial load if token exists
+    const token = localStorage.getItem('spotify_access_token');
     if (token) {
-        const tracks = await fetchRecentlyPlayedTracks(token);
-        if (tracks) {
-            renderSpotifyRecentSessions(tracks);
-            await analyzeMoodMusicCorrelations(tracks);
-        }
-    } else {
-        const connectBtn = document.getElementById('connectSpotifyBtn');
-        if (connectBtn) {
-            connectBtn.addEventListener('click', redirectToSpotifyAuth);
-        }
+        fetchRecentlyPlayedTracks(token).then(tracks => {
+            if (tracks) renderSpotifyRecentSessions(tracks);
+        });
     }
 }
 
-document.addEventListener('DOMContentLoaded', initSpotifyIntegration);
+document.addEventListener('DOMContentLoaded', () => {
+    initSpotifyAuth();
+});

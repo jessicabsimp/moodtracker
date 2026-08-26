@@ -138,7 +138,13 @@ async function updateAnalytics() {
         buckets: buckets
     };
 
+    // Update status rows in the Today card
     updateTodayCardStatuses(moodEntries || [], medLogs || [], journalEntries || [], spotifyItems);
+
+    // Explicitly update the bottom Spotify Pulse Bar
+    if (typeof renderSpotifyRecentSessions === 'function') {
+        renderSpotifyRecentSessions(spotifyItems);
+    }
 
     const loggedDaysSet = new Set();
     const moodScores = { 'great': 5, 'good': 4, 'okay': 3, 'bad': 2, 'terrible': 1 };
@@ -335,7 +341,6 @@ function renderPhaseWavelength() {
     lanes.forEach(lane => {
         if (!activeWavelengthSignals.has(lane.id)) return;
 
-        // Ultra-subtle grid lines for dark mode
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', '10'); line.setAttribute('y1', lane.yBaseline);
         line.setAttribute('x2', '770'); line.setAttribute('y2', lane.yBaseline);
@@ -358,7 +363,7 @@ function renderPhaseWavelength() {
     const medEvents = mapMedicationEvents(medication, buckets);
     const journalEvents = mapJournalEvents(journal, buckets);
 
-    // 1. Mood Wave Line (Moss - Restrained Gradient Fill)
+    // 1. Mood Wave Line (Moss)
     if (activeWavelengthSignals.has('mood')) {
         const moodPoints = moodNorm.map((d, i) => ({
             x: xPositions[i],
@@ -386,7 +391,7 @@ function renderPhaseWavelength() {
         pathsGroup.appendChild(area);
     }
 
-    // 2. Listening Wave Line (Violet - Dusty Electric Wave)
+    // 2. Listening Wave Line (Violet)
     if (activeWavelengthSignals.has('listening')) {
         const listeningPoints = listeningNorm.map((d, i) => ({
             x: xPositions[i],
@@ -452,7 +457,7 @@ function renderPhaseWavelength() {
         pathsGroup.appendChild(path);
     }
 
-    // Shared Hover Cursor & Unified Dark Tooltip
+    // Shared Hover Cursor & Tooltip Calculation
     svgElem.onmousemove = (e) => {
         const rect = svgElem.getBoundingClientRect();
         const mouseX = ((e.clientX - rect.left) / rect.width) * canvasWidth;
