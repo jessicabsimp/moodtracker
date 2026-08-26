@@ -215,6 +215,23 @@ function updateVibeCard(matchedPairs, rawItems) {
 
 function renderSpotifyRecentSessions(tracks) {
     const container = document.getElementById('spotify-container');
+    
+    // Update Today Card Spotify Row Status if present
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayTracks = (tracks || []).filter(i => i.played_at && new Date(i.played_at).toISOString().split('T')[0] === todayStr);
+    
+    const elemAudioDesc = document.getElementById('spotifyVibeSubtitle');
+    const connectBtn = document.getElementById('connectSpotifyBtn');
+    if (elemAudioDesc) {
+        elemAudioDesc.textContent = todayTracks.length > 0 
+            ? `${todayTracks.length} tracks logged today` 
+            : `${tracks ? tracks.length : 0} recent tracks synced`;
+    }
+    if (connectBtn) {
+        connectBtn.textContent = 'Active';
+        connectBtn.style.color = 'var(--olive)';
+    }
+
     if (!container) return;
 
     if (!tracks || tracks.length === 0) {
