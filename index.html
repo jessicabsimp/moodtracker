@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phase — Personal Pattern Tracking</title>
+    <title>Phase — Personal Signal & Pattern Platform</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -31,23 +31,26 @@
     <div id="dashboard-view">
         <div class="dashboard-grid">
             
-            <!-- LEFT COLUMN: PRIMARY CHECK-IN & CONSOLIDATED DAILY STATUS RAIL -->
+            <!-- LEFT COLUMN: PRIMARY CHECK-IN & CONSOLIDATED TODAY RAIL -->
             <div class="left-column">
                 
                 <!-- 1. Check In / Mood Tracker -->
                 <div class="card mood-tracker-card">
                     <div class="card-header-flex">
-                        <h3>How are you feeling?</h3>
+                        <div>
+                            <h3>How are you feeling?</h3>
+                            <span class="section-subtitle">Record your current emotional state</span>
+                        </div>
                         <img src="assets/mood tracker icon.svg" alt="Check in" class="nav-icon">
                     </div>
                     
                     <form id="moodForm">
                         <div class="mood-buttons">
-                            <button type="button" name="mood" value="Great" class="mood-btn great">Great</button>
-                            <button type="button" name="mood" value="Good" class="mood-btn good">Good</button>
-                            <button type="button" name="mood" value="Okay" class="mood-btn okay">Okay</button>
-                            <button type="button" name="mood" value="Bad" class="mood-btn bad">Bad</button>
-                            <button type="button" name="mood" value="Terrible" class="mood-btn terrible">Terrible</button>
+                            <button type="button" name="mood" value="Great" class="mood-btn">Great</button>
+                            <button type="button" name="mood" value="Good" class="mood-btn">Good</button>
+                            <button type="button" name="mood" value="Okay" class="mood-btn">Okay</button>
+                            <button type="button" name="mood" value="Bad" class="mood-btn">Bad</button>
+                            <button type="button" name="mood" value="Terrible" class="mood-btn">Terrible</button>
                         </div>
 
                         <div class="notes">
@@ -60,20 +63,21 @@
                         </div>
                     </form>
 
-                    <!-- Hidden container to preserve JS background rendering -->
                     <div id="history" style="display: none;"></div>
                 </div>
 
-                <!-- 2. Consolidated "Today" Card -->
+                <!-- 2. Consolidated Today Card -->
                 <div class="card compact-card today-summary-card">
                     <div class="card-header-flex">
-                        <h3>Today</h3>
-                        <span class="section-subtitle" style="margin: 0;">Tracked Signals</span>
+                        <div>
+                            <h3>Today</h3>
+                            <span class="section-subtitle">Tracked Signal Status</span>
+                        </div>
                     </div>
 
                     <div class="today-status-list">
-                        <!-- Medication Status Row -->
-                        <div class="today-status-row">
+                        <!-- Medication Row -->
+                        <div class="today-status-row medication-row-accent">
                             <div class="status-row-info">
                                 <span class="status-row-icon">💊</span>
                                 <div>
@@ -84,8 +88,8 @@
                             <button id="simulateNFC" class="text-action-btn">Log →</button>
                         </div>
 
-                        <!-- Listening Status Row -->
-                        <div class="today-status-row">
+                        <!-- Listening Row (Elevated Violet Accent) -->
+                        <div class="today-status-row listening-row-accent">
                             <div class="status-row-info">
                                 <span class="status-row-icon">🎧</span>
                                 <div>
@@ -93,11 +97,11 @@
                                     <span id="spotifyVibeSubtitle" class="status-row-desc">Spotify not connected</span>
                                 </div>
                             </div>
-                            <button id="connectSpotifyBtn" class="text-action-btn">Connect</button>
+                            <button id="connectSpotifyBtn" class="text-action-btn violet-action-btn">Connect</button>
                         </div>
 
-                        <!-- Journal Status Row -->
-                        <div class="today-status-row">
+                        <!-- Journal Row -->
+                        <div class="today-status-row journal-row-accent">
                             <div class="status-row-info">
                                 <span class="status-row-icon">📖</span>
                                 <div>
@@ -109,7 +113,6 @@
                         </div>
                     </div>
 
-                    <!-- Hidden container targeted by js/spotify.js to preserve connection engine -->
                     <div id="spotify-container" style="display: none;"></div>
                     <span id="spotifyVibeTitle" style="display: none;">Listening Status</span>
                     <div id="med-log-history" style="display: none;"></div>
@@ -118,7 +121,10 @@
                 <!-- 3. Quick Reflection Card -->
                 <div class="card journal-details-card">
                     <div class="card-header-flex">
-                        <h3>Quick Reflection</h3>
+                        <div>
+                            <h3>Quick Reflection</h3>
+                            <span class="section-subtitle">Daily Prompts & Entry</span>
+                        </div>
                         <img src="assets/journal icon.svg" alt="Journal" class="nav-icon">
                     </div>
 
@@ -128,20 +134,19 @@
                             <button type="button" id="shufflePromptBtn" class="text-link-btn">Shuffle</button>
                         </div>
                         <p id="dashboardPromptText">What is one small win from today that I want to celebrate?</p>
-                        <button id="writeWithPromptBtn" class="outline-btn prompt-write-btn">Write about this →</button>
+                        <button id="writeWithPromptBtn" class="prompt-write-btn">Write about this →</button>
                     </div>
 
-                    <!-- Hidden recent entries container -->
                     <div class="recent-entries" style="display: none;"></div>
 
-                    <div class="card-action-row">
-                        <button id="freeWriteBtn" class="save-btn full-width-btn">Free Write →</button>
+                    <div class="card-action-row" style="margin-top: 10px;">
+                        <button id="freeWriteBtn" class="save-btn journal-action full-width-btn">Free Write →</button>
                     </div>
                 </div>
 
             </div>
 
-            <!-- RIGHT COLUMN: PATTERN CENTERPIECE & WAVELENGTH VISUALIZATION -->
+            <!-- RIGHT COLUMN: PATTERN CENTERPIECE & PHASE WAVELENGTH -->
             <div class="right-column">
                 <div class="card analytics-card wavelength-card">
                     <div class="card-header-flex">
@@ -154,69 +159,153 @@
 
                     <div class="analytics-card-body">
                         
-                        <!-- Dynamic Signal Selector Pills -->
-                        <div class="signal-selector-row">
-                            <span class="signal-selector-label">SIGNALS:</span>
-                            <button id="btnSignalMood" class="signal-pill active" onclick="toggleWavelengthSignal('mood')">Mood ✓</button>
-                            <button id="btnSignalListening" class="signal-pill active" onclick="toggleWavelengthSignal('listening')">Listening ✓</button>
-                            <button id="btnSignalMedication" class="signal-pill active" onclick="toggleWavelengthSignal('medication')">Medication ✓</button>
-                            <button id="btnSignalJournal" class="signal-pill active" onclick="toggleWavelengthSignal('journal')">Journal ✓</button>
+                        <!-- Wavelength Control Header Toolbar -->
+                        <div class="wavelength-controls-header">
+                            <!-- Signal Selector Pills -->
+                            <div class="signal-selector-row">
+                                <button id="btnSignalMood" class="signal-pill active" onclick="toggleWavelengthSignal('mood')">
+                                    <span class="signal-dot mood-dot"></span> Mood
+                                </button>
+                                <button id="btnSignalListening" class="signal-pill active" onclick="toggleWavelengthSignal('listening')">
+                                    <span class="signal-dot listening-dot"></span> Listening
+                                </button>
+                                <button id="btnSignalMedication" class="signal-pill active" onclick="toggleWavelengthSignal('medication')">
+                                    <span class="signal-dot medication-dot"></span> Medication
+                                </button>
+                                <button id="btnSignalJournal" class="signal-pill active" onclick="toggleWavelengthSignal('journal')">
+                                    <span class="signal-dot journal-dot"></span> Journal
+                                </button>
+                            </div>
+
+                            <!-- Time Range Switcher -->
+                            <div class="range-switcher">
+                                <button class="range-btn active" onclick="setWavelengthRange(7, this)">7D</button>
+                                <button class="range-btn" onclick="setWavelengthRange(14, this)">14D</button>
+                                <button class="range-btn" onclick="setWavelengthRange(30, this)">30D</button>
+                                <button class="range-btn" onclick="setWavelengthRange(90, this)">90D</button>
+                            </div>
                         </div>
 
-                        <!-- Expanded Wavelength Canvas (320px Height) -->
+                        <!-- Stacked Signal Visualization Canvas -->
                         <div class="wavelength-container">
                             <div class="chart-wrapper">
-                                <svg viewBox="0 0 350 280" class="wavelength-svg" preserveAspectRatio="none">
-                                    <defs>
-                                        <linearGradient id="moodWaveGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stop-color="#56613B" stop-opacity="0.35" />
-                                            <stop offset="100%" stop-color="#56613B" stop-opacity="0.0" />
-                                        </linearGradient>
-                                        <linearGradient id="musicWaveGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stop-color="#1DB954" stop-opacity="0.3" />
-                                            <stop offset="100%" stop-color="#1DB954" stop-opacity="0.0" />
-                                        </linearGradient>
-                                    </defs>
+                                <svg viewBox="0 0 780 180" class="wavelength-svg" preserveAspectRatio="xMidYMid meet">
+                                  <defs>
+    <linearGradient id="moodWaveGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#788D46" stop-opacity="0.22" />
+        <stop offset="100%" stop-color="#788D46" stop-opacity="0.0" />
+    </linearGradient>
+    <linearGradient id="listeningWaveGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#9A75C4" stop-opacity="0.22" />
+        <stop offset="100%" stop-color="#9A75C4" stop-opacity="0.0" />
+    </linearGradient>
+</defs>
+                                    
                                     <g id="wavelengthGridGroup"></g>
                                     <g id="wavelengthPathsGroup"></g>
                                     <g id="wavelengthEventsGroup"></g>
+                                    <!-- Shared Hover Crosshair Line -->
+                                    <line id="wavelengthCrosshair" x1="0" y1="0" x2="0" y2="180" stroke="var(--phase-border-strong)" stroke-width="1" stroke-dasharray="2 2" style="display:none;" />
                                 </svg>
                                 <div class="chart-labels" id="dynamicChartLabels"></div>
                                 <div id="chartTooltip" class="chart-tooltip"></div>
                             </div>
                         </div>
 
-                        <!-- Pattern & This Week Summary Section -->
+  <!-- Pattern & This Week Summary Section -->
                         <div class="wavelength-summary-row">
-                            <!-- Pattern Insight Tile -->
                             <div class="insight-box wavelength-insight-tile">
                                 <span class="prompt-title">PATTERN DETECTED</span>
                                 <p id="weeklyInsightText">
-                                    Log entries to generate weekly pattern insights.
+                                    Log entries to generate multi-signal pattern insights.
                                 </p>
                             </div>
 
-                            <!-- This Week Metrics Tiles -->
                             <div class="this-week-container">
                                 <span class="this-week-title">THIS WEEK</span>
                                 <div class="this-week-grid">
-                                    <div class="stat-box terracotta-box">
+                                    <div class="stat-box mood-stat">
                                         <span class="stat-value" id="daysLoggedValue">0</span>
                                         <span class="stat-label">Days Logged</span>
                                     </div>
-                                    <div class="stat-box sage-box">
+                                    <div class="stat-box streak-stat">
                                         <span class="stat-value" id="avgMoodValue">0.0</span>
                                         <span class="stat-label">Avg Mood</span>
                                     </div>
-                                    <div class="stat-box gold-box">
+                                    <div class="stat-box med-stat">
                                         <span class="stat-value" id="streakBadgeText">0d</span>
                                         <span class="stat-label">Streak</span>
                                     </div>
-                                    <div class="stat-box sage-box">
+                                    <div class="stat-box journal-stat">
                                         <span class="stat-value" id="medAdherenceText">0%</span>
                                         <span class="stat-label">Med Adherence</span>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+<!-- Currently Listening & Audio Pulse Row -->
+                        <div class="audio-pulse-bar">
+                            <!-- Dynamic Currently Listening Metadata -->
+                            <div class="audio-now-playing">
+                                <div class="album-art-thumb" id="dashboardAlbumArt">
+                                    <span class="album-placeholder-icon">🎧</span>
+                                </div>
+                                <div class="now-playing-info">
+                                    <span class="now-playing-label" id="dashboardListeningLabel">Listening status</span>
+                                    <strong id="dashboardListeningTitle" class="now-playing-title">Spotify Disconnected</strong>
+                                    <span id="dashboardListeningArtist" class="now-playing-artist">Connect to track music signals</span>
+                                </div>
+                            </div>
+
+                            <!-- Central Dynamic Waveform -->
+                            <div class="audio-waveform-visualizer" id="audioWaveformVisualizer">
+                                <span class="bar bar-1"></span>
+                                <span class="bar bar-2"></span>
+                                <span class="bar bar-3"></span>
+                                <span class="bar bar-4"></span>
+                                <span class="bar bar-5"></span>
+                                <span class="bar bar-6"></span>
+                                <span class="bar bar-7"></span>
+                                <span class="bar bar-8"></span>
+                                <span class="bar bar-9"></span>
+                                <span class="bar bar-10"></span>
+                                <span class="bar bar-11"></span>
+                                <span class="bar bar-12"></span>
+                                <span class="bar bar-13"></span>
+                                <span class="bar bar-14"></span>
+                                <span class="bar bar-15"></span>
+                                <span class="bar bar-16"></span>
+                                <span class="bar bar-17"></span>
+                                <span class="bar bar-18"></span>
+                                <span class="bar bar-19"></span>
+                                <span class="bar bar-20"></span>
+                            </div>
+
+                            <!-- Audio Pulse Intensity Meter -->
+                            <div class="audio-pulse-meter">
+                                <div class="pulse-meta">
+                                    <span class="pulse-label">Your audio pulse</span>
+                                    <div class="pulse-status-row">
+                                        <strong id="audioPulseLevel" class="pulse-level-text">Idle</strong>
+                                        <div class="pulse-dot-bars" id="audioPulseDots">
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                            <span class="pulse-dot"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="dashboardPulseToggleBtn" class="audio-pause-btn" title="Toggle Listening Signal">
+                                    <span class="pause-icon">❚❚</span>
+                                </button>
                             </div>
                         </div>
 
@@ -231,11 +320,11 @@
         </div>
     </div>
 
-    <!-- HASH SUB-PAGES -->
-    <div id="subpage-view" style="display: none; padding: 20px; max-width: 800px; margin: 0 auto; font-size: 0.85rem;">
-        <a href="#" class="save-btn" style="display: inline-block; margin-bottom: 20px; text-decoration: none; font-size: 0.85rem;">← Back to Dashboard</a>
-        <div class="card" style="padding: 20px;">
-            <h2 id="page-title" style="margin-bottom: 15px; font-size: 1.15rem; color: var(--olive);">History</h2>
+    <!-- SUB-PAGE CONTAINER -->
+    <div id="subpage-view" style="display: none; padding: 24px; max-width: 800px; margin: 0 auto;">
+        <a href="#" class="save-btn" style="display: inline-block; margin-bottom: 20px; text-decoration: none;">← Back to Dashboard</a>
+        <div class="card">
+            <h2 id="page-title" style="margin-bottom: 16px; color: var(--phase-text);">History</h2>
             <div id="page-content"></div>
         </div>
     </div>
@@ -245,7 +334,7 @@
     <div id="medModal" class="modal">
       <div class="modal-content">
         <span class="close">&times;</span>
-        <h3>Log Medication Dose</h3>
+        <h3 style="margin-bottom: 12px;">Log Medication Dose</h3>
         <form id="medForm">
           <div class="radio-group">
             <label><input type="radio" name="time" value="Morning" required> Morning</label>
@@ -253,7 +342,7 @@
             <label><input type="radio" name="time" value="Dinner"> Dinner</label>
             <label><input type="radio" name="time" value="Bedtime"> Bedtime</label>
           </div>
-          <button type="submit" class="save-btn">Log Dose</button>
+          <button type="submit" class="save-btn" style="width: 100%; margin-top: 8px;">Log Dose</button>
         </form>
       </div>
     </div>
@@ -262,18 +351,18 @@
     <div id="journalModal" class="modal">
       <div class="modal-content">
         <span class="close-journal close">&times;</span>
-        <h3>Journal Entry</h3>
+        <h3 style="margin-bottom: 12px;">Journal Entry</h3>
         
-        <div id="modalPromptContainer" class="prompt-box" style="margin-bottom: 15px;">
+        <div id="modalPromptContainer" class="prompt-box" style="margin-bottom: 16px;">
           <span class="prompt-title">INSPIRATION PROMPT</span>
-          <p id="modalPromptText" style="margin-top: 4px; font-style: italic; color: var(--primary-text);"></p>
+          <p id="modalPromptText" style="margin-top: 4px; font-style: italic; color: var(--phase-text);"></p>
         </div>
 
         <form id="journalForm">
           <div class="notes">
             <textarea id="journalResponse" rows="5" placeholder="Write your reflection here..." required style="width: 100%; box-sizing: border-box;"></textarea>
           </div>
-          <button type="submit" class="save-btn" style="margin-top: 15px; width: 100%;">Save Reflection</button>
+          <button type="submit" class="save-btn journal-action" style="margin-top: 16px; width: 100%;">Save Reflection</button>
         </form>
       </div>
     </div>
@@ -282,22 +371,22 @@
     <div id="journalEditModal" class="modal">
       <div class="modal-content">
         <span id="closeEditJournal" class="close">&times;</span>
-        <h3 id="editModalDate">Journal Entry</h3>
+        <h3 id="editModalDate" style="margin-bottom: 12px;">Journal Entry</h3>
         
-        <div class="prompt-box" style="margin-bottom: 15px;">
+        <div class="prompt-box" style="margin-bottom: 16px;">
           <span class="prompt-title">PROMPT</span>
-          <p id="editJournalPromptText" style="margin-top: 4px; font-style: italic; color: var(--primary-text);"></p>
+          <p id="editJournalPromptText" style="margin-top: 4px; font-style: italic; color: var(--phase-text);"></p>
         </div>
 
         <form id="editJournalForm">
           <input type="hidden" id="editJournalId">
           <div class="notes">
-            <label style="font-size: 0.8rem; font-weight: 600; color: var(--olive);">Your Reflection</label>
-            <textarea id="editJournalResponse" rows="5" style="width: 100%; margin-top: 4px;" required></textarea>
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--phase-text-secondary);">Your Reflection</label>
+            <textarea id="editJournalResponse" rows="5" style="width: 100%; margin-top: 6px;" required></textarea>
           </div>
-          <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button type="submit" class="save-btn" style="flex: 2;">Update Entry</button>
-            <button type="button" id="deleteModalEntryBtn" style="flex: 1; background: var(--terracotta); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button type="submit" class="save-btn journal-action" style="flex: 2;">Update Entry</button>
+            <button type="button" id="deleteModalEntryBtn" style="flex: 1; background: var(--signal-journal); color: white; border: none; border-radius: var(--phase-radius-sm); cursor: pointer; font-weight: 600; font-size: 0.78rem;">Delete</button>
           </div>
         </form>
       </div>

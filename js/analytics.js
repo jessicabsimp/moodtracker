@@ -2,17 +2,17 @@
 // PHASE WAVELENGTH DATA NORMALIZATION ENGINE
 // ==========================================
 
-function get7DayDateBuckets() {
+function getRangeDateBuckets(daysCount = 7) {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const days = [];
     const today = new Date();
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = daysCount - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(today.getDate() - i);
         days.push({
             dateString: d.toISOString().split('T')[0],
-            label: dayNames[d.getDay()],
+            label: daysCount <= 14 ? dayNames[d.getDay()] : `${d.getMonth() + 1}/${d.getDate()}`,
             rawDate: d
         });
     }
@@ -88,6 +88,7 @@ function mapMedicationEvents(medLogs, buckets) {
 }
 
 function mapJournalEvents(journalEntries, buckets) {
+    const maxEntriesPerDay = 3;
     return buckets.map(b => {
         const dayEntries = (journalEntries || []).filter(j => {
             if (!j.timestamp) return false;
@@ -97,33 +98,31 @@ function mapJournalEvents(journalEntries, buckets) {
         return {
             dateString: b.dateString,
             label: b.label,
-            count: dayEntries.length
+            count: dayEntries.length,
+            norm: Math.min(dayEntries.length / maxEntriesPerDay, 1.0)
         };
     });
 }
 
 // ==========================================
-// DASHBOARD ANALYTICS WIDGET ENGINE
+// DASHBOARD ANALYTICS & WAVELENGTH ENGINE
 // ==========================================
 
 let activeWavelengthSignals = new Set(['mood', 'listening', 'medication', 'journal']);
 let cachedWavelengthData = null;
-let selectedMonthOffset = 0; // 0 = This Month, -1 = Last Month
-let customHabits = JSON.parse(localStorage.getItem('user_custom_habits')) || ['Hydration 💧', 'Meditation 🧘'];
+let currentWavelengthRange = 7;
 
 async function updateAnalytics() {
-    const buckets = get7DayDateBuckets();
+    const buckets = getRangeDateBuckets(currentWavelengthRange);
     const startDate = new Date(buckets[0].rawDate);
     startDate.setHours(0, 0, 0, 0);
 
-    // Query Supabase Datasets & Spotify Recent Tracks
     const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
         supabaseClient.from('mood_entries').select('mood, date_time, notes').gte('date_time', startDate.toISOString()),
         supabaseClient.from('medication_log').select('timestamp, time_of_day').gte('timestamp', startDate.toISOString()),
         supabaseClient.from('journal_entries').select('timestamp, prompt').gte('timestamp', startDate.toISOString())
     ]);
 
-    // Fetch Spotify Tracks if token exists
     let spotifyItems = [];
     const spotifyToken = localStorage.getItem('spotify_access_token');
     if (spotifyToken && typeof fetchRecentlyPlayedTracks === 'function') {
@@ -131,7 +130,6 @@ async function updateAnalytics() {
         if (tracks) spotifyItems = tracks;
     }
 
-    // Cache dataset for signal toggling
     cachedWavelengthData = {
         mood: moodEntries || [],
         medication: medLogs || [],
@@ -140,10 +138,8 @@ async function updateAnalytics() {
         buckets: buckets
     };
 
-    // 1. Update Left-Column Consolidated "Today" Card Statuses
     updateTodayCardStatuses(moodEntries || [], medLogs || [], journalEntries || [], spotifyItems);
 
-    // 2. Compute Metrics for "This Week" Tile Summary
     const loggedDaysSet = new Set();
     const moodScores = { 'great': 5, 'good': 4, 'okay': 3, 'bad': 2, 'terrible': 1 };
     const dailyMoodMap = {};
@@ -171,7 +167,6 @@ async function updateAnalytics() {
     if (elemAvgMood) elemAvgMood.textContent = overallAvgMood;
     if (elemDaysLogged) elemDaysLogged.textContent = loggedDaysSet.size;
 
-    // Badges / Summary Text
     let streak = 0;
     const checkDate = new Date();
     while (true) {
@@ -183,35 +178,32 @@ async function updateAnalytics() {
     }
 
     const medDays = new Set((medLogs || []).map(m => new Date(m.timestamp).toISOString().split('T')[0])).size;
-    const medAdherence = Math.round((medDays / 7) * 100);
+    const medAdherence = Math.round((medDays / currentWavelengthRange) * 100);
 
     const elemStreak = document.getElementById('streakBadgeText');
     const elemMedAdherence = document.getElementById('medAdherenceText');
     if (elemStreak) elemStreak.textContent = `${streak}d`;
     if (elemMedAdherence) elemMedAdherence.textContent = `${medAdherence}%`;
 
-    // 3. Dynamic Weekly Pattern Insight Text
     const insightElem = document.getElementById('weeklyInsightText');
     if (insightElem) {
         if (loggedDaysSet.size === 0) {
             insightElem.textContent = "Log daily mood, meds, or journaling to reveal your pattern.";
         } else if (parseFloat(overallAvgMood) >= 4.0) {
-            insightElem.textContent = "Your overall signals show high emotional stability and consistency this week.";
+            insightElem.textContent = "Your overall signals show high emotional stability and consistency across this period.";
         } else if (parseFloat(overallAvgMood) >= 3.0) {
-            insightElem.textContent = "A steady week overall. Notice how medication adherence aligns with higher mood days.";
+            insightElem.textContent = "A steady pattern overall. Listening behavior correlates smoothly with your balanced days.";
         } else {
             insightElem.textContent = "Lower mood scores detected recently. Prioritize rest and quick reflections.";
         }
     }
 
-    // 4. Render Phase Wavelength Visualization
     renderPhaseWavelength();
 }
 
 function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyItems) {
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // A. Medication Status Row
     const todayMeds = medLogs.filter(m => m.timestamp && new Date(m.timestamp).toISOString().split('T')[0] === todayStr);
     const hasMorning = todayMeds.some(m => (m.time_of_day || '').toLowerCase() === 'morning');
     const hasBedtime = todayMeds.some(m => (m.time_of_day || '').toLowerCase() === 'bedtime');
@@ -219,19 +211,18 @@ function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyIt
     const elemMed = document.getElementById('todayMedText');
     if (elemMed) {
         if (hasMorning && hasBedtime) {
-            elemMed.innerHTML = 'Morning <span style="color:var(--olive); font-weight:700;">✓</span> · Bedtime <span style="color:var(--olive); font-weight:700;">✓</span>';
+            elemMed.innerHTML = 'Morning <span style="color:var(--signal-medication); font-weight:700;">✓</span> · Bedtime <span style="color:var(--signal-medication); font-weight:700;">✓</span>';
         } else if (hasMorning) {
-            elemMed.innerHTML = 'Morning <span style="color:var(--olive); font-weight:700;">✓</span> · Bedtime ○';
+            elemMed.innerHTML = 'Morning <span style="color:var(--signal-medication); font-weight:700;">✓</span> · Evening ○';
         } else if (hasBedtime) {
-            elemMed.innerHTML = 'Morning ○ · Bedtime <span style="color:var(--olive); font-weight:700;">✓</span>';
+            elemMed.innerHTML = 'Morning ○ · Evening <span style="color:var(--signal-medication); font-weight:700;">✓</span>';
         } else if (todayMeds.length > 0) {
-            elemMed.innerHTML = `${todayMeds.length} dose(s) logged today <span style="color:var(--olive); font-weight:700;">✓</span>`;
+            elemMed.innerHTML = `${todayMeds.length} dose(s) logged today <span style="color:var(--signal-medication); font-weight:700;">✓</span>`;
         } else {
             elemMed.textContent = 'Not logged today';
         }
     }
 
-    // B. Listening Status Row
     const elemAudioDesc = document.getElementById('spotifyVibeSubtitle');
     const connectBtn = document.getElementById('connectSpotifyBtn');
     const isSpotifyConnected = !!localStorage.getItem('spotify_access_token');
@@ -239,10 +230,10 @@ function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyIt
     if (elemAudioDesc) {
         if (isSpotifyConnected) {
             const todayTracks = spotifyItems.filter(i => i.played_at && new Date(i.played_at).toISOString().split('T')[0] === todayStr);
-            elemAudioDesc.textContent = todayTracks.length > 0 ? `${todayTracks.length} tracks logged today` : 'Spotify active';
+            elemAudioDesc.textContent = todayTracks.length > 0 ? `${todayTracks.length} tracks logged today` : 'Connected & Active';
             if (connectBtn) {
                 connectBtn.textContent = 'Active';
-                connectBtn.style.color = 'var(--olive)';
+                connectBtn.style.color = 'var(--signal-listening-hover)';
             }
         } else {
             elemAudioDesc.textContent = 'Spotify not connected';
@@ -250,26 +241,31 @@ function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyIt
         }
     }
 
-    // C. Journal Status Row
     const todayJournal = journalEntries.some(j => j.timestamp && new Date(j.timestamp).toISOString().split('T')[0] === todayStr);
     const elemJournal = document.getElementById('todayJournalText');
     if (elemJournal) {
         elemJournal.innerHTML = todayJournal 
-            ? 'Reflected today <span style="color:var(--olive); font-weight:700;">✓</span>' 
+            ? 'Reflected today <span style="color:var(--signal-journal); font-weight:700;">✓</span>' 
             : 'Not logged today';
     }
 }
 
+function setWavelengthRange(days, btnElem) {
+    currentWavelengthRange = days;
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+    if (btnElem) btnElem.classList.add('active');
+    updateAnalytics();
+}
+
 function toggleWavelengthSignal(signalName) {
     if (activeWavelengthSignals.has(signalName)) {
-        if (activeWavelengthSignals.size > 1) { // Maintain at least one signal
+        if (activeWavelengthSignals.size > 1) {
             activeWavelengthSignals.delete(signalName);
         }
     } else {
         activeWavelengthSignals.add(signalName);
     }
 
-    // Update Pill Buttons Styling
     const btnMap = {
         mood: 'btnSignalMood',
         listening: 'btnSignalListening',
@@ -282,10 +278,8 @@ function toggleWavelengthSignal(signalName) {
         if (btn) {
             if (activeWavelengthSignals.has(sig)) {
                 btn.className = 'signal-pill active';
-                btn.textContent = `${sig.charAt(0).toUpperCase() + sig.slice(1)} ✓`;
             } else {
-                btn.className = 'signal-pill';
-                btn.textContent = sig.charAt(0).toUpperCase() + sig.slice(1);
+                btn.className = 'signal-pill inactive';
             }
         }
     });
@@ -294,7 +288,7 @@ function toggleWavelengthSignal(signalName) {
 }
 
 // ==========================================
-// PHASE WAVELENGTH MULTI-SIGNAL SVG RENDERER
+// RENDER ATMOSPHERIC DARK WAVELENGTH
 // ==========================================
 
 function renderPhaseWavelength() {
@@ -305,58 +299,72 @@ function renderPhaseWavelength() {
     const eventsGroup = document.getElementById('wavelengthEventsGroup');
     const labelsContainer = document.getElementById('dynamicChartLabels');
     const tooltip = document.getElementById('chartTooltip');
+    const crosshair = document.getElementById('wavelengthCrosshair');
+    const svgElem = document.querySelector('.wavelength-svg');
 
-    if (!pathsGroup || !labelsContainer) return;
+    if (!pathsGroup || !labelsContainer || !svgElem) return;
+
+    svgElem.setAttribute('viewBox', '0 0 780 180');
+    svgElem.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
     gridGroup.innerHTML = '';
     pathsGroup.innerHTML = '';
     eventsGroup.innerHTML = '';
 
     const { buckets, mood, spotify, medication, journal } = cachedWavelengthData;
-    labelsContainer.innerHTML = buckets.map(b => `<span>${b.label}</span>`).join('');
+    
+    const labelStep = currentWavelengthRange > 14 ? Math.ceil(currentWavelengthRange / 7) : 1;
+    labelsContainer.innerHTML = buckets.map((b, idx) => {
+        if (idx % labelStep === 0 || idx === buckets.length - 1) {
+            return `<span>${b.label}</span>`;
+        }
+        return `<span></span>`;
+    }).join('');
 
-    const xPositions = [15, 69, 123, 177, 231, 285, 335];
+    const canvasWidth = 780;
+    const paddingLeftRight = 30;
+    const xPositions = buckets.map((_, i) => (i / (buckets.length - 1)) * (canvasWidth - (paddingLeftRight * 2)) + paddingLeftRight);
 
-    // Draw horizontal signal lane separators
     const lanes = [
-        { id: 'mood', yTop: 15, height: 75, label: 'MOOD' },
-        { id: 'listening', yTop: 100, height: 50, label: 'AUDIO' },
-        { id: 'medication', yTop: 165, height: 40, label: 'MEDS' },
-        { id: 'journal', yTop: 220, height: 40, label: 'JOURNAL' }
+        { id: 'mood', yBaseline: 45, height: 35, label: 'MOOD' },
+        { id: 'listening', yBaseline: 85, height: 30, label: 'LISTENING' },
+        { id: 'medication', yBaseline: 125, height: 15, label: 'MEDICATION' },
+        { id: 'journal', yBaseline: 155, height: 15, label: 'JOURNAL' }
     ];
 
     lanes.forEach(lane => {
         if (!activeWavelengthSignals.has(lane.id)) return;
 
-        // Faint horizontal divider
+        // Ultra-subtle grid lines for dark mode
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', '0');
-        line.setAttribute('y1', lane.yTop + lane.height);
-        line.setAttribute('x2', '350');
-        line.setAttribute('y2', lane.yTop + lane.height);
-        line.setAttribute('stroke', 'rgba(90, 80, 60, 0.08)');
-        line.setAttribute('stroke-dasharray', '3 3');
+        line.setAttribute('x1', '10'); line.setAttribute('y1', lane.yBaseline);
+        line.setAttribute('x2', '770'); line.setAttribute('y2', lane.yBaseline);
+        line.setAttribute('stroke', 'rgba(255, 255, 255, 0.07)');
+        line.setAttribute('stroke-dasharray', '3 4');
         gridGroup.appendChild(line);
 
-        // Subtle lane text tag
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', '0');
-        text.setAttribute('y', lane.yTop + 10);
-        text.setAttribute('fill', '#6E6B61');
-        text.setAttribute('font-size', '7');
+        text.setAttribute('x', '10'); text.setAttribute('y', lane.yBaseline - 12);
+        text.setAttribute('fill', '#858A82');
+        text.setAttribute('font-size', '8.5');
         text.setAttribute('font-weight', '700');
-        text.setAttribute('opacity', '0.5');
+        text.setAttribute('letter-spacing', '0.5px');
         text.textContent = lane.label;
         gridGroup.appendChild(text);
     });
 
-    // 1. RENDER MOOD SIGNAL WAVE (Lane 1: y: 15 to 90)
+    const moodNorm = normalizeMoodData(mood, buckets);
+    const listeningNorm = normalizeListeningData(spotify, buckets);
+    const medEvents = mapMedicationEvents(medication, buckets);
+    const journalEvents = mapJournalEvents(journal, buckets);
+
+    // 1. Mood Wave Line (Moss - Restrained Gradient Fill)
     if (activeWavelengthSignals.has('mood')) {
-        const moodNorm = normalizeMoodData(mood, buckets);
-        const moodPoints = moodNorm.map((d, i) => {
-            const y = 85 - (d.val * 60); // Invert scale for SVG Y-axis
-            return { x: xPositions[i], y: Math.round(y), score: (d.val * 5).toFixed(1), day: d.label };
-        });
+        const moodPoints = moodNorm.map((d, i) => ({
+            x: xPositions[i],
+            y: Math.round(45 - (d.val * 30)),
+            score: (d.val * 5).toFixed(1)
+        }));
 
         let pathD = `M ${moodPoints[0].x},${moodPoints[0].y}`;
         for (let i = 0; i < moodPoints.length - 1; i++) {
@@ -367,367 +375,131 @@ function renderPhaseWavelength() {
         }
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathD);
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', '#56613B');
-        path.setAttribute('stroke-width', '2.5');
+        path.setAttribute('d', pathD); path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#788D46'); path.setAttribute('stroke-width', '2.5');
         path.setAttribute('stroke-linecap', 'round');
         pathsGroup.appendChild(path);
 
-        const areaD = `${pathD} L 335,90 L 15,90 Z`;
         const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        area.setAttribute('d', areaD);
+        area.setAttribute('d', `${pathD} L ${xPositions[xPositions.length-1]},45 L ${xPositions[0]},45 Z`);
         area.setAttribute('fill', 'url(#moodWaveGradient)');
         pathsGroup.appendChild(area);
+    }
 
-        // Dynamic Tooltip Nodes
-        moodPoints.forEach(pt => {
+    // 2. Listening Wave Line (Violet - Dusty Electric Wave)
+    if (activeWavelengthSignals.has('listening')) {
+        const listeningPoints = listeningNorm.map((d, i) => ({
+            x: xPositions[i],
+            y: Math.round(85 - (d.norm * 25)),
+            count: d.count
+        }));
+
+        let pathD = `M ${listeningPoints[0].x},${listeningPoints[0].y}`;
+        for (let i = 0; i < listeningPoints.length - 1; i++) {
+            const p0 = listeningPoints[i];
+            const p1 = listeningPoints[i + 1];
+            const cpX = (p0.x + p1.x) / 2;
+            pathD += ` C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`;
+        }
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathD); path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#9A75C4'); path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-linecap', 'round');
+        pathsGroup.appendChild(path);
+
+        const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        area.setAttribute('d', `${pathD} L ${xPositions[xPositions.length-1]},85 L ${xPositions[0]},85 Z`);
+        area.setAttribute('fill', 'url(#listeningWaveGradient)');
+        pathsGroup.appendChild(area);
+    }
+
+    // 3. Medication Events (Amber Baseline Markers)
+    if (activeWavelengthSignals.has('medication')) {
+        medEvents.forEach((d, i) => {
+            const x = xPositions[i];
+            const y = 125;
             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', pt.x);
-            circle.setAttribute('cy', pt.y);
-            circle.setAttribute('r', 3.5);
-            circle.setAttribute('fill', '#56613B');
-            circle.setAttribute('class', 'chart-node');
-
-            circle.addEventListener('mouseenter', () => {
-                if (!tooltip) return;
-                tooltip.style.display = 'block';
-                tooltip.style.left = `${(pt.x / 350) * 100}%`;
-                tooltip.style.top = `${pt.y - 10}px`;
-                tooltip.textContent = `${pt.day}: ${pt.score} Mood`;
-            });
-            circle.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
+            circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+            circle.setAttribute('r', d.count > 0 ? '4.5' : '2');
+            circle.setAttribute('fill', d.count > 0 ? '#D49728' : '#171B19');
+            circle.setAttribute('stroke', '#D49728');
+            circle.setAttribute('stroke-width', '1.5');
             eventsGroup.appendChild(circle);
         });
     }
 
-    // 2. RENDER LISTENING SIGNAL WAVE (Lane 2: y: 100 to 150)
-    if (activeWavelengthSignals.has('listening')) {
-        const listeningNorm = normalizeListeningData(spotify, buckets);
-        
-        if (localStorage.getItem('spotify_access_token')) {
-            listeningNorm.forEach((d, i) => {
-                const barHeight = Math.max(d.norm * 35, 4);
-                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rect.setAttribute('x', xPositions[i] - 4);
-                rect.setAttribute('y', 145 - barHeight);
-                rect.setAttribute('width', '8');
-                rect.setAttribute('height', barHeight);
-                rect.setAttribute('rx', '3');
-                rect.setAttribute('fill', '#1DB954');
-                rect.setAttribute('opacity', d.count > 0 ? '0.85' : '0.2');
-
-                rect.addEventListener('mouseenter', () => {
-                    if (!tooltip) return;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = `${(xPositions[i] / 350) * 100}%`;
-                    tooltip.style.top = `130px`;
-                    tooltip.textContent = `${d.label}: ${d.count} Spotify Tracks`;
-                });
-                rect.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
-                eventsGroup.appendChild(rect);
-            });
-        } else {
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', '175');
-            text.setAttribute('y', '130');
-            text.setAttribute('fill', '#6E6B61');
-            text.setAttribute('font-size', '8');
-            text.setAttribute('text-anchor', 'middle');
-            text.textContent = 'Connect Spotify to activate listening signal.';
-            eventsGroup.appendChild(text);
-        }
-    }
-
-    // 3. RENDER MEDICATION EVENT MARKERS (Lane 3: y: 165 to 205)
-    if (activeWavelengthSignals.has('medication')) {
-        const medEvents = mapMedicationEvents(medication, buckets);
-        medEvents.forEach((d, i) => {
-            const x = xPositions[i];
-            const y = 185;
-
-            // Horizontal reference line
-            const refLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            refLine.setAttribute('x1', '15'); refLine.setAttribute('y1', y);
-            refLine.setAttribute('x2', '335'); refLine.setAttribute('y2', y);
-            refLine.setAttribute('stroke', '#D8A646');
-            refLine.setAttribute('stroke-width', '1');
-            refLine.setAttribute('opacity', '0.25');
-            eventsGroup.appendChild(refLine);
-
-            if (d.count > 0) {
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', x); circle.setAttribute('cy', y);
-                circle.setAttribute('r', 5);
-                circle.setAttribute('fill', '#D8A646');
-
-                circle.addEventListener('mouseenter', () => {
-                    if (!tooltip) return;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = `${(x / 350) * 100}%`;
-                    tooltip.style.top = `${y - 10}px`;
-                    tooltip.textContent = `${d.label}: ${d.count} Med Dose(s) Logged`;
-                });
-                circle.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
-                eventsGroup.appendChild(circle);
-            }
-        });
-    }
-
-    // 4. RENDER JOURNAL EVENT MARKERS (Lane 4: y: 220 to 260)
+    // 4. Journal Activity Wave (Burnt Coral)
     if (activeWavelengthSignals.has('journal')) {
-        const journalEvents = mapJournalEvents(journal, buckets);
-        journalEvents.forEach((d, i) => {
-            const x = xPositions[i];
-            const y = 240;
+        const journalPoints = journalEvents.map((d, i) => ({
+            x: xPositions[i],
+            y: Math.round(155 - (d.norm * 18)),
+            count: d.count
+        }));
 
-            const refLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            refLine.setAttribute('x1', '15'); refLine.setAttribute('y1', y);
-            refLine.setAttribute('x2', '335'); refLine.setAttribute('y2', y);
-            refLine.setAttribute('stroke', '#C96F4A');
-            refLine.setAttribute('stroke-width', '1');
-            refLine.setAttribute('opacity', '0.25');
-            eventsGroup.appendChild(refLine);
-
-            if (d.count > 0) {
-                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rect.setAttribute('x', x - 4); rect.setAttribute('y', y - 4);
-                rect.setAttribute('width', '8'); rect.setAttribute('height', '8');
-                rect.setAttribute('rx', '2');
-                rect.setAttribute('fill', '#C96F4A');
-
-                rect.addEventListener('mouseenter', () => {
-                    if (!tooltip) return;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = `${(x / 350) * 100}%`;
-                    tooltip.style.top = `${y - 10}px`;
-                    tooltip.textContent = `${d.label}: ${d.count} Journal Reflection(s)`;
-                });
-                rect.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display = 'none'; });
-                eventsGroup.appendChild(rect);
-            }
-        });
-    }
-}
-
-// ==========================================
-// CALENDAR MONTH HABIT MATRIX & DETAILED PAGES
-// ==========================================
-
-async function renderHabitMatrix(monthOffset = 0) {
-    selectedMonthOffset = monthOffset;
-    const container = document.getElementById('habitMatrixRows');
-    const labelElem = document.getElementById('habitMatrixMonthLabel');
-    if (!container) return;
-
-    const targetDate = new Date();
-    targetDate.setMonth(targetDate.getMonth() + monthOffset);
-
-    const year = targetDate.getFullYear();
-    const month = targetDate.getMonth();
-
-    const monthName = targetDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    if (labelElem) labelElem.textContent = `Habit Matrix — ${monthName}`;
-
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const totalDaysInMonth = lastDay.getDate();
-
-    const startDate = new Date(firstDay);
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(lastDay);
-    endDate.setHours(23, 59, 59, 999);
-
-    const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
-        supabaseClient.from('mood_entries').select('date_time').gte('date_time', startDate.toISOString()).lte('date_time', endDate.toISOString()),
-        supabaseClient.from('medication_log').select('timestamp').gte('timestamp', startDate.toISOString()).lte('timestamp', endDate.toISOString()),
-        supabaseClient.from('journal_entries').select('timestamp').gte('timestamp', startDate.toISOString()).lte('timestamp', endDate.toISOString())
-    ]);
-
-    const logsMap = { mood: new Set(), med: new Set(), journal: new Set() };
-    if (moodEntries) moodEntries.forEach(m => m.date_time && logsMap.mood.add(new Date(m.date_time).toISOString().split('T')[0]));
-    if (medLogs) medLogs.forEach(m => m.timestamp && logsMap.med.add(new Date(m.timestamp).toISOString().split('T')[0]));
-    if (journalEntries) journalEntries.forEach(j => j.timestamp && logsMap.journal.add(new Date(j.timestamp).toISOString().split('T')[0]));
-
-    const defaultHabits = [
-        { id: 'mood', name: 'Mood Logs', colorClass: 'active-mood' },
-        { id: 'med', name: 'Medication', colorClass: 'active-med' },
-        { id: 'journal', name: 'Journaling', colorClass: 'active-journal' }
-    ];
-
-    container.innerHTML = '';
-    const allHabits = [
-        ...defaultHabits, 
-        ...customHabits.map((h, idx) => ({ id: `custom_${idx}`, name: h, colorClass: 'active-custom', isCustom: true }))
-    ];
-
-    allHabits.forEach(habit => {
-        const row = document.createElement('div');
-        row.className = 'habit-matrix-row';
-
-        let dotsHtml = '<div class="habit-dots-flex">';
-        for (let dayNum = 1; dayNum <= totalDaysInMonth; dayNum++) {
-            const currentDayDate = new Date(year, month, dayNum);
-            const dateStr = currentDayDate.toISOString().split('T')[0];
-
-            if (currentDayDate.getDay() === 0 && dayNum !== 1) {
-                dotsHtml += `<div class="week-separator" title="Week Divider"></div>`;
-            }
-            
-            let isLogged = false;
-            if (habit.id === 'mood' || habit.id === 'med' || habit.id === 'journal') {
-                isLogged = logsMap[habit.id].has(dateStr);
-            } else {
-                const customLogs = JSON.parse(localStorage.getItem(`habit_log_${habit.name}`)) || [];
-                isLogged = customLogs.includes(dateStr);
-            }
-
-            const activeClass = isLogged ? habit.colorClass : '';
-            const dayFormatted = currentDayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            dotsHtml += `<div class="matrix-dot ${activeClass}" title="${habit.name} — ${dayFormatted}" onclick="toggleCustomHabit('${habit.name}', '${dateStr}')"></div>`;
+        let pathD = `M ${journalPoints[0].x},${journalPoints[0].y}`;
+        for (let i = 0; i < journalPoints.length - 1; i++) {
+            const p0 = journalPoints[i];
+            const p1 = journalPoints[i + 1];
+            const cpX = (p0.x + p1.x) / 2;
+            pathD += ` C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`;
         }
-        dotsHtml += '</div>';
 
-        row.innerHTML = `
-            <span class="habit-label">
-                ${habit.name}
-                ${habit.isCustom ? `<span onclick="deleteCustomHabit('${habit.name}')" style="cursor:pointer; color:var(--terracotta); font-size:0.65rem;">✕</span>` : ''}
-            </span>
-            ${dotsHtml}
-        `;
-        container.appendChild(row);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('thisMonthBtn')?.addEventListener('click', () => renderHabitMatrix(0));
-    document.getElementById('lastMonthBtn')?.addEventListener('click', () => renderHabitMatrix(-1));
-});
-
-function deleteCustomHabit(habitName) {
-    if (confirm(`Remove habit "${habitName}"?`)) {
-        customHabits = customHabits.filter(h => h !== habitName);
-        localStorage.setItem('user_custom_habits', JSON.stringify(customHabits));
-        renderHabitMatrix(selectedMonthOffset);
-    }
-}
-
-function toggleCustomHabit(habitName, dateStr) {
-    if (['Mood Logs', 'Medication', 'Journaling'].includes(habitName)) return;
-
-    let customLogs = JSON.parse(localStorage.getItem(`habit_log_${habitName}`)) || [];
-    if (customLogs.includes(dateStr)) {
-        customLogs = customLogs.filter(d => d !== dateStr);
-    } else {
-        customLogs.push(dateStr);
-    }
-    localStorage.setItem(`habit_log_${habitName}`, JSON.stringify(customLogs));
-    renderHabitMatrix(selectedMonthOffset);
-}
-
-async function renderFullAnalyticsPage(daysFilter = 30) {
-    const pageTitle = document.getElementById('page-title');
-    const pageContent = document.getElementById('page-content');
-    if (!pageTitle || !pageContent) return;
-
-    pageTitle.textContent = 'Detailed Analytics & Insights';
-
-    const now = new Date();
-    const startDate = new Date();
-    const filterKey = String(daysFilter).toLowerCase();
-
-    if (filterKey !== 'all') {
-        const numDays = parseInt(filterKey, 10) || 30;
-        startDate.setDate(now.getDate() - numDays);
-        startDate.setHours(0, 0, 0, 0);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathD); path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#D56543'); path.setAttribute('stroke-width', '1.8');
+        path.setAttribute('stroke-dasharray', '3 3');
+        pathsGroup.appendChild(path);
     }
 
-    let moodQuery = supabaseClient.from('mood_entries').select('*');
-    let medQuery = supabaseClient.from('medication_log').select('*');
-    let journalQuery = supabaseClient.from('journal_entries').select('*');
+    // Shared Hover Cursor & Unified Dark Tooltip
+    svgElem.onmousemove = (e) => {
+        const rect = svgElem.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * canvasWidth;
 
-    if (filterKey !== 'all') {
-        moodQuery = moodQuery.gte('date_time', startDate.toISOString());
-        medQuery = medQuery.gte('timestamp', startDate.toISOString());
-        journalQuery = journalQuery.gte('timestamp', startDate.toISOString());
-    }
-
-    const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
-        moodQuery, medQuery, journalQuery
-    ]);
-
-    const moodScores = { 'great': 5, 'good': 4, 'okay': 3, 'bad': 2, 'terrible': 1 };
-    const counts = { great: 0, good: 0, okay: 0, bad: 0, terrible: 0 };
-    let totalScore = 0;
-
-    if (moodEntries) {
-        moodEntries.forEach(entry => {
-            const key = (entry.mood || '').toLowerCase().trim();
-            if (counts[key] !== undefined) {
-                counts[key]++;
-                totalScore += moodScores[key];
+        let closestIdx = 0;
+        let minDiff = Infinity;
+        xPositions.forEach((pos, idx) => {
+            const diff = Math.abs(pos - mouseX);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestIdx = idx;
             }
         });
-    }
 
-    const totalMoods = moodEntries ? moodEntries.length : 0;
-    const avgScore = totalMoods > 0 ? (totalScore / totalMoods).toFixed(2) : '0.00';
+        const matchX = xPositions[closestIdx];
+        if (crosshair) {
+            crosshair.style.display = 'block';
+            crosshair.setAttribute('x1', matchX);
+            crosshair.setAttribute('x2', matchX);
+            crosshair.setAttribute('y1', '10');
+            crosshair.setAttribute('y2', '170');
+            crosshair.setAttribute('stroke', '#41473E');
+        }
 
-    const habitSummaryList = [
-        { name: 'Mood Logs', count: totalMoods },
-        { name: 'Medication Logs', count: medLogs ? medLogs.length : 0 },
-        { name: 'Journal Reflections', count: journalEntries ? journalEntries.length : 0 },
-        ...customHabits.map(h => {
-            const logs = JSON.parse(localStorage.getItem(`habit_log_${h}`)) || [];
-            return { name: h, count: logs.length };
-        })
-    ];
+        if (tooltip) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${(matchX / canvasWidth) * 100}%`;
+            tooltip.style.top = `35px`;
 
-    pageContent.innerHTML = `
-        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-            <button class="time-filter-btn ${filterKey === '7' ? 'active-btn' : 'inactive-btn'}" data-days="7">Last 7 Days</button>
-            <button class="time-filter-btn ${filterKey === '30' ? 'active-btn' : 'inactive-btn'}" data-days="30">Last 30 Days</button>
-            <button class="time-filter-btn ${filterKey === 'all' ? 'active-btn' : 'inactive-btn'}" data-days="all">All Time</button>
-        </div>
+            const b = buckets[closestIdx];
+            const mVal = moodNorm[closestIdx].score;
+            const lVal = listeningNorm[closestIdx].count;
+            const medVal = medEvents[closestIdx].count > 0 ? 'Logged' : 'None';
+            const jVal = journalEvents[closestIdx].count;
 
-        <div class="stats-grid" style="margin-bottom: 20px;">
-            <div class="stat-box sage-box">
-                <span class="stat-value">${avgScore}</span>
-                <span class="stat-label">Average Score (Out of 5)</span>
-            </div>
-            <div class="stat-box gold-box">
-                <span class="stat-value">${totalMoods}</span>
-                <span class="stat-label">Mood Logs</span>
-            </div>
-            <div class="stat-box terracotta-box">
-                <span class="stat-value">${(medLogs ? medLogs.length : 0) + (journalEntries ? journalEntries.length : 0)}</span>
-                <span class="stat-label">Meds & Journal Actions</span>
-            </div>
-        </div>
+            tooltip.innerHTML = `
+                <div class="tooltip-date">${b.dateString}</div>
+                <div class="tooltip-row"><span style="color:#788D46">●</span> Mood: ${mVal}/5</div>
+                <div class="tooltip-row"><span style="color:#9A75C4">●</span> Tracks: ${lVal}</div>
+                <div class="tooltip-row"><span style="color:#D49728">●</span> Meds: ${medVal}</div>
+                <div class="tooltip-row"><span style="color:#D56543">●</span> Journal: ${jVal} entries</div>
+            `;
+        }
+    };
 
-        <h4 style="font-family: 'DM Serif Display', serif; margin: 20px 0 10px 0; color: var(--olive);">Habit & Activity Data Summary</h4>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 25px;">
-            <thead>
-                <tr style="border-bottom: 2px solid var(--sage); color: var(--olive); text-align: left;">
-                    <th style="padding: 6px;">Habit / Activity Name</th>
-                    <th style="padding: 6px; text-align: right;">Total Logs</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${habitSummaryList.map(h => `
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 8px 6px; font-weight: 600;">${h.name}</td>
-                        <td style="padding: 8px 6px; text-align: right; color: var(--olive); font-weight: 700;">${h.count} logged</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-
-    document.querySelectorAll('.time-filter-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const daysAttr = e.currentTarget.getAttribute('data-days');
-            renderFullAnalyticsPage(daysAttr);
-        });
-    });
+    svgElem.onmouseleave = () => {
+        if (crosshair) crosshair.style.display = 'none';
+        if (tooltip) tooltip.style.display = 'none';
+    };
 }
