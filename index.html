@@ -3,239 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warm & Organic Wellness Dashboard</title>
+    <title>Phase — Personal Pattern Tracking</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+    <!-- PHASE TOP BRANDING & NAVIGATION HEADER -->
+    <header class="phase-header">
+        <div class="header-container">
+            <div class="brand-logo">
+                <span class="brand-icon">◐</span>
+                <span class="brand-name">Phase</span>
+            </div>
+            <nav class="phase-nav">
+                <a href="#" class="nav-link active">Home</a>
+                <a href="#journal" class="nav-link">Journal</a>
+                <a href="#analytics" class="nav-link">Insights</a>
+                <a href="#music" class="nav-link">Music</a>
+                <a href="#medication" class="nav-link">More</a>
+            </nav>
+        </div>
+    </header>
+
     <!-- MAIN DASHBOARD VIEW -->
     <div id="dashboard-view">
         <div class="dashboard-grid">
-            <!-- Row 1 Column 1: Mood Tracker -->
-            <div class="card mood-tracker-card" style="display: flex; flex-direction: column;">
-                <div class="card-header-flex">
-                    <h3>Mood Tracker</h3>
-                    <img src="assets/mood tracker icon.svg" alt="Mood Tracker Icon" class="nav-icon">
-                </div>
+            
+            <!-- LEFT COLUMN: PRIMARY CHECK-IN & CONSOLIDATED DAILY STATUS RAIL -->
+            <div class="left-column">
                 
-                <form id="moodForm">
-                    <div class="mood-buttons">
-                        <button type="button" name="mood" value="Great" class="mood-btn great">Great</button>
-                        <button type="button" name="mood" value="Good" class="mood-btn good">Good</button>
-                        <button type="button" name="mood" value="Okay" class="mood-btn okay">Okay</button>
-                        <button type="button" name="mood" value="Bad" class="mood-btn bad">Bad</button>
-                        <button type="button" name="mood" value="Terrible" class="mood-btn terrible">Terrible</button>
+                <!-- 1. Check In / Mood Tracker -->
+                <div class="card mood-tracker-card">
+                    <div class="card-header-flex">
+                        <h3>How are you feeling?</h3>
+                        <img src="assets/mood tracker icon.svg" alt="Check in" class="nav-icon">
                     </div>
-
-                    <div class="notes">
-                        <textarea id="notes" name="notes" placeholder="Add any notes or tags here..."></textarea>
-                    </div>
-
-                    <div class="datetime-submit">
-                        <input type="datetime-local" id="dateTime" name="dateTime">
-                        <button type="submit" id="saveEntry" class="save-btn">Save Entry</button>
-                    </div>
-                </form>
-
-                <!-- Hidden on card to hide visible log items while preserving functionality -->
-                <div id="history" style="display: none;"></div>
-                <a href="#mood" class="card-view-all">View All →</a>
-            </div>
-
-            <!-- Row 2 Column 1: Medication Tracker -->
-            <div class="card detail-card med-details-card" style="display: flex; flex-direction: column;">
-                <div class="card-header-flex">
-                    <h3>Medication Tracker</h3>
-                    <img src="assets/medication icon.svg" alt="Medication Icon" class="nav-icon">
-                </div>
-
-                <!-- Dynamic Log Container -->
-                <div id="med-log-history"></div>
-
-                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px;">
-                    <button id="simulateNFC" class="save-btn" style="width: 100%;">Log Medication →</button>
-                    <a href="#medication" class="card-view-all">View All →</a>
-                </div>
-            </div>
-
-            <!-- Column 2 (Spans Rows 1, 2, & 3): Combined Trends, Analytics & Music Insights -->
-            <div class="card detail-card analytics-card">
-                <div class="card-header-flex">
-                    <h3>Trends & Analytics</h3>
-                    <img src="assets/trends icon.svg" alt="Trends Icon" class="nav-icon">
-                </div>
-
-                <!-- Main Flex Body Wrapper -->
-                <div class="analytics-card-body">
                     
-                    <!-- Insights Highlight Badges -->
-                    <div class="analytics-badge-row">
-                        <span id="streakBadge" class="analytics-badge sage-badge">🔥 0-Day Streak</span>
-                        <span id="medAdherenceBadge" class="analytics-badge gold-badge">💊 0% Med Adherence</span>
+                    <form id="moodForm">
+                        <div class="mood-buttons">
+                            <button type="button" name="mood" value="Great" class="mood-btn great">Great</button>
+                            <button type="button" name="mood" value="Good" class="mood-btn good">Good</button>
+                            <button type="button" name="mood" value="Okay" class="mood-btn okay">Okay</button>
+                            <button type="button" name="mood" value="Bad" class="mood-btn bad">Bad</button>
+                            <button type="button" name="mood" value="Terrible" class="mood-btn terrible">Terrible</button>
+                        </div>
+
+                        <div class="notes">
+                            <textarea id="notes" name="notes" placeholder="Add optional note or context..."></textarea>
+                        </div>
+
+                        <div class="datetime-submit">
+                            <input type="datetime-local" id="dateTime" name="dateTime">
+                            <button type="submit" id="saveEntry" class="save-btn">Save Entry</button>
+                        </div>
+                    </form>
+
+                    <!-- Hidden container to preserve JS background rendering -->
+                    <div id="history" style="display: none;"></div>
+                </div>
+
+                <!-- 2. Consolidated "Today" Card -->
+                <div class="card compact-card today-summary-card">
+                    <div class="card-header-flex">
+                        <h3>Today</h3>
+                        <span class="section-subtitle" style="margin: 0;">Tracked Signals</span>
                     </div>
 
-                    <!-- 2-Column Split TOP ROW: Graph Side (2/3) vs Stats Side (1/3) -->
-                    <div class="analytics-split-container">
+                    <div class="today-status-list">
+                        <!-- Medication Status Row -->
+                        <div class="today-status-row">
+                            <div class="status-row-info">
+                                <span class="status-row-icon">💊</span>
+                                <div>
+                                    <strong class="status-row-title">Medication</strong>
+                                    <span id="todayMedText" class="status-row-desc">Checking status...</span>
+                                </div>
+                            </div>
+                            <button id="simulateNFC" class="text-action-btn">Log →</button>
+                        </div>
+
+                        <!-- Listening Status Row -->
+                        <div class="today-status-row">
+                            <div class="status-row-info">
+                                <span class="status-row-icon">🎧</span>
+                                <div>
+                                    <strong class="status-row-title">Listening</strong>
+                                    <span id="spotifyVibeSubtitle" class="status-row-desc">Spotify not connected</span>
+                                </div>
+                            </div>
+                            <button id="connectSpotifyBtn" class="text-action-btn">Connect</button>
+                        </div>
+
+                        <!-- Journal Status Row -->
+                        <div class="today-status-row">
+                            <div class="status-row-info">
+                                <span class="status-row-icon">📖</span>
+                                <div>
+                                    <strong class="status-row-title">Journal</strong>
+                                    <span id="todayJournalText" class="status-row-desc">Not logged today</span>
+                                </div>
+                            </div>
+                            <a href="#journal" class="text-action-btn">View →</a>
+                        </div>
+                    </div>
+
+                    <!-- Hidden container targeted by js/spotify.js to preserve connection engine -->
+                    <div id="spotify-container" style="display: none;"></div>
+                    <span id="spotifyVibeTitle" style="display: none;">Listening Status</span>
+                    <div id="med-log-history" style="display: none;"></div>
+                </div>
+
+                <!-- 3. Quick Reflection Card -->
+                <div class="card journal-details-card">
+                    <div class="card-header-flex">
+                        <h3>Quick Reflection</h3>
+                        <img src="assets/journal icon.svg" alt="Journal" class="nav-icon">
+                    </div>
+
+                    <div class="prompt-box">
+                        <div class="prompt-header">
+                            <span class="prompt-title">PROMPT INSPIRATION</span>
+                            <button type="button" id="shufflePromptBtn" class="text-link-btn">Shuffle</button>
+                        </div>
+                        <p id="dashboardPromptText">What is one small win from today that I want to celebrate?</p>
+                        <button id="writeWithPromptBtn" class="outline-btn prompt-write-btn">Write about this →</button>
+                    </div>
+
+                    <!-- Hidden recent entries container -->
+                    <div class="recent-entries" style="display: none;"></div>
+
+                    <div class="card-action-row">
+                        <button id="freeWriteBtn" class="save-btn full-width-btn">Free Write →</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: PATTERN CENTERPIECE & WAVELENGTH VISUALIZATION -->
+            <div class="right-column">
+                <div class="card analytics-card wavelength-card">
+                    <div class="card-header-flex">
+                        <div>
+                            <h2>Your Phase</h2>
+                            <span class="section-subtitle">See how your signals move together</span>
+                        </div>
+                        <img src="assets/trends icon.svg" alt="Trends" class="nav-icon">
+                    </div>
+
+                    <div class="analytics-card-body">
                         
-                        <!-- LEFT SIDE: Taller Graph (~2/3 Width) -->
-                        <div class="analytics-main-col">
-                            <span class="section-subtitle">Last 7 Days Overview</span>
+                        <!-- Dynamic Signal Selector Pills -->
+                        <div class="signal-selector-row">
+                            <span class="signal-selector-label">SIGNALS:</span>
+                            <button id="btnSignalMood" class="signal-pill active" onclick="toggleWavelengthSignal('mood')">Mood ✓</button>
+                            <button id="btnSignalListening" class="signal-pill active" onclick="toggleWavelengthSignal('listening')">Listening ✓</button>
+                            <button id="btnSignalMedication" class="signal-pill active" onclick="toggleWavelengthSignal('medication')">Medication ✓</button>
+                            <button id="btnSignalJournal" class="signal-pill active" onclick="toggleWavelengthSignal('journal')">Journal ✓</button>
+                        </div>
 
-                            <div class="chart-container" style="display: flex; gap: 8px; align-items: flex-start; position: relative;">
-                                <div class="y-axis-labels" style="height: 140px;">
-                                    <span>Great</span>
-                                    <span>Okay</span>
-                                    <span>Terrible</span>
-                                </div>
-
-                                <div style="flex: 1; position: relative;">
-                                    <svg viewBox="0 0 350 140" class="trend-svg" preserveAspectRatio="none" style="width: 100%; height: 140px;">
-                                        <defs>
-                                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stop-color="#A7AF8B" stop-opacity="0.5" />
-                                                <stop offset="100%" stop-color="#A7AF8B" stop-opacity="0.0" />
-                                            </linearGradient>
-                                        </defs>
-                                        <path id="chartArea" fill="url(#chartGradient)" d="" />
-                                        <path id="chartPath" fill="none" stroke="#56613B" stroke-width="3" stroke-linecap="round" d="" />
-                                        <g id="chartNodes"></g>
-                                    </svg>
-                                    <div class="chart-labels" id="dynamicChartLabels"></div>
-                                    <div id="chartTooltip" class="chart-tooltip"></div>
-                                </div>
+                        <!-- Expanded Wavelength Canvas (320px Height) -->
+                        <div class="wavelength-container">
+                            <div class="chart-wrapper">
+                                <svg viewBox="0 0 350 280" class="wavelength-svg" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="moodWaveGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#56613B" stop-opacity="0.35" />
+                                            <stop offset="100%" stop-color="#56613B" stop-opacity="0.0" />
+                                        </linearGradient>
+                                        <linearGradient id="musicWaveGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#1DB954" stop-opacity="0.3" />
+                                            <stop offset="100%" stop-color="#1DB954" stop-opacity="0.0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <g id="wavelengthGridGroup"></g>
+                                    <g id="wavelengthPathsGroup"></g>
+                                    <g id="wavelengthEventsGroup"></g>
+                                </svg>
+                                <div class="chart-labels" id="dynamicChartLabels"></div>
+                                <div id="chartTooltip" class="chart-tooltip"></div>
                             </div>
                         </div>
 
-                        <!-- RIGHT SIDE: Stats & Weekly Insights (~1/3 Width) -->
-                        <div class="analytics-side-col">
-                            <div class="stats-grid-two">
-                                <div class="stat-box terracotta-box">
-                                    <span class="stat-value" id="daysLoggedValue">0</span>
-                                    <span class="stat-label">Days Logged</span>
-                                </div>
-                                <div class="stat-box sage-box">
-                                    <span class="stat-value" id="avgMoodValue">0.0</span>
-                                    <span class="stat-label">Avg Mood</span>
-                                </div>
-                            </div>
-
-                            <div class="insight-box">
-                                <span class="prompt-title">WEEKLY INSIGHT</span>
-                                <p id="weeklyInsightText" style="margin: 6px 0 0 0; font-size: 0.82rem; color: var(--primary-text); line-height: 1.35;">
-                                    Log entries to generate weekly wellness insights.
+                        <!-- Pattern & This Week Summary Section -->
+                        <div class="wavelength-summary-row">
+                            <!-- Pattern Insight Tile -->
+                            <div class="insight-box wavelength-insight-tile">
+                                <span class="prompt-title">PATTERN DETECTED</span>
+                                <p id="weeklyInsightText">
+                                    Log entries to generate weekly pattern insights.
                                 </p>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- FULL-WIDTH SECTION 1: Mood Distribution Progress Bar -->
-                    <div style="width: 100%;">
-                        <span class="section-subtitle" style="margin-bottom: 6px;">Mood Distribution</span>
-                        <div class="mood-bar-container">
-                            <div id="barGreat" class="mood-bar-seg great-seg" style="width: 0%;"></div>
-                            <div id="barGood" class="mood-bar-seg good-seg" style="width: 0%;"></div>
-                            <div id="barLow" class="mood-bar-seg low-seg" style="width: 0%;"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--secondary-text); margin-top: 6px;">
-                            <span>🟢 High (<span id="countHigh">0</span>)</span>
-                            <span>🟡 Medium (<span id="countMed">0</span>)</span>
-                            <span>🔴 Low (<span id="countLow">0</span>)</span>
-                        </div>
-                    </div>
-
-                    <!-- FULL-WIDTH SECTION 2: MONTHLY HABIT MATRIX WITH WEEK DIVIDERS -->
-                    <div class="dot-matrix-container" style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span class="section-subtitle" id="habitMatrixMonthLabel" style="margin: 0;">Habit Matrix — August 2026</span>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <button id="addHabitBtn" style="background: none; border: 1px dashed var(--olive); color: var(--olive); padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer;">+ Add Habit</button>
-                                <div style="display: flex; gap: 4px;">
-                                    <button id="thisMonthBtn" class="time-filter-btn active-btn" style="padding: 2px 10px; font-size: 0.7rem;">This Month</button>
-                                    <button id="lastMonthBtn" class="time-filter-btn inactive-btn" style="padding: 2px 10px; font-size: 0.7rem;">Last Month</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Dynamic Habit Rows Container -->
-                        <div id="habitMatrixRows" style="display: flex; flex-direction: column; gap: 10px; background: #FAF8F3; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box; overflow-x: auto;">
-                            <!-- Dynamic Rows rendered via JavaScript -->
-                        </div>
-                    </div>
-
-                    <!-- EMBEDDED SPOTIFY SECTION (1-2 COLUMN SPLIT LAYOUT) -->
-                    <div class="music-analytics-section" style="width: 100%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span class="section-subtitle" style="margin: 0;">Audio & Mood Correlations</span>
-                            <a href="#music" style="color: var(--terracotta); text-decoration: none; font-size: 0.78rem; font-weight: 600;">Full Music Insights →</a>
-                        </div>
-
-                        <!-- 1-2 Split: Left Vibe (1/3) vs Right Sessions (2/3) -->
-                        <div class="spotify-split-grid">
-                            
-                            <!-- Left Column: Weekly Vibe Badge Card (1/3 Width) -->
-                            <div class="spotify-vibe-card">
-                                <span class="prompt-title" style="font-size: 0.68rem; color: #1DB954;">AUDIO VIBE</span>
-                                <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.4rem;">🎧</span>
-                                    <div>
-                                        <strong id="spotifyVibeTitle" style="font-size: 0.85rem; color: var(--primary-text); display: block;">Mellow Acoustic</strong>
-                                        <span id="spotifyVibeSubtitle" style="font-size: 0.7rem; color: var(--secondary-text);">High correlation with "Great" mood</span>
+                            <!-- This Week Metrics Tiles -->
+                            <div class="this-week-container">
+                                <span class="this-week-title">THIS WEEK</span>
+                                <div class="this-week-grid">
+                                    <div class="stat-box terracotta-box">
+                                        <span class="stat-value" id="daysLoggedValue">0</span>
+                                        <span class="stat-label">Days Logged</span>
+                                    </div>
+                                    <div class="stat-box sage-box">
+                                        <span class="stat-value" id="avgMoodValue">0.0</span>
+                                        <span class="stat-label">Avg Mood</span>
+                                    </div>
+                                    <div class="stat-box gold-box">
+                                        <span class="stat-value" id="streakBadgeText">0d</span>
+                                        <span class="stat-label">Streak</span>
+                                    </div>
+                                    <div class="stat-box sage-box">
+                                        <span class="stat-value" id="medAdherenceText">0%</span>
+                                        <span class="stat-label">Med Adherence</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Right Column: Recent Sessions Container (2/3 Width) -->
-                            <div id="spotify-container" class="spotify-session-card">
-                                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #1DB954; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; flex-shrink: 0;">🎵</div>
-                                        <div>
-                                            <strong style="font-size: 0.8rem; color: var(--primary-text); display: block;">Recent Sessions</strong>
-                                            <span style="font-size: 0.7rem; color: var(--secondary-text);">Connect account to fetch 50 recently played tracks</span>
-                                        </div>
-                                    </div>
-                                    <button id="connectSpotifyBtn" class="pill-btn" style="background-color: #1DB954; font-size: 0.75rem; padding: 6px 14px; flex-shrink: 0;">
-                                        Connect Account
-                                    </button>
-                                </div>
-                            </div>
-
                         </div>
+
                     </div>
 
-                </div>
-
-                <a href="#analytics" style="align-self: flex-end; color: var(--terracotta); text-decoration: none; font-size: 0.85rem; font-weight: 600; padding-top: 10px;">View Detailed Analytics →</a>
-            </div>
-
-            <!-- Row 3 Column 1: Journal & Prompts -->
-            <div class="card detail-card journal-details-card" style="display: flex; flex-direction: column;">
-                <div class="card-header-flex">
-                    <h3>Journal</h3>
-                    <img src="assets/journal icon.svg" alt="Journal Icon" class="nav-icon">
-                </div>
-
-                <!-- Active Prompt Box -->
-                <div class="prompt-box" style="margin-bottom: 8px; padding: 10px 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span class="prompt-title">NEED INSPIRATION?</span>
-                        <button type="button" id="shufflePromptBtn" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.78rem; font-weight: 600;"> Shuffle</button>
+                    <div class="card-footer-link">
+                        <a href="#analytics" class="card-view-all">Explore Detailed Insights & History →</a>
                     </div>
-                    <p id="dashboardPromptText" style="font-style: italic; margin-bottom: 6px; font-size: 0.8rem;">What is one small win from today that I want to celebrate?</p>
-                    <button id="writeWithPromptBtn" class="outline-btn" style="width: 100%; font-size: 0.78rem; padding: 5px; color: var(--olive); border-color: var(--sage);">Write about this →</button>
-                </div>
-
-                <!-- Hidden on card to hide visible entry items while preserving functionality -->
-                <div class="recent-entries" style="display: none;"></div>
-
-                <!-- Bottom Actions -->
-                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px;">
-                    <button id="freeWriteBtn" class="save-btn" style="width: 100%;">Free Write →</button>
-                    <a href="#journal" class="card-view-all">View All →</a>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -314,8 +306,9 @@
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Modular Application Scripts -->
+    <!-- Application Scripts -->
     <script src="js/config.js" defer></script>
+    <script src="js/wavelengthUtils.js" defer></script>
     <script src="js/prompts.js" defer></script>
     <script src="js/analytics.js" defer></script>
     <script src="js/router.js" defer></script>
