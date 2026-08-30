@@ -46,6 +46,7 @@ if (moodForm) {
         }
     });
 
+    // REPLACE YOUR EXISTING 'submit' EVENT LISTENER WITH THIS:
     moodForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const moodButtons = document.querySelectorAll('#moodForm .mood-buttons button.selected');
@@ -57,13 +58,22 @@ if (moodForm) {
         }
 
         const notes = document.getElementById('notes').value.trim();
+        const songPairing = document.getElementById('songPairingInput')?.value.trim() || '';
         const dateTime = document.getElementById('dateTime').value || new Date().toISOString();
 
         const { error } = await supabaseClient
             .from('mood_entries')
-            .insert([{ mood: selectedMood, notes: notes, date_time: dateTime }]);
+            .insert([{ 
+                mood: selectedMood, 
+                notes: notes, 
+                song_pairing: songPairing, 
+                date_time: dateTime 
+            }]);
 
-        if (error) return;
+        if (error) {
+            console.error('Error saving mood:', error);
+            return;
+        }
 
         await renderHistory();
         await updateAnalytics();
