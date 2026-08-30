@@ -441,7 +441,7 @@ async function spotifyApiRequest(endpoint, retry = true) {
 
 async function fetchRecentlyPlayedTracks() {
     const data = await spotifyApiRequest(
-        '/me/player/recently-played?limit=30'
+        '/me/player/recently-played?limit=50'
     );
 
     return data?.items || [];
@@ -739,10 +739,37 @@ async function syncSpotifyData() {
         fetchCurrentlyPlayingTrack()
     ]);
 
+    let historySaveError = null;
+
+    if (
+        tracks?.length &&
+        typeof saveSpotifyListeningHistory ===
+            'function'
+    ) {
+        try {
+            await saveSpotifyListeningHistory(
+                tracks
+            );
+        } catch (error) {
+            historySaveError = error;
+
+            console.error(
+                'Spotify history database sync failed:',
+                error
+            );
+        }
+    }
+
     renderSpotifyRecentSessions(
         tracks || [],
         currentlyPlaying
     );
+
+    if (historySaveError) {
+        updateSpotifyConnectionStatus(
+            'Spotify connected — history save failed'
+        );
+    }
 }
 
 // This function name is referenced by router.js.
