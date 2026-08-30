@@ -2,6 +2,48 @@
 // SPOTIFY INTEGRATION & AUDIO PULSE ENGINE
 // ==========================================
 
+// Spotify OAuth Configuration
+const SPOTIFY_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID_HERE'; // Replace with your Spotify Developer App Client ID
+const SPOTIFY_REDIRECT_URI = window.location.origin + window.location.pathname;
+const SPOTIFY_SCOPES = ['user-read-recently-played', 'user-read-currently-playing'];
+
+// Redirects user to Spotify Authorization Screen
+function redirectToSpotifyAuth() {
+    if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID_HERE') {
+        alert('Please update your SPOTIFY_CLIENT_ID in js/spotify.js');
+        return;
+    }
+
+    const authUrl = new URL('https://accounts.spotify.com/authorize');
+    authUrl.searchParams.append('client_id', SPOTIFY_CLIENT_ID);
+    authUrl.searchParams.append('response_type', 'token');
+    authUrl.searchParams.append('redirect_uri', SPOTIFY_REDIRECT_URI);
+    authUrl.searchParams.append('scope', SPOTIFY_SCOPES.join(' '));
+    authUrl.searchParams.append('show_dialog', 'true');
+
+    window.location.href = authUrl.toString();
+}
+
+// Handles incoming access token from Spotify callback URL
+function handleSpotifyTokenCallback() {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
+
+        if (token) {
+            localStorage.setItem('spotify_access_token', token);
+            // Clean hash from URL bar without triggering page reloads
+            window.history.replaceState(null, null, window.location.pathname);
+            
+            fetchRecentlyPlayedTracks(token).then(tracks => {
+                if (tracks) renderSpotifyRecentSessions(tracks);
+            });
+        }
+    }
+}
+
+// Fetches user's recently played tracks from Spotify REST API
 async function fetchRecentlyPlayedTracks(accessToken) {
     try {
         const response = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=30', {
@@ -29,6 +71,7 @@ async function fetchRecentlyPlayedTracks(accessToken) {
     }
 }
 
+// Renders dynamic Spotify session info and audio pulse meter
 function renderSpotifyRecentSessions(tracks) {
     const container = document.getElementById('spotify-container');
     const tokenExists = !!localStorage.getItem('spotify_access_token');
@@ -126,13 +169,21 @@ function renderSpotifyRecentSessions(tracks) {
     }
 }
 
+// Initializes Spotify connection hooks and checks stored tokens
 function initSpotifyAuth() {
+    handleSpotifyTokenCallback();
+
     const connectBtn = document.getElementById('connectSpotifyBtn');
     if (connectBtn) {
         connectBtn.addEventListener('click', () => {
             const tokenExists = !!localStorage.getItem('spotify_access_token');
-            if (!tokenExists && typeof redirectToSpotifyAuth === 'function') {
+            if (!tokenExists) {
                 redirectToSpotifyAuth();
+            } else {
+                if (confirm('Disconnect Spotify?')) {
+                    localStorage.removeItem('spotify_access_token');
+                    location.reload();
+                }
             }
         });
     }
