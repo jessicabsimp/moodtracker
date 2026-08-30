@@ -3,13 +3,13 @@
 // ==========================================
 
 // Spotify OAuth Configuration
-const SPOTIFY_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID_HERE'; // Replace with your Spotify Developer App Client ID
+const SPOTIFY_CLIENT_ID = 'Yd3c342d0538c4fb9b1ecf547654dc0e5'; // Replace with your Spotify Developer App Client ID
 const SPOTIFY_REDIRECT_URI = window.location.origin + window.location.pathname;
 const SPOTIFY_SCOPES = ['user-read-recently-played', 'user-read-currently-playing'];
 
 // Redirects user to Spotify Authorization Screen
 function redirectToSpotifyAuth() {
-    if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID_HERE') {
+    if (SPOTIFY_CLIENT_ID === 'Yd3c342d0538c4fb9b1ecf547654dc0e5') {
         alert('Please update your SPOTIFY_CLIENT_ID in js/spotify.js');
         return;
     }
