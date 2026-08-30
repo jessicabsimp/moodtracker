@@ -136,8 +136,6 @@ function initSpotifyAuth() {
             }
         });
     }
-    // ...
-}
 
     // Auto-sync bottom bar on initial load if token exists
     const token = localStorage.getItem('spotify_access_token');
