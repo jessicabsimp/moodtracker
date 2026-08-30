@@ -9,10 +9,6 @@ const SPOTIFY_SCOPES = ['user-read-recently-played', 'user-read-currently-playin
 
 // Redirects user to Spotify Authorization Screen
 function redirectToSpotifyAuth() {
-    if (SPOTIFY_CLIENT_ID === 'd3c342d0538c4fb9b1ecf547654dc0e5') {
-        alert('Please update your SPOTIFY_CLIENT_ID in js/spotify.js');
-        return;
-    }
 
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.append('client_id', SPOTIFY_CLIENT_ID);
