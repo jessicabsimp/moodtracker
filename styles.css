@@ -964,3 +964,272 @@ body {
     font-size: 0.65rem;
     letter-spacing: -1px;
 }
+
+/* ==========================================
+   INSIGHTS + MUSIC SUBPAGES
+   ========================================== */
+
+.phase-page-state,
+.phase-page-error {
+    padding: 22px;
+    border: 1px solid var(--phase-border);
+    border-radius: var(--phase-radius-md);
+    background: var(--phase-surface-secondary);
+    color: var(--phase-text-secondary);
+}
+
+.phase-page-error strong {
+    color: var(--phase-text);
+}
+
+.phase-page-error p {
+    color: var(--phase-text-muted);
+}
+
+.phase-page-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.phase-page-toolbar p {
+    margin: 0;
+    color: var(--phase-text-secondary);
+    font-size: 0.84rem;
+}
+
+.phase-page-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.phase-page-stat {
+    padding: 14px;
+    border: 1px solid var(--phase-border);
+    border-radius: var(--phase-radius-md);
+    background: var(--phase-surface-secondary);
+    display: flex;
+    flex-direction: column;
+}
+
+.phase-page-stat.mood {
+    border-top: 2px solid var(--signal-mood);
+}
+
+.phase-page-stat.listening {
+    border-top: 2px solid var(--signal-listening);
+}
+
+.phase-page-stat.medication {
+    border-top: 2px solid var(--signal-medication);
+}
+
+.phase-page-stat.journal {
+    border-top: 2px solid var(--signal-journal);
+}
+
+.phase-page-stat.neutral {
+    border-top: 2px solid var(--phase-border-strong);
+}
+
+.phase-page-stat strong {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 1.45rem;
+    color: var(--phase-text);
+}
+
+.phase-page-stat span,
+.phase-page-note {
+    color: var(--phase-text-muted);
+    font-size: 0.68rem;
+}
+
+.phase-pattern-box {
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--phase-border);
+    border-left: 3px solid var(--signal-journal);
+    border-radius: var(--phase-radius-md);
+    background: var(--phase-surface-secondary);
+}
+
+.phase-pattern-box p {
+    margin: 7px 0 0;
+    color: var(--phase-text-secondary);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.phase-signal-list {
+    border: 1px solid var(--phase-border);
+    border-radius: var(--phase-radius-md);
+    overflow: hidden;
+    background: var(--phase-graph-surface);
+}
+
+.phase-list-heading {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--phase-border);
+}
+
+.phase-list-heading span {
+    color: var(--phase-text-muted);
+    font-size: 0.68rem;
+    margin-top: 2px;
+}
+
+.phase-signal-row {
+    display: grid;
+    grid-template-columns: 74px repeat(4, 1fr);
+    gap: 8px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--phase-border);
+    color: var(--phase-text-secondary);
+    font-size: 0.7rem;
+}
+
+.phase-signal-row:last-child,
+.music-track-row:last-child {
+    border-bottom: 0;
+}
+
+.phase-signal-row span:nth-child(2) {
+    color: var(--signal-mood);
+}
+
+.phase-signal-row span:nth-child(3) {
+    color: var(--signal-medication);
+}
+
+.phase-signal-row span:nth-child(4) {
+    color: var(--signal-journal);
+}
+
+.phase-signal-row span:nth-child(5) {
+    color: var(--signal-listening);
+}
+
+.phase-page-note {
+    margin: 12px 2px 0;
+    line-height: 1.5;
+}
+
+.music-connect-state {
+    text-align: center;
+    border-color: var(--signal-listening-dark);
+}
+
+.music-connect-state strong {
+    display: block;
+    color: var(--phase-text);
+    margin-bottom: 6px;
+}
+
+.music-connect-state p {
+    font-size: 0.82rem;
+}
+
+.music-current {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--signal-listening-dark);
+    border-radius: var(--phase-radius-md);
+    background: var(--signal-listening-tint);
+}
+
+.music-current img {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--phase-radius-md);
+    object-fit: cover;
+}
+
+.music-current h3 {
+    margin: 4px 0;
+}
+
+.music-current p {
+    margin: 0;
+    color: var(--phase-text-secondary);
+    font-size: 0.78rem;
+}
+
+.music-track-row {
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--phase-border);
+}
+
+.music-track-row img,
+.music-art-placeholder {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--phase-radius-sm);
+    object-fit: cover;
+}
+
+.music-art-placeholder {
+    display: grid;
+    place-items: center;
+    background: var(--phase-surface-hover);
+}
+
+.music-track-row div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.music-track-row div strong,
+.music-track-row div span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.music-track-row div strong {
+    font-size: 0.77rem;
+}
+
+.music-track-row div span,
+.music-track-row time {
+    color: var(--phase-text-muted);
+    font-size: 0.66rem;
+    margin-top: 3px;
+}
+
+@media (max-width: 680px) {
+    .phase-page-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .phase-page-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .phase-signal-row {
+        grid-template-columns: 68px repeat(2, 1fr);
+    }
+
+    .phase-signal-row span:nth-child(n+4),
+    .music-track-row time {
+        display: none;
+    }
+
+    .music-track-row {
+        grid-template-columns: 42px 1fr;
+    }
+}

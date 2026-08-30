@@ -126,7 +126,7 @@ async function updateAnalytics() {
     let spotifyItems = [];
     const spotifyToken = localStorage.getItem('spotify_access_token');
     if (spotifyToken && typeof fetchRecentlyPlayedTracks === 'function') {
-        const tracks = await fetchRecentlyPlayedTracks(spotifyToken);
+        const tracks = await fetchRecentlyPlayedTracks();
         if (tracks) spotifyItems = tracks;
     }
 
@@ -488,7 +488,9 @@ function renderPhaseWavelength() {
             tooltip.style.top = `35px`;
 
             const b = buckets[closestIdx];
-            const mVal = moodNorm[closestIdx].score;
+            const mVal = (
+                moodNorm[closestIdx].val * 5
+            ).toFixed(1);
             const lVal = listeningNorm[closestIdx].count;
             const medVal = medEvents[closestIdx].count > 0 ? 'Logged' : 'None';
             const jVal = journalEvents[closestIdx].count;

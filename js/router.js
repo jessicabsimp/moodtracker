@@ -50,23 +50,15 @@ async function handleRouting() {
         pageTitle.textContent = 'Mood Log History';
         renderFullMoodList();
     } else if (hash === '#analytics') {
-        pageTitle.textContent = 'Personal Insights & Analytics';
-        renderFullAnalyticsPage(30);
+    pageTitle.textContent =
+        'Personal Insights & Analytics';
+
+        await renderFullAnalyticsPage(30);
     } else if (hash === '#music') {
-        pageTitle.textContent = 'Music & Audio Insights';
-        if (typeof renderMusicInsightsSubpage === 'function') {
-            renderMusicInsightsSubpage();
-        } else {
-            pageContent.innerHTML = `
-                <div style="padding: 10px 0;">
-                    <p style="color: var(--secondary-text); margin-bottom: 12px;">Track your listening behavior and explore audio-mood correlations.</p>
-                    <div id="spotify-container" class="card" style="padding: 16px;"></div>
-                </div>
-            `;
-            if (typeof initSpotifyIntegration === 'function') {
-                initSpotifyIntegration();
-            }
-        }
+    pageTitle.textContent =
+        'Music & Audio Insights';
+
+        await renderMusicInsightsSubpage();
     }
 }
 
