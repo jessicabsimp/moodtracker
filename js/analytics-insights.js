@@ -90,7 +90,7 @@ async function phaseLoadInsightData(days) {
                 .order('played_at', { ascending: false })
                 .limit(1000),
             supabaseClient.from('music_tracks')
-                .select('id, track_name, artist_names, album_name, duration_ms, artwork_url, spotify_url, genre, tempo, energy, valence, danceability')
+                .select('id, track_name, artist_names, album_name, duration_ms, artwork_url, spotify_url')
                 .limit(1000)
         ]);
 
