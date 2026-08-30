@@ -3,13 +3,12 @@
 // ==========================================
 
 // Spotify OAuth Configuration
-const SPOTIFY_CLIENT_ID = 'd3c342d0538c4fb9b1ecf547654dc0e5'; // Replace with your Spotify Developer App Client ID
+const SPOTIFY_CLIENT_ID = 'd3c342d0538c4fb9b1ecf547654dc0e5';
 const SPOTIFY_REDIRECT_URI = window.location.origin + window.location.pathname;
 const SPOTIFY_SCOPES = ['user-read-recently-played', 'user-read-currently-playing'];
 
 // Redirects user to Spotify Authorization Screen
 function redirectToSpotifyAuth() {
-
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.append('client_id', SPOTIFY_CLIENT_ID);
     authUrl.searchParams.append('response_type', 'token');
@@ -29,7 +28,7 @@ function handleSpotifyTokenCallback() {
 
         if (token) {
             localStorage.setItem('spotify_access_token', token);
-            // Clean hash from URL bar without triggering page reloads
+            // Clean hash from URL bar cleanly
             window.history.replaceState(null, null, window.location.pathname);
             
             fetchRecentlyPlayedTracks(token).then(tracks => {
