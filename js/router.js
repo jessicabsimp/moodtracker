@@ -38,7 +38,7 @@ async function handleRouting() {
 
     dashboardView.style.display = 'none';
     subpageView.style.display = 'block';
-    pageContent.innerHTML = '<p style="font-size: 0.85rem; color: var(--secondary-text);">Loading...</p>';
+    pageContent.innerHTML = '<p class="phase-page-state">Loading…</p>';
 
     if (hash === '#journal') {
         pageTitle.textContent = 'Journal & Reflections';
@@ -77,16 +77,16 @@ async function renderFullJournalList() {
     entries.forEach(entry => {
         const div = document.createElement('div');
         div.style.padding = '12px 0';
-        div.style.borderBottom = '1px solid var(--sage)';
+        div.style.borderBottom = '1px solid var(--phase-border)';
         div.style.fontSize = '0.85rem';
         div.style.cursor = 'pointer';
         div.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong style="color: var(--olive);">${new Date(entry.timestamp).toLocaleString()}</strong>
-                <span style="color: var(--terracotta); font-size: 0.8rem; font-weight: 600;">Edit / View ›</span>
+                <strong style="color: var(--phase-primary-hover);">${new Date(entry.timestamp).toLocaleString()}</strong>
+                <span style="color: var(--signal-journal-hover); font-size: 0.8rem; font-weight: 600;">Edit / View ›</span>
             </div>
-            <p style="margin: 4px 0;"><em>${entry.prompt}</em></p>
-            <p style="white-space: pre-wrap; margin-top: 4px;">${entry.response}</p>
+            <p style="margin: 4px 0;"><em>${phaseEscapeHtml(entry.prompt)}</em></p>
+            <p style="white-space: pre-wrap; margin-top: 4px;">${phaseEscapeHtml(entry.response)}</p>
         `;
 
         div.addEventListener('click', () => openJournalEditModal(entry));
@@ -106,10 +106,10 @@ async function renderFullMedicationList() {
     // --- SECTION 1: Medication History ---
     const medSection = document.createElement('div');
     medSection.style.marginBottom = '24px';
-    medSection.innerHTML = `<h3 style="font-family: 'DM Serif Display', serif; color: var(--olive); margin-bottom: 12px; font-size: 1.05rem;">Medication History</h3>`;
+    medSection.innerHTML = `<h3 style="font-family: 'DM Serif Display', serif; color: var(--phase-text); margin-bottom: 12px; font-size: 1.05rem;">Medication History</h3>`;
 
     if (medError || !logs || logs.length === 0) {
-        medSection.innerHTML += '<p style="font-size: 0.85rem; color: var(--secondary-text);">No medication logs found.</p>';
+        medSection.innerHTML += '<p style="font-size: 0.85rem; color: var(--phase-text-secondary);">No medication logs found.</p>';
     } else {
         logs.forEach(log => {
             const div = document.createElement('div');
@@ -120,8 +120,8 @@ async function renderFullMedicationList() {
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
             div.innerHTML = `
-                <span><strong>${log.time_of_day}</strong> — ${new Date(log.timestamp).toLocaleString()}</span>
-                <button class="delete-btn" data-id="${log.id}" data-type="medication" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Delete</button>
+                <span><strong>${phaseEscapeHtml(log.time_of_day)}</strong> — ${new Date(log.timestamp).toLocaleString()}</span>
+                <button class="delete-btn" data-id="${log.id}" data-type="medication" style="background: none; border: none; color: var(--signal-journal-hover); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Delete</button>
             `;
             medSection.appendChild(div);
         });
@@ -130,10 +130,10 @@ async function renderFullMedicationList() {
 
     // --- SECTION 2: Mood Log History ---
     const moodSection = document.createElement('div');
-    moodSection.innerHTML = `<h3 style="font-family: 'DM Serif Display', serif; color: var(--olive); margin-bottom: 12px; font-size: 1.05rem;">Mood History</h3>`;
+    moodSection.innerHTML = `<h3 style="font-family: 'DM Serif Display', serif; color: var(--phase-text); margin-bottom: 12px; font-size: 1.05rem;">Mood History</h3>`;
 
     if (moodError || !moodEntries || moodEntries.length === 0) {
-        moodSection.innerHTML += '<p style="font-size: 0.85rem; color: var(--secondary-text);">No mood logs found.</p>';
+        moodSection.innerHTML += '<p style="font-size: 0.85rem; color: var(--phase-text-secondary);">No mood logs found.</p>';
     } else {
         moodEntries.forEach(entry => {
             const div = document.createElement('div');
@@ -145,11 +145,11 @@ async function renderFullMedicationList() {
             div.style.alignItems = 'center';
             div.innerHTML = `
                 <div>
-                    <span class="mood ${entry.mood.toLowerCase()}">${entry.mood}</span>
-                    <p style="display:inline; margin-left:8px;">${entry.notes || ''}</p>
+                    <span class="mood ${phaseEscapeHtml(entry.mood.toLowerCase())}">${phaseEscapeHtml(entry.mood)}</span>
+                    <p style="display:inline; margin-left:8px;">${phaseEscapeHtml(entry.notes || '')}</p>
                     <span class="dateTime" style="display:block; font-size:0.75rem;">${formatDate(entry.date_time)}</span>
                 </div>
-                <button class="delete-btn" data-id="${entry.id}" data-type="mood" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Delete</button>
+                <button class="delete-btn" data-id="${entry.id}" data-type="mood" style="background: none; border: none; color: var(--signal-journal-hover); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Delete</button>
             `;
             moodSection.appendChild(div);
         });
@@ -179,11 +179,11 @@ async function renderFullMoodList() {
         div.style.alignItems = 'center';
         div.innerHTML = `
             <div>
-                <span class="mood ${entry.mood.toLowerCase()}">${entry.mood}</span>
-                <p style="display:inline; margin-left:8px;">${entry.notes || ''}</p>
+                <span class="mood ${phaseEscapeHtml(entry.mood.toLowerCase())}">${phaseEscapeHtml(entry.mood)}</span>
+                <p style="display:inline; margin-left:8px;">${phaseEscapeHtml(entry.notes || '')}</p>
                 <span class="dateTime" style="display:block; font-size:0.75rem;">${formatDate(entry.date_time)}</span>
             </div>
-            <button class="delete-btn" data-id="${entry.id}" data-type="mood" style="background: none; border: none; color: var(--terracotta); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Delete</button>
+            <button class="delete-btn" data-id="${entry.id}" data-type="mood" style="background: none; border: none; color: var(--signal-journal-hover); cursor: pointer; font-size: 0.8rem; font-weight: 600;">Delete</button>
         `;
         pageContent.appendChild(div);
     });
@@ -197,15 +197,13 @@ pageContent.addEventListener('click', async (e) => {
         if (type === 'medication') {
             await supabaseClient.from('medication_log').delete().eq('id', id);
             await renderFullMedicationList();
-            await renderMedLogs();
         } else if (type === 'mood') {
             await supabaseClient.from('mood_entries').delete().eq('id', id);
-            await renderFullMoodList();
-            await renderHistory();
+            if (window.location.hash === '#medication') await renderFullMedicationList();
+            else await renderFullMoodList();
         }
         await updateAnalytics();
     }
 });
 
 window.addEventListener('hashchange', handleRouting);
-window.addEventListener('DOMContentLoaded', handleRouting);

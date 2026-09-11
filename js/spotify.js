@@ -513,18 +513,14 @@ function renderSpotifyRecentSessions(
         'connectSpotifyBtn'
     );
 
-    const todayStr = new Date()
-        .toISOString()
-        .split('T')[0];
+    const todayStr = phaseLocalDateKey();
 
     const todayTracks = (tracks || []).filter(item => {
         if (!item.played_at) {
             return false;
         }
 
-        return new Date(item.played_at)
-            .toISOString()
-            .split('T')[0] === todayStr;
+        return phaseLocalDateKey(item.played_at) === todayStr;
     });
 
     if (elemAudioDesc) {
@@ -811,15 +807,3 @@ async function initSpotifyAuth() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    initSpotifyAuth().catch(error => {
-        console.error(
-            'Spotify initialization failed:',
-            error
-        );
-
-        updateSpotifyConnectionStatus(
-            'Spotify could not be initialized.'
-        );
-    });
-});

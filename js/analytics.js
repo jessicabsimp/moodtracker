@@ -11,7 +11,7 @@ function getRangeDateBuckets(daysCount = 7) {
         const d = new Date();
         d.setDate(today.getDate() - i);
         days.push({
-            dateString: d.toISOString().split('T')[0],
+            dateString: phaseLocalDateKey(d),
             label: daysCount <= 14 ? dayNames[d.getDay()] : `${d.getMonth() + 1}/${d.getDate()}`,
             rawDate: d
         });
@@ -26,7 +26,7 @@ function normalizeMoodData(moodEntries, buckets) {
     return buckets.map(bucket => {
         const dayEntries = (moodEntries || []).filter(entry => {
             if (!entry.date_time) return false;
-            return new Date(entry.date_time).toISOString().split('T')[0] === bucket.dateString;
+            return phaseLocalDateKey(entry.date_time) === bucket.dateString;
         });
 
         if (dayEntries.length > 0) {
@@ -54,7 +54,7 @@ function normalizeListeningData(spotifyItems, buckets) {
     const countsMap = {};
     spotifyItems.forEach(item => {
         if (!item.played_at) return;
-        const dStr = new Date(item.played_at).toISOString().split('T')[0];
+        const dStr = phaseLocalDateKey(item.played_at);
         countsMap[dStr] = (countsMap[dStr] || 0) + 1;
     });
 
@@ -75,7 +75,7 @@ function mapMedicationEvents(medLogs, buckets) {
     return buckets.map(b => {
         const dayLogs = (medLogs || []).filter(m => {
             if (!m.timestamp) return false;
-            return new Date(m.timestamp).toISOString().split('T')[0] === b.dateString;
+            return phaseLocalDateKey(m.timestamp) === b.dateString;
         });
 
         return {
@@ -92,7 +92,7 @@ function mapJournalEvents(journalEntries, buckets) {
     return buckets.map(b => {
         const dayEntries = (journalEntries || []).filter(j => {
             if (!j.timestamp) return false;
-            return new Date(j.timestamp).toISOString().split('T')[0] === b.dateString;
+            return phaseLocalDateKey(j.timestamp) === b.dateString;
         });
 
         return {
@@ -114,21 +114,11 @@ let currentWavelengthRange = 7;
 
 async function updateAnalytics() {
     const buckets = getRangeDateBuckets(currentWavelengthRange);
-    const startDate = new Date(buckets[0].rawDate);
-    startDate.setHours(0, 0, 0, 0);
-
-    const [{ data: moodEntries }, { data: medLogs }, { data: journalEntries }] = await Promise.all([
-        supabaseClient.from('mood_entries').select('mood, date_time, notes').gte('date_time', startDate.toISOString()),
-        supabaseClient.from('medication_log').select('timestamp, time_of_day').gte('timestamp', startDate.toISOString()),
-        supabaseClient.from('journal_entries').select('timestamp, prompt').gte('timestamp', startDate.toISOString())
-    ]);
-
-    let spotifyItems = [];
-    const spotifyToken = localStorage.getItem('spotify_access_token');
-    if (spotifyToken && typeof fetchRecentlyPlayedTracks === 'function') {
-        const tracks = await fetchRecentlyPlayedTracks();
-        if (tracks) spotifyItems = tracks;
-    }
+    const insightData = await phaseLoadInsightData(currentWavelengthRange);
+    const moodEntries = insightData.moods;
+    const medLogs = insightData.meds;
+    const journalEntries = insightData.journals;
+    const spotifyItems = insightData.plays;
 
     cachedWavelengthData = {
         mood: moodEntries || [],
@@ -142,24 +132,20 @@ async function updateAnalytics() {
     updateTodayCardStatuses(moodEntries || [], medLogs || [], journalEntries || [], spotifyItems);
 
     // Explicitly update the bottom Spotify Pulse Bar
-    if (typeof renderSpotifyRecentSessions === 'function') {
-        renderSpotifyRecentSessions(spotifyItems);
-    }
-
     const loggedDaysSet = new Set();
     const moodScores = { 'great': 5, 'good': 4, 'okay': 3, 'bad': 2, 'terrible': 1 };
     const dailyMoodMap = {};
 
     (moodEntries || []).forEach(e => {
         if (!e.date_time) return;
-        const dateStr = new Date(e.date_time).toISOString().split('T')[0];
+        const dateStr = phaseLocalDateKey(e.date_time);
         loggedDaysSet.add(dateStr);
         if (!dailyMoodMap[dateStr]) dailyMoodMap[dateStr] = [];
         dailyMoodMap[dateStr].push(moodScores[(e.mood || '').toLowerCase().trim()] || 3);
     });
 
-    (medLogs || []).forEach(m => m.timestamp && loggedDaysSet.add(new Date(m.timestamp).toISOString().split('T')[0]));
-    (journalEntries || []).forEach(j => j.timestamp && loggedDaysSet.add(new Date(j.timestamp).toISOString().split('T')[0]));
+    (medLogs || []).forEach(m => m.timestamp && loggedDaysSet.add(phaseLocalDateKey(m.timestamp)));
+    (journalEntries || []).forEach(j => j.timestamp && loggedDaysSet.add(phaseLocalDateKey(j.timestamp)));
 
     const totalMoodDays = Object.keys(dailyMoodMap).length;
     let sumOfAverages = 0;
@@ -176,14 +162,14 @@ async function updateAnalytics() {
     let streak = 0;
     const checkDate = new Date();
     while (true) {
-        const dateStr = checkDate.toISOString().split('T')[0];
-        if (loggedDaysSet.has(dateStr)) {
+        const dateStr = phaseLocalDateKey(checkDate);
+        if (dailyMoodMap[dateStr]) {
             streak++;
             checkDate.setDate(checkDate.getDate() - 1);
         } else break;
     }
 
-    const medDays = new Set((medLogs || []).map(m => new Date(m.timestamp).toISOString().split('T')[0])).size;
+    const medDays = new Set((medLogs || []).map(m => phaseLocalDateKey(m.timestamp))).size;
     const medAdherence = Math.round((medDays / currentWavelengthRange) * 100);
 
     const elemStreak = document.getElementById('streakBadgeText');
@@ -205,12 +191,21 @@ async function updateAnalytics() {
     }
 
     renderPhaseWavelength();
+
+    if (typeof phaseBuildInsightModel === 'function' && typeof phaseLoadInsightData === 'function') {
+        try {
+            const insightModel = phaseBuildInsightModel(insightData, currentWavelengthRange);
+            if (insightElem) insightElem.textContent = phaseCorrelationCopy(insightModel).text;
+        } catch (error) {
+            console.warn('Dashboard insight could not be calculated:', error);
+        }
+    }
 }
 
 function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyItems) {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = phaseLocalDateKey();
 
-    const todayMeds = medLogs.filter(m => m.timestamp && new Date(m.timestamp).toISOString().split('T')[0] === todayStr);
+    const todayMeds = medLogs.filter(m => m.timestamp && phaseLocalDateKey(m.timestamp) === todayStr);
     const hasMorning = todayMeds.some(m => (m.time_of_day || '').toLowerCase() === 'morning');
     const hasBedtime = todayMeds.some(m => (m.time_of_day || '').toLowerCase() === 'bedtime');
 
@@ -235,7 +230,7 @@ function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyIt
 
     if (elemAudioDesc) {
         if (isSpotifyConnected) {
-            const todayTracks = spotifyItems.filter(i => i.played_at && new Date(i.played_at).toISOString().split('T')[0] === todayStr);
+            const todayTracks = spotifyItems.filter(i => i.played_at && phaseLocalDateKey(i.played_at) === todayStr);
             elemAudioDesc.textContent = todayTracks.length > 0 ? `${todayTracks.length} tracks logged today` : 'Connected & Active';
             if (connectBtn) {
                 connectBtn.textContent = 'Active';
@@ -247,7 +242,7 @@ function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyIt
         }
     }
 
-    const todayJournal = journalEntries.some(j => j.timestamp && new Date(j.timestamp).toISOString().split('T')[0] === todayStr);
+    const todayJournal = journalEntries.some(j => j.timestamp && phaseLocalDateKey(j.timestamp) === todayStr);
     const elemJournal = document.getElementById('todayJournalText');
     if (elemJournal) {
         elemJournal.innerHTML = todayJournal 
@@ -371,24 +366,31 @@ function renderPhaseWavelength() {
             score: (d.val * 5).toFixed(1)
         }));
 
-        let pathD = `M ${moodPoints[0].x},${moodPoints[0].y}`;
         for (let i = 0; i < moodPoints.length - 1; i++) {
             const p0 = moodPoints[i];
             const p1 = moodPoints[i + 1];
             const cpX = (p0.x + p1.x) / 2;
-            pathD += ` C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`;
+            const segment = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            segment.setAttribute('d', `M ${p0.x},${p0.y} C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`);
+            segment.setAttribute('fill', 'none');
+            segment.setAttribute('stroke', '#788D46');
+            segment.setAttribute('stroke-width', moodNorm[i + 1].hasData ? '2.5' : '1.5');
+            segment.setAttribute('stroke-opacity', moodNorm[i + 1].hasData ? '1' : '0.28');
+            segment.setAttribute('stroke-linecap', 'round');
+            pathsGroup.appendChild(segment);
         }
 
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathD); path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', '#788D46'); path.setAttribute('stroke-width', '2.5');
-        path.setAttribute('stroke-linecap', 'round');
-        pathsGroup.appendChild(path);
-
-        const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        area.setAttribute('d', `${pathD} L ${xPositions[xPositions.length-1]},45 L ${xPositions[0]},45 Z`);
-        area.setAttribute('fill', 'url(#moodWaveGradient)');
-        pathsGroup.appendChild(area);
+        moodPoints.forEach((point, index) => {
+            if (!moodNorm[index].hasData) return;
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            marker.setAttribute('cx', point.x);
+            marker.setAttribute('cy', point.y);
+            marker.setAttribute('r', '3.5');
+            marker.setAttribute('fill', '#788D46');
+            marker.setAttribute('stroke', '#F1EFE7');
+            marker.setAttribute('stroke-width', '1');
+            eventsGroup.appendChild(marker);
+        });
     }
 
     // 2. Listening Wave Line (Violet)
@@ -488,16 +490,15 @@ function renderPhaseWavelength() {
             tooltip.style.top = `35px`;
 
             const b = buckets[closestIdx];
-            const mVal = (
-                moodNorm[closestIdx].val * 5
-            ).toFixed(1);
+            const moodPoint = moodNorm[closestIdx];
+            const mVal = (moodPoint.val * 5).toFixed(1);
             const lVal = listeningNorm[closestIdx].count;
             const medVal = medEvents[closestIdx].count > 0 ? 'Logged' : 'None';
             const jVal = journalEvents[closestIdx].count;
 
             tooltip.innerHTML = `
                 <div class="tooltip-date">${b.dateString}</div>
-                <div class="tooltip-row"><span style="color:#788D46">●</span> Mood: ${mVal}/5</div>
+                <div class="tooltip-row"><span style="color:#788D46">●</span> Mood: ${mVal}/5${moodPoint.hasData ? '' : ' (carried forward)'}</div>
                 <div class="tooltip-row"><span style="color:#9A75C4">●</span> Tracks: ${lVal}</div>
                 <div class="tooltip-row"><span style="color:#D49728">●</span> Meds: ${medVal}</div>
                 <div class="tooltip-row"><span style="color:#D56543">●</span> Journal: ${jVal} entries</div>

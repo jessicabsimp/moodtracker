@@ -15,7 +15,7 @@ if (writeWithPromptBtn) {
   writeWithPromptBtn.addEventListener('click', () => {
     if (modalPromptContainer) modalPromptContainer.style.display = 'block';
     if (modalPromptText && dashboardPromptText) modalPromptText.textContent = dashboardPromptText.textContent;
-    if (journalModal) journalModal.style.display = 'block';
+    if (journalModal) journalModal.style.display = 'flex';
   });
 }
 
@@ -23,7 +23,7 @@ if (freeWriteBtn) {
   freeWriteBtn.addEventListener('click', () => {
     if (modalPromptContainer) modalPromptContainer.style.display = 'none';
     if (modalPromptText) modalPromptText.textContent = 'Free Reflection';
-    if (journalModal) journalModal.style.display = 'block';
+    if (journalModal) journalModal.style.display = 'flex';
   });
 }
 
@@ -41,7 +41,7 @@ function openJournalEditModal(entry) {
     document.getElementById('editModalDate').textContent = `Journal Entry — ${new Date(entry.timestamp).toLocaleDateString()}`;
     document.getElementById('editJournalPromptText').textContent = entry.prompt || 'Free Reflection';
     document.getElementById('editJournalResponse').value = entry.response;
-    journalEditModal.style.display = 'block';
+    journalEditModal.style.display = 'flex';
 }
 
 if (journalForm) {
@@ -62,7 +62,6 @@ if (journalForm) {
     if (!error) {
         journalForm.reset();
         journalModal.style.display = 'none';
-        await renderJournalEntries();
         await updateAnalytics();
     }
   });
@@ -81,7 +80,6 @@ if (editJournalForm) {
 
         if (!error) {
             journalEditModal.style.display = 'none';
-            await renderJournalEntries();
             if (window.location.hash === '#journal') {
                 await renderFullJournalList();
             }
@@ -102,7 +100,6 @@ if (deleteModalEntryBtn) {
 
         if (!error) {
             journalEditModal.style.display = 'none';
-            await renderJournalEntries();
             if (window.location.hash === '#journal') {
                 await renderFullJournalList();
             }
@@ -111,38 +108,3 @@ if (deleteModalEntryBtn) {
     });
 }
 
-async function renderJournalEntries() {
-  const container = document.querySelector('.recent-entries');
-  if (!container) return;
-
-  const { data: entries, error } = await supabaseClient
-    .from('journal_entries')
-    .select('*')
-    .order('timestamp', { ascending: false })
-    .limit(3);
-
-  if (error) return;
-
-  container.innerHTML = '<span class="section-subtitle">Recent Entries</span>';
-  if (!entries || entries.length === 0) {
-    container.innerHTML += '<p style="color:var(--secondary-text); font-size:0.85rem;">No journal entries yet.</p>';
-    return;
-  }
-
-  entries.forEach((entry) => {
-    const formattedDate = new Date(entry.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const entryRow = document.createElement('div');
-    entryRow.className = 'entry-row';
-    entryRow.style.cursor = 'pointer';
-    entryRow.innerHTML = `
-      <div>
-        <strong>${formattedDate}</strong>
-        <p>${entry.response.substring(0, 35)}${entry.response.length > 35 ? '...' : ''}</p>
-      </div>
-      <span class="chevron">›</span>
-    `;
-
-    entryRow.addEventListener('click', () => openJournalEditModal(entry));
-    container.appendChild(entryRow);
-  });
-}
