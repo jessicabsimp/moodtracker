@@ -90,7 +90,7 @@ async function phaseLoadInsightData(days) {
                 .order('played_at', { ascending: false })
                 .limit(1000),
             supabaseClient.from('music_tracks')
-                .select('id, track_name, artist_names, album_name, duration_ms, artwork_url, spotify_url')
+                .select('id, track_name, artist_names, album_name, duration_ms, artwork_url, spotify_url, tempo, energy, valence, danceability, acousticness, audio_features_source')
                 .limit(1000)
         ]);
 
@@ -280,6 +280,77 @@ function phaseBarRows(items, valueKey, limit = 5) {
         </div>`).join('') : '<p class="phase-empty-copy">More listening data is needed.</p>';
 }
 
+// Use at most one mood observation per calendar day. Only tracks played in the
+// six hours BEFORE that observation contribute to its musical profile.
+function phaseMusicMoodDays(model, field) {
+    const latestMoodByDay = new Map();
+    model.moodPoints.forEach(mood => latestMoodByDay.set(phaseInsightDateKey(mood.date_time), mood));
+    return [...latestMoodByDay.values()].map(mood => {
+        const preceding = model.plays.filter(play => {
+            const time = new Date(play.played_at).getTime();
+            return time <= mood.time && time >= mood.time - 6 * 60 * 60 * 1000;
+        });
+        const values = preceding.map(play => Number(play.track?.[field]))
+            .filter((value, index) => playHasFeature(preceding[index], field) && Number.isFinite(value));
+        return { mood: mood.score, value: phaseInsightMean(values), plays: preceding.length };
+    }).filter(day => day.value !== null);
+}
+
+function playHasFeature(play, field) {
+    return play?.track?.[field] !== null && play?.track?.[field] !== undefined && play.track[field] !== '';
+}
+
+function phaseFeatureComparison(model, field, threshold, lowLabel, highLabel) {
+    const days = phaseMusicMoodDays(model, field);
+    const low = days.filter(day => day.value < threshold);
+    const high = days.filter(day => day.value >= threshold);
+    if (low.length < 3 || high.length < 3) {
+        return {
+            text: `Matched ${days.length} mood day${days.length === 1 ? '' : 's'} to music heard in the preceding six hours (${low.length} ${lowLabel}; ${high.length} ${highLabel}). At least three days in each group are needed for a comparison.`,
+            confidence: phaseInsightConfidence(0)
+        };
+    }
+    const lowMood = phaseInsightMean(low.map(day => day.mood));
+    const highMood = phaseInsightMean(high.map(day => day.mood));
+    return {
+        text: `Your reported mood averaged ${lowMood.toFixed(1)}/5 on ${low.length} ${lowLabel} days and ${highMood.toFixed(1)}/5 on ${high.length} ${highLabel} days. This is an association, not evidence that the music changed your mood.`,
+        confidence: phaseInsightConfidence(Math.min(low.length, high.length) * 2, 6)
+    };
+}
+
+function phaseWeeklyListeningComparison(model) {
+    const weeks = new Map();
+    model.dailyRows.forEach(day => {
+        const monday = new Date(day.date);
+        monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+        const key = phaseInsightDateKey(monday);
+        if (!weeks.has(key)) weeks.set(key, { monday, minutes: 0, moods: [] });
+        const week = weeks.get(key);
+        week.minutes += day.minutes;
+        if (day.averageMood !== null) week.moods.push(day.averageMood);
+    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const complete = [...weeks.values()].filter(week => {
+        const sunday = new Date(week.monday);
+        sunday.setDate(sunday.getDate() + 6);
+        return week.monday >= model.start && sunday < today && week.moods.length >= 2;
+    });
+    const heavy = complete.filter(week => week.minutes >= 1200);
+    const lighter = complete.filter(week => week.minutes < 1200);
+    if (heavy.length < 3 || lighter.length < 3) {
+        return {
+            text: `So far, ${heavy.length} complete week${heavy.length === 1 ? '' : 's'} had at least 20 hours of saved listening and ${lighter.length} had less. Phase needs three of each, with mood reports on at least two days per week, before comparing them.`,
+            confidence: phaseInsightConfidence(0)
+        };
+    }
+    const average = weeks => phaseInsightMean(weeks.map(week => phaseInsightMean(week.moods)));
+    return {
+        text: `Across ${heavy.length} weeks with at least 20 saved listening hours, weekly mood averaged ${average(heavy).toFixed(1)}/5; across ${lighter.length} lighter weeks, it averaged ${average(lighter).toFixed(1)}/5. Saved track durations estimate listening time and may overstate actual playback. This does not establish cause.`,
+        confidence: phaseInsightConfidence(Math.min(heavy.length, lighter.length) * 2, 6)
+    };
+}
+
 async function renderFullAnalyticsPage(daysCount = 30) {
     const days = [7, 30, 90].includes(Number(daysCount)) ? Number(daysCount) : 30;
     const route = window.location.hash;
@@ -383,6 +454,13 @@ async function renderMusicInsightsSubpage(daysCount = 30) {
         const busiest = [...model.timePeriods].sort((a, b) => b.count - a.count)[0];
         const matchedTracks = model.topTracks.filter(track => track.moodScores.length >= 3);
         const strongestTrack = matchedTracks.sort((a, b) => b.moodScores.length - a.moodScores.length)[0];
+        const enrichedPlays = model.plays.filter(play =>
+            playHasFeature(play, 'energy') || playHasFeature(play, 'tempo') || playHasFeature(play, 'valence')
+        );
+        const energyPattern = phaseFeatureComparison(model, 'energy', 0.5, 'lower-energy music', 'higher-energy music');
+        const tempoPattern = phaseFeatureComparison(model, 'tempo', 110, 'slower-tempo music', 'faster-tempo music');
+        const valencePattern = phaseFeatureComparison(model, 'valence', 0.5, 'less upbeat-sounding music', 'more upbeat-sounding music');
+        const weeklyPattern = phaseWeeklyListeningComparison(model);
         const current = typeof fetchCurrentlyPlayingTrack === 'function' && isSpotifyConnected()
             ? await fetchCurrentlyPlayingTrack().catch(() => null) : null;
         const active = current?.item;
@@ -405,6 +483,7 @@ async function renderMusicInsightsSubpage(daysCount = 30) {
                 <div class="phase-page-stat listening"><strong>${model.repeatRate.toFixed(0)}%</strong><span>Repeat rate</span></div>
                 <div class="phase-page-stat listening"><strong>${model.topArtists.length}</strong><span>Artists</span></div>
                 <div class="phase-page-stat listening"><strong>${model.overlap.length}</strong><span>Mood overlap days</span></div>
+                <div class="phase-page-stat listening"><strong>${enrichedPlays.length}/${model.plays.length}</strong><span>Plays with audio features</span></div>
             </div>
             <div class="phase-insight-grid">
                 ${phasePatternCard(relationship.title, relationship.text, relationship.confidence)}
@@ -414,6 +493,10 @@ async function renderMusicInsightsSubpage(daysCount = 30) {
                 ${phasePatternCard('Track + mood signal', strongestTrack
                     ? `${strongestTrack.name} has ${strongestTrack.moodScores.length} nearby mood observations averaging ${phaseInsightMean(strongestTrack.moodScores).toFixed(1)}/5. More observations are needed before treating this as a stable pattern.`
                     : 'A track needs at least 3 plays within six hours of a mood entry before Phase displays a track-level mood signal.', phaseInsightConfidence(strongestTrack?.moodScores.length || 0, 5))}
+                ${phasePatternCard('Musical energy + mood', energyPattern.text, energyPattern.confidence)}
+                ${phasePatternCard('Tempo + mood', tempoPattern.text, tempoPattern.confidence)}
+                ${phasePatternCard('Musical positivity + mood', valencePattern.text, valencePattern.confidence)}
+                ${phasePatternCard('20-hour listening weeks + mood', weeklyPattern.text, weeklyPattern.confidence)}
             </div>
             <div class="phase-analysis-grid">
                 <section class="phase-analysis-panel"><div class="phase-list-heading"><strong>Top artists</strong><span>Play frequency</span></div><div class="phase-bar-list">${phaseBarRows(model.topArtists, 'count', 6)}</div></section>
@@ -428,7 +511,7 @@ async function renderMusicInsightsSubpage(daysCount = 30) {
                         <time>${track.count} play${track.count === 1 ? '' : 's'}</time>
                     </div>`).join('') || '<div class="phase-page-state">No saved tracks in this range.</div>'}
             </div>
-            <p class="phase-page-note">Genre, tempo, energy, valence and danceability will appear when those optional metadata fields are populated. They are intentionally excluded instead of guessed.</p>`;
+            <p class="phase-page-note">Music energy and positivity describe tracks, not your personal energy or feelings. Listening hours estimate full track durations rather than confirmed playtime. Genre and personal vibe tags will come in a separate step. Patterns are observational, not medical advice.</p>`;
 
         pageContent.querySelectorAll('[data-music-range]').forEach(button =>
             button.addEventListener('click', () => renderMusicInsightsSubpage(Number(button.dataset.musicRange)))
@@ -438,4 +521,3 @@ async function renderMusicInsightsSubpage(daysCount = 30) {
         if (window.location.hash === route) phaseShowPageError('Music insights could not be calculated.', error, () => renderMusicInsightsSubpage(days));
     }
 }
-
