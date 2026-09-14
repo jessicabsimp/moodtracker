@@ -6,11 +6,25 @@ async function initializePhaseApp() {
 
     try {
         await initSpotifyAuth();
+
+        if (
+            typeof enrichPendingTracksWithReccoBeats ===
+            'function'
+        ) {
+            await enrichPendingTracksWithReccoBeats();
+        }
+
         await updateAnalytics();
         await handleRouting();
     } catch (error) {
-        console.error('Phase initialization failed:', error);
+        console.error(
+            'Phase initialization failed:',
+            error
+        );
     }
 }
 
-document.addEventListener('DOMContentLoaded', initializePhaseApp);
+document.addEventListener(
+    'DOMContentLoaded',
+    initializePhaseApp
+);
