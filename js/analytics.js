@@ -1,513 +1,2344 @@
 // ==========================================
-// PHASE WAVELENGTH DATA NORMALIZATION ENGINE
+// PHASE DASHBOARD SIGNAL ENGINE
+// ==========================================
+//
+// Dashboard signals:
+// - Mood
+// - Listening
+// - Medication
+// - Sleep
+//
+// Journal is intentionally no longer part
+// of the Phase dashboard signal model.
+// ==========================================
+
+
+// ==========================================
+// DATE BUCKETS
 // ==========================================
 
 function getRangeDateBuckets(daysCount = 7) {
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = [
+        'Sun',
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat'
+    ];
+
     const days = [];
     const today = new Date();
 
-    for (let i = daysCount - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(today.getDate() - i);
+    for (
+        let i = daysCount - 1;
+        i >= 0;
+        i--
+    ) {
+        const date = new Date();
+
+        date.setDate(
+            today.getDate() - i
+        );
+
         days.push({
-            dateString: phaseLocalDateKey(d),
-            label: daysCount <= 14 ? dayNames[d.getDay()] : `${d.getMonth() + 1}/${d.getDate()}`,
-            rawDate: d
+            dateString:
+                phaseLocalDateKey(date),
+
+            label:
+                daysCount <= 14
+                    ? dayNames[date.getDay()]
+                    : `${date.getMonth() + 1}/${date.getDate()}`,
+
+            rawDate:
+                date
         });
     }
+
     return days;
 }
 
-function normalizeMoodData(moodEntries, buckets) {
-    const moodScores = { 'great': 1.0, 'good': 0.75, 'okay': 0.5, 'bad': 0.25, 'terrible': 0.0 };
-    let lastValidScore = 0.5;
-
-    return buckets.map(bucket => {
-        const dayEntries = (moodEntries || []).filter(entry => {
-            if (!entry.date_time) return false;
-            return phaseLocalDateKey(entry.date_time) === bucket.dateString;
-        });
-
-        if (dayEntries.length > 0) {
-            const sum = dayEntries.reduce((acc, curr) => {
-                const norm = (curr.mood || '').toLowerCase().trim();
-                return acc + (moodScores[norm] !== undefined ? moodScores[norm] : 0.5);
-            }, 0);
-            lastValidScore = sum / dayEntries.length;
-        }
-
-        return {
-            dateString: bucket.dateString,
-            label: bucket.label,
-            val: lastValidScore,
-            hasData: dayEntries.length > 0
-        };
-    });
-}
-
-function normalizeListeningData(spotifyItems, buckets) {
-    if (!spotifyItems || spotifyItems.length === 0) {
-        return buckets.map(b => ({ dateString: b.dateString, label: b.label, count: 0, norm: 0 }));
-    }
-
-    const countsMap = {};
-    spotifyItems.forEach(item => {
-        if (!item.played_at) return;
-        const dStr = phaseLocalDateKey(item.played_at);
-        countsMap[dStr] = (countsMap[dStr] || 0) + 1;
-    });
-
-    const maxCount = Math.max(...Object.values(countsMap), 1);
-
-    return buckets.map(b => {
-        const count = countsMap[b.dateString] || 0;
-        return {
-            dateString: b.dateString,
-            label: b.label,
-            count: count,
-            norm: count / maxCount
-        };
-    });
-}
-
-function mapMedicationEvents(medLogs, buckets) {
-    return buckets.map(b => {
-        const dayLogs = (medLogs || []).filter(m => {
-            if (!m.timestamp) return false;
-            return phaseLocalDateKey(m.timestamp) === b.dateString;
-        });
-
-        return {
-            dateString: b.dateString,
-            label: b.label,
-            count: dayLogs.length,
-            doses: dayLogs.map(l => l.time_of_day)
-        };
-    });
-}
-
-function mapJournalEvents(journalEntries, buckets) {
-    const maxEntriesPerDay = 3;
-    return buckets.map(b => {
-        const dayEntries = (journalEntries || []).filter(j => {
-            if (!j.timestamp) return false;
-            return phaseLocalDateKey(j.timestamp) === b.dateString;
-        });
-
-        return {
-            dateString: b.dateString,
-            label: b.label,
-            count: dayEntries.length,
-            norm: Math.min(dayEntries.length / maxEntriesPerDay, 1.0)
-        };
-    });
-}
 
 // ==========================================
-// DASHBOARD ANALYTICS & WAVELENGTH ENGINE
+// MOOD NORMALIZATION
 // ==========================================
 
-let activeWavelengthSignals = new Set(['mood', 'listening', 'medication', 'journal']);
-let cachedWavelengthData = null;
-let currentWavelengthRange = 7;
-
-async function updateAnalytics() {
-    const buckets = getRangeDateBuckets(currentWavelengthRange);
-    const insightData = await phaseLoadInsightData(currentWavelengthRange);
-    const moodEntries = insightData.moods;
-    const medLogs = insightData.meds;
-    const journalEntries = insightData.journals;
-    const spotifyItems = insightData.plays;
-
-    cachedWavelengthData = {
-        mood: moodEntries || [],
-        medication: medLogs || [],
-        journal: journalEntries || [],
-        spotify: spotifyItems || [],
-        buckets: buckets
+function normalizeMoodData(
+    moodEntries,
+    buckets
+) {
+    const moodScores = {
+        great: 1,
+        good: 0.75,
+        okay: 0.5,
+        bad: 0.25,
+        terrible: 0
     };
 
-    // Update status rows in the Today card
-    updateTodayCardStatuses(moodEntries || [], medLogs || [], journalEntries || [], spotifyItems);
+    let lastValidScore = 0.5;
 
-    // Explicitly update the bottom Spotify Pulse Bar
-    const loggedDaysSet = new Set();
-    const moodScores = { 'great': 5, 'good': 4, 'okay': 3, 'bad': 2, 'terrible': 1 };
-    const dailyMoodMap = {};
+    return buckets.map(
+        bucket => {
+            const dayEntries =
+                (moodEntries || [])
+                    .filter(entry => {
+                        if (!entry.date_time) {
+                            return false;
+                        }
 
-    (moodEntries || []).forEach(e => {
-        if (!e.date_time) return;
-        const dateStr = phaseLocalDateKey(e.date_time);
-        loggedDaysSet.add(dateStr);
-        if (!dailyMoodMap[dateStr]) dailyMoodMap[dateStr] = [];
-        dailyMoodMap[dateStr].push(moodScores[(e.mood || '').toLowerCase().trim()] || 3);
-    });
+                        return (
+                            phaseLocalDateKey(
+                                entry.date_time
+                            ) ===
+                            bucket.dateString
+                        );
+                    });
 
-    (medLogs || []).forEach(m => m.timestamp && loggedDaysSet.add(phaseLocalDateKey(m.timestamp)));
-    (journalEntries || []).forEach(j => j.timestamp && loggedDaysSet.add(phaseLocalDateKey(j.timestamp)));
+            if (dayEntries.length) {
+                const values =
+                    dayEntries.map(entry => {
+                        const normalized =
+                            String(
+                                entry.mood || ''
+                            )
+                                .toLowerCase()
+                                .trim();
 
-    const totalMoodDays = Object.keys(dailyMoodMap).length;
-    let sumOfAverages = 0;
-    Object.values(dailyMoodMap).forEach(scores => {
-        sumOfAverages += scores.reduce((a, b) => a + b, 0) / scores.length;
-    });
-    const overallAvgMood = totalMoodDays > 0 ? (sumOfAverages / totalMoodDays).toFixed(1) : '0.0';
+                        return (
+                            moodScores[
+                                normalized
+                            ] ?? 0.5
+                        );
+                    });
 
-    const elemAvgMood = document.getElementById('avgMoodValue');
-    const elemDaysLogged = document.getElementById('daysLoggedValue');
-    if (elemAvgMood) elemAvgMood.textContent = overallAvgMood;
-    if (elemDaysLogged) elemDaysLogged.textContent = loggedDaysSet.size;
+                lastValidScore =
+                    values.reduce(
+                        (sum, value) =>
+                            sum + value,
+                        0
+                    ) /
+                    values.length;
+            }
 
-    let streak = 0;
-    const checkDate = new Date();
-    while (true) {
-        const dateStr = phaseLocalDateKey(checkDate);
-        if (dailyMoodMap[dateStr]) {
-            streak++;
-            checkDate.setDate(checkDate.getDate() - 1);
-        } else break;
-    }
+            return {
+                dateString:
+                    bucket.dateString,
 
-    const medDays = new Set((medLogs || []).map(m => phaseLocalDateKey(m.timestamp))).size;
-    const medAdherence = Math.round((medDays / currentWavelengthRange) * 100);
+                label:
+                    bucket.label,
 
-    const elemStreak = document.getElementById('streakBadgeText');
-    const elemMedAdherence = document.getElementById('medAdherenceText');
-    if (elemStreak) elemStreak.textContent = `${streak}d`;
-    if (elemMedAdherence) elemMedAdherence.textContent = `${medAdherence}%`;
+                val:
+                    lastValidScore,
 
-    const insightElem = document.getElementById('weeklyInsightText');
-    if (insightElem) {
-        if (loggedDaysSet.size === 0) {
-            insightElem.textContent = "Log daily mood, meds, or journaling to reveal your pattern.";
-        } else if (parseFloat(overallAvgMood) >= 4.0) {
-            insightElem.textContent = "Your overall signals show high emotional stability and consistency across this period.";
-        } else if (parseFloat(overallAvgMood) >= 3.0) {
-            insightElem.textContent = "A steady pattern overall. Listening behavior correlates smoothly with your balanced days.";
-        } else {
-            insightElem.textContent = "Lower mood scores detected recently. Prioritize rest and quick reflections.";
+                hasData:
+                    dayEntries.length > 0,
+
+                count:
+                    dayEntries.length
+            };
+        }
+    );
+}
+
+
+// ==========================================
+// LISTENING NORMALIZATION
+// ==========================================
+
+function normalizeListeningData(
+    spotifyItems,
+    buckets
+) {
+    const countsMap = {};
+
+    (spotifyItems || [])
+        .forEach(item => {
+            if (!item.played_at) {
+                return;
+            }
+
+            const dateString =
+                phaseLocalDateKey(
+                    item.played_at
+                );
+
+            countsMap[dateString] =
+                (
+                    countsMap[
+                        dateString
+                    ] || 0
+                ) + 1;
+        });
+
+    const maximum =
+        Math.max(
+            ...Object.values(
+                countsMap
+            ),
+            1
+        );
+
+    return buckets.map(
+        bucket => {
+            const count =
+                countsMap[
+                    bucket.dateString
+                ] || 0;
+
+            return {
+                dateString:
+                    bucket.dateString,
+
+                label:
+                    bucket.label,
+
+                count,
+
+                norm:
+                    count / maximum
+            };
+        }
+    );
+}
+
+
+// ==========================================
+// MEDICATION EVENTS
+// ==========================================
+
+function mapMedicationEvents(
+    medLogs,
+    buckets
+) {
+    return buckets.map(
+        bucket => {
+            const dayLogs =
+                (medLogs || [])
+                    .filter(log => {
+                        if (!log.timestamp) {
+                            return false;
+                        }
+
+                        return (
+                            phaseLocalDateKey(
+                                log.timestamp
+                            ) ===
+                            bucket.dateString
+                        );
+                    });
+
+            return {
+                dateString:
+                    bucket.dateString,
+
+                label:
+                    bucket.label,
+
+                count:
+                    dayLogs.length,
+
+                doses:
+                    dayLogs.map(
+                        log =>
+                            log.time_of_day
+                    )
+            };
+        }
+    );
+}
+
+
+// ==========================================
+// SLEEP NORMALIZATION
+// ==========================================
+//
+// Completed sleep windows are associated with
+// the day the user GOT UP.
+//
+// Example:
+// Sun 11:45 PM → Mon 7:10 AM
+// belongs to Monday.
+//
+// This makes the sleep signal line up with the
+// day it is most likely to affect.
+// ==========================================
+
+function normalizeSleepData(
+    sleepSessions,
+    buckets
+) {
+    return buckets.map(
+        bucket => {
+            const sessions =
+                (sleepSessions || [])
+                    .filter(session => {
+                        const anchor =
+                            session.wake_time ||
+                            session.bedtime;
+
+                        if (!anchor) {
+                            return false;
+                        }
+
+                        return (
+                            phaseLocalDateKey(
+                                anchor
+                            ) ===
+                            bucket.dateString
+                        );
+                    });
+
+            if (!sessions.length) {
+                return {
+                    dateString:
+                        bucket.dateString,
+
+                    label:
+                        bucket.label,
+
+                    hasData:
+                        false,
+
+                    durationMinutes:
+                        null,
+
+                    durationNorm:
+                        0,
+
+                    quality:
+                        null,
+
+                    rested:
+                        null,
+
+                    isOpen:
+                        false,
+
+                    session:
+                        null
+                };
+            }
+
+            const session =
+                sessions[
+                    sessions.length - 1
+                ];
+
+            const end =
+                session.wake_time ||
+                new Date().toISOString();
+
+            let durationMinutes =
+                null;
+
+            if (
+                typeof phaseSleepDurationMinutes ===
+                'function'
+            ) {
+                durationMinutes =
+                    phaseSleepDurationMinutes(
+                        session.bedtime,
+                        end
+                    );
+            } else {
+                const startTime =
+                    new Date(
+                        session.bedtime
+                    ).getTime();
+
+                const endTime =
+                    new Date(
+                        end
+                    ).getTime();
+
+                if (
+                    Number.isFinite(
+                        startTime
+                    ) &&
+                    Number.isFinite(
+                        endTime
+                    )
+                ) {
+                    durationMinutes =
+                        Math.round(
+                            (
+                                endTime -
+                                startTime
+                            ) /
+                            60000
+                        );
+                }
+            }
+
+            // Map roughly 4–10 hours to 0–1.
+            //
+            // This is visual normalization only.
+            // The actual tooltip always displays
+            // the real Sleep Window duration.
+            const minimumMinutes =
+                4 * 60;
+
+            const maximumMinutes =
+                10 * 60;
+
+            const durationNorm =
+                Number.isFinite(
+                    durationMinutes
+                )
+                    ? Math.max(
+                        0,
+                        Math.min(
+                            1,
+                            (
+                                durationMinutes -
+                                minimumMinutes
+                            ) /
+                            (
+                                maximumMinutes -
+                                minimumMinutes
+                            )
+                        )
+                    )
+                    : 0;
+
+            return {
+                dateString:
+                    bucket.dateString,
+
+                label:
+                    bucket.label,
+
+                hasData:
+                    true,
+
+                durationMinutes,
+
+                durationNorm,
+
+                quality:
+                    Number.isFinite(
+                        Number(
+                            session.sleep_quality
+                        )
+                    )
+                        ? Number(
+                            session.sleep_quality
+                        )
+                        : null,
+
+                rested:
+                    Number.isFinite(
+                        Number(
+                            session.rested_rating
+                        )
+                    )
+                        ? Number(
+                            session.rested_rating
+                        )
+                        : null,
+
+                isOpen:
+                    !session.wake_time,
+
+                session
+            };
+        }
+    );
+}
+
+
+// ==========================================
+// ACTIVE DASHBOARD STATE
+// ==========================================
+
+let activeWavelengthSignals =
+    new Set([
+        'mood',
+        'listening',
+        'medication',
+        'sleep'
+    ]);
+
+let cachedWavelengthData =
+    null;
+
+let currentWavelengthRange =
+    7;
+
+
+// ==========================================
+// MAIN DASHBOARD UPDATE
+// ==========================================
+
+async function updateAnalytics() {
+    const buckets =
+        getRangeDateBuckets(
+            currentWavelengthRange
+        );
+
+    const insightData =
+        await phaseLoadInsightData(
+            currentWavelengthRange
+        );
+
+    const moodEntries =
+        insightData.moods || [];
+
+    const medLogs =
+        insightData.meds || [];
+
+    const spotifyItems =
+        insightData.plays || [];
+
+    let sleepSessions = [];
+
+    if (
+        typeof phaseLoadSleepSessions ===
+        'function'
+    ) {
+        try {
+            sleepSessions =
+                await phaseLoadSleepSessions(
+                    currentWavelengthRange +
+                    1
+                );
+        } catch (error) {
+            console.warn(
+                'Sleep data could not be loaded for the dashboard:',
+                error
+            );
         }
     }
+
+
+    cachedWavelengthData = {
+        mood:
+            moodEntries,
+
+        medication:
+            medLogs,
+
+        spotify:
+            spotifyItems,
+
+        sleep:
+            sleepSessions,
+
+        buckets
+    };
+
+
+    await updateTodayCardStatuses(
+        medLogs,
+        spotifyItems,
+        sleepSessions
+    );
+
 
     renderPhaseWavelength();
 
-    if (typeof phaseBuildInsightModel === 'function' && typeof phaseLoadInsightData === 'function') {
+
+    // ======================================
+    // PHASE NOTICED
+    // ======================================
+
+    const insightElement =
+        document.getElementById(
+            'weeklyInsightText'
+        );
+
+    if (!insightElement) {
+        return;
+    }
+
+    const moodDays =
+        new Set(
+            moodEntries
+                .filter(
+                    entry =>
+                        entry.date_time
+                )
+                .map(
+                    entry =>
+                        phaseLocalDateKey(
+                            entry.date_time
+                        )
+                )
+        );
+
+    const listeningDays =
+        new Set(
+            spotifyItems
+                .filter(
+                    item =>
+                        item.played_at
+                )
+                .map(
+                    item =>
+                        phaseLocalDateKey(
+                            item.played_at
+                        )
+                )
+        );
+
+    const sleepDays =
+        new Set(
+            sleepSessions
+                .filter(
+                    session =>
+                        session.wake_time
+                )
+                .map(
+                    session =>
+                        phaseLocalDateKey(
+                            session.wake_time
+                        )
+                )
+        );
+
+
+    if (
+        moodDays.size === 0 &&
+        listeningDays.size === 0 &&
+        sleepDays.size === 0 &&
+        medLogs.length === 0
+    ) {
+        insightElement.textContent =
+            'Keep recording your signals to reveal meaningful patterns.';
+
+        return;
+    }
+
+
+    // Prefer the existing persistent insight
+    // engine when enough data exists.
+    if (
+        typeof phaseBuildInsightModel ===
+            'function' &&
+        typeof phaseCorrelationCopy ===
+            'function'
+    ) {
         try {
-            const insightModel = phaseBuildInsightModel(insightData, currentWavelengthRange);
-            if (insightElem) insightElem.textContent = phaseCorrelationCopy(insightModel).text;
-        } catch (error) {
-            console.warn('Dashboard insight could not be calculated:', error);
-        }
-    }
-}
+            const insightModel =
+                phaseBuildInsightModel(
+                    insightData,
+                    currentWavelengthRange
+                );
 
-function updateTodayCardStatuses(moodEntries, medLogs, journalEntries, spotifyItems) {
-    const todayStr = phaseLocalDateKey();
+            const musicMoodInsight =
+                phaseCorrelationCopy(
+                    insightModel
+                );
 
-    const todayMeds = medLogs.filter(m => m.timestamp && phaseLocalDateKey(m.timestamp) === todayStr);
-    const hasMorning = todayMeds.some(m => (m.time_of_day || '').toLowerCase() === 'morning');
-    const hasBedtime = todayMeds.some(m => (m.time_of_day || '').toLowerCase() === 'bedtime');
+            if (
+                insightModel.overlap
+                    ?.length >= 5
+            ) {
+                insightElement.textContent =
+                    musicMoodInsight.text;
 
-    const elemMed = document.getElementById('todayMedText');
-    if (elemMed) {
-        if (hasMorning && hasBedtime) {
-            elemMed.innerHTML = 'Morning <span style="color:var(--signal-medication); font-weight:700;">✓</span> · Bedtime <span style="color:var(--signal-medication); font-weight:700;">✓</span>';
-        } else if (hasMorning) {
-            elemMed.innerHTML = 'Morning <span style="color:var(--signal-medication); font-weight:700;">✓</span> · Evening ○';
-        } else if (hasBedtime) {
-            elemMed.innerHTML = 'Morning ○ · Evening <span style="color:var(--signal-medication); font-weight:700;">✓</span>';
-        } else if (todayMeds.length > 0) {
-            elemMed.innerHTML = `${todayMeds.length} dose(s) logged today <span style="color:var(--signal-medication); font-weight:700;">✓</span>`;
-        } else {
-            elemMed.textContent = 'Not logged today';
-        }
-    }
-
-    const elemAudioDesc = document.getElementById('spotifyVibeSubtitle');
-    const connectBtn = document.getElementById('connectSpotifyBtn');
-    const isSpotifyConnected = !!localStorage.getItem('spotify_access_token');
-
-    if (elemAudioDesc) {
-        if (isSpotifyConnected) {
-            const todayTracks = spotifyItems.filter(i => i.played_at && phaseLocalDateKey(i.played_at) === todayStr);
-            elemAudioDesc.textContent = todayTracks.length > 0 ? `${todayTracks.length} tracks logged today` : 'Connected & Active';
-            if (connectBtn) {
-                connectBtn.textContent = 'Active';
-                connectBtn.style.color = 'var(--signal-listening-hover)';
+                return;
             }
-        } else {
-            elemAudioDesc.textContent = 'Spotify not connected';
-            if (connectBtn) connectBtn.textContent = 'Connect';
+        } catch (error) {
+            console.warn(
+                'Dashboard pattern insight could not be calculated:',
+                error
+            );
         }
     }
 
-    const todayJournal = journalEntries.some(j => j.timestamp && phaseLocalDateKey(j.timestamp) === todayStr);
-    const elemJournal = document.getElementById('todayJournalText');
-    if (elemJournal) {
-        elemJournal.innerHTML = todayJournal 
-            ? 'Reflected today <span style="color:var(--signal-journal); font-weight:700;">✓</span>' 
-            : 'Not logged today';
+
+    // Before there is enough correlation data,
+    // surface a useful descriptive observation.
+    const completedSleep =
+        sleepSessions.filter(
+            session =>
+                session.wake_time
+        );
+
+    if (
+        completedSleep.length >= 2
+    ) {
+        const durations =
+            completedSleep
+                .map(session => {
+                    if (
+                        typeof phaseSleepDurationMinutes !==
+                        'function'
+                    ) {
+                        return null;
+                    }
+
+                    return phaseSleepDurationMinutes(
+                        session.bedtime,
+                        session.wake_time
+                    );
+                })
+                .filter(
+                    Number.isFinite
+                );
+
+        if (durations.length) {
+            const averageMinutes =
+                durations.reduce(
+                    (sum, value) =>
+                        sum + value,
+                    0
+                ) /
+                durations.length;
+
+            const formatted =
+                typeof phaseSleepFormatDuration ===
+                    'function'
+                    ? phaseSleepFormatDuration(
+                        averageMinutes
+                    )
+                    : `${Math.round(
+                        averageMinutes /
+                        60
+                    )}h`;
+
+            insightElement.textContent =
+                `Your average recorded sleep window is ${formatted} across ${durations.length} recent night${durations.length === 1 ? '' : 's'}.`;
+
+            return;
+        }
     }
+
+
+    if (
+        moodDays.size >= 3
+    ) {
+        insightElement.textContent =
+            `Phase has ${moodDays.size} days with mood observations in this range. More overlapping signals will make pattern detection stronger.`;
+
+        return;
+    }
+
+
+    if (
+        spotifyItems.length
+    ) {
+        insightElement.textContent =
+            `${spotifyItems.length} listening events are saved in this range. Keep checking in so Phase can compare listening with mood and sleep.`;
+
+        return;
+    }
+
+
+    insightElement.textContent =
+        'Your signals are starting to build a timeline. More overlapping observations will reveal stronger patterns.';
 }
 
-function setWavelengthRange(days, btnElem) {
-    currentWavelengthRange = days;
-    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
-    if (btnElem) btnElem.classList.add('active');
+
+// ==========================================
+// TODAY STATUS CARD
+// ==========================================
+
+async function updateTodayCardStatuses(
+    medLogs,
+    spotifyItems,
+    sleepSessions
+) {
+    const todayString =
+        phaseLocalDateKey();
+
+
+    // ======================================
+    // MEDICATION
+    // ======================================
+
+    const todayMeds =
+        (medLogs || [])
+            .filter(
+                log =>
+                    log.timestamp &&
+                    phaseLocalDateKey(
+                        log.timestamp
+                    ) ===
+                    todayString
+            );
+
+    const hasMorning =
+        todayMeds.some(
+            log =>
+                String(
+                    log.time_of_day || ''
+                )
+                    .toLowerCase() ===
+                'morning'
+        );
+
+    const hasBedtime =
+        todayMeds.some(
+            log =>
+                String(
+                    log.time_of_day || ''
+                )
+                    .toLowerCase() ===
+                'bedtime'
+        );
+
+    const medElement =
+        document.getElementById(
+            'todayMedText'
+        );
+
+    if (medElement) {
+        if (
+            hasMorning &&
+            hasBedtime
+        ) {
+            medElement.innerHTML =
+                'Morning <span style="color:var(--signal-medication);font-weight:700;">✓</span> · Bedtime <span style="color:var(--signal-medication);font-weight:700;">✓</span>';
+
+        } else if (hasMorning) {
+            medElement.innerHTML =
+                'Morning <span style="color:var(--signal-medication);font-weight:700;">✓</span> · Evening ○';
+
+        } else if (hasBedtime) {
+            medElement.innerHTML =
+                'Morning ○ · Evening <span style="color:var(--signal-medication);font-weight:700;">✓</span>';
+
+        } else if (
+            todayMeds.length
+        ) {
+            medElement.innerHTML =
+                `${todayMeds.length} dose${todayMeds.length === 1 ? '' : 's'} logged today <span style="color:var(--signal-medication);font-weight:700;">✓</span>`;
+
+        } else {
+            medElement.textContent =
+                'Not logged today';
+        }
+    }
+
+
+    // ======================================
+    // LISTENING
+    // ======================================
+
+    const audioElement =
+        document.getElementById(
+            'spotifyVibeSubtitle'
+        );
+
+    const connectButton =
+        document.getElementById(
+            'connectSpotifyBtn'
+        );
+
+    const connected =
+        !!localStorage.getItem(
+            'spotify_access_token'
+        );
+
+    if (audioElement) {
+        if (connected) {
+            const todayTracks =
+                (spotifyItems || [])
+                    .filter(
+                        item =>
+                            item.played_at &&
+                            phaseLocalDateKey(
+                                item.played_at
+                            ) ===
+                            todayString
+                    );
+
+            audioElement.textContent =
+                todayTracks.length
+                    ? `${todayTracks.length} track${todayTracks.length === 1 ? '' : 's'} logged today`
+                    : 'Connected & active';
+
+            if (connectButton) {
+                connectButton.textContent =
+                    'Active';
+
+                connectButton.style.color =
+                    'var(--signal-listening-hover)';
+            }
+
+        } else {
+            audioElement.textContent =
+                'Spotify not connected';
+
+            if (connectButton) {
+                connectButton.textContent =
+                    'Connect';
+            }
+        }
+    }
+
+
+    // ======================================
+    // SLEEP
+    // ======================================
+
+    const sleepElement =
+        document.getElementById(
+            'todaySleepText'
+        );
+
+    if (!sleepElement) {
+        return;
+    }
+
+
+    const openSession =
+        (sleepSessions || [])
+            .find(
+                session =>
+                    !session.wake_time
+            );
+
+
+    if (openSession) {
+        const minutes =
+            typeof phaseSleepDurationMinutes ===
+                'function'
+                ? phaseSleepDurationMinutes(
+                    openSession.bedtime,
+                    new Date()
+                )
+                : null;
+
+        const duration =
+            typeof phaseSleepFormatDuration ===
+                'function' &&
+            Number.isFinite(minutes)
+                ? phaseSleepFormatDuration(
+                    minutes
+                )
+                : '';
+
+        sleepElement.textContent =
+            duration
+                ? `Sleep window open · ${duration}`
+                : 'Sleep window in progress';
+
+        return;
+    }
+
+
+    const completedToday =
+        (sleepSessions || [])
+            .filter(
+                session =>
+                    session.wake_time &&
+                    phaseLocalDateKey(
+                        session.wake_time
+                    ) ===
+                    todayString
+            )
+            .sort(
+                (a, b) =>
+                    new Date(
+                        b.wake_time
+                    ) -
+                    new Date(
+                        a.wake_time
+                    )
+            )[0];
+
+
+    if (completedToday) {
+        const minutes =
+            typeof phaseSleepDurationMinutes ===
+                'function'
+                ? phaseSleepDurationMinutes(
+                    completedToday.bedtime,
+                    completedToday.wake_time
+                )
+                : null;
+
+        const duration =
+            typeof phaseSleepFormatDuration ===
+                'function' &&
+            Number.isFinite(minutes)
+                ? phaseSleepFormatDuration(
+                    minutes
+                )
+                : 'Saved';
+
+        const quality =
+            completedToday.sleep_quality
+                ? ` · Quality ${completedToday.sleep_quality}/5`
+                : '';
+
+        sleepElement.textContent =
+            `${duration}${quality}`;
+
+        return;
+    }
+
+
+    sleepElement.textContent =
+        'Ready for your next sleep window';
+}
+
+
+// ==========================================
+// RANGE CONTROLS
+// ==========================================
+
+function setWavelengthRange(
+    days,
+    buttonElement
+) {
+    currentWavelengthRange =
+        Number(days) || 7;
+
+    document
+        .querySelectorAll(
+            '.range-btn'
+        )
+        .forEach(
+            button =>
+                button.classList.remove(
+                    'active'
+                )
+        );
+
+    if (buttonElement) {
+        buttonElement.classList.add(
+            'active'
+        );
+    }
+
     updateAnalytics();
 }
 
-function toggleWavelengthSignal(signalName) {
-    if (activeWavelengthSignals.has(signalName)) {
-        if (activeWavelengthSignals.size > 1) {
-            activeWavelengthSignals.delete(signalName);
-        }
-    } else {
-        activeWavelengthSignals.add(signalName);
+
+// ==========================================
+// SIGNAL TOGGLES
+// ==========================================
+
+function toggleWavelengthSignal(
+    signalName
+) {
+    const validSignals =
+        new Set([
+            'mood',
+            'listening',
+            'medication',
+            'sleep'
+        ]);
+
+    if (
+        !validSignals.has(
+            signalName
+        )
+    ) {
+        return;
     }
 
-    const btnMap = {
-        mood: 'btnSignalMood',
-        listening: 'btnSignalListening',
-        medication: 'btnSignalMedication',
-        journal: 'btnSignalJournal'
+
+    if (
+        activeWavelengthSignals.has(
+            signalName
+        )
+    ) {
+        // Never allow every signal to be
+        // hidden at once.
+        if (
+            activeWavelengthSignals
+                .size > 1
+        ) {
+            activeWavelengthSignals
+                .delete(
+                    signalName
+                );
+        }
+
+    } else {
+        activeWavelengthSignals
+            .add(
+                signalName
+            );
+    }
+
+
+    const buttonMap = {
+        mood:
+            'btnSignalMood',
+
+        listening:
+            'btnSignalListening',
+
+        medication:
+            'btnSignalMedication',
+
+        sleep:
+            'btnSignalSleep'
     };
 
-    Object.entries(btnMap).forEach(([sig, btnId]) => {
-        const btn = document.getElementById(btnId);
-        if (btn) {
-            if (activeWavelengthSignals.has(sig)) {
-                btn.className = 'signal-pill active';
-            } else {
-                btn.className = 'signal-pill inactive';
+
+    Object.entries(
+        buttonMap
+    ).forEach(
+        ([signal, buttonId]) => {
+            const button =
+                document.getElementById(
+                    buttonId
+                );
+
+            if (!button) {
+                return;
             }
+
+            button.className =
+                activeWavelengthSignals
+                    .has(signal)
+                    ? 'signal-pill active'
+                    : 'signal-pill inactive';
         }
-    });
+    );
+
 
     renderPhaseWavelength();
 }
 
+
 // ==========================================
-// RENDER ATMOSPHERIC DARK WAVELENGTH
+// SVG HELPERS
+// ==========================================
+
+function phaseCreateSvgElement(
+    tag,
+    attributes = {}
+) {
+    const element =
+        document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            tag
+        );
+
+    Object.entries(
+        attributes
+    ).forEach(
+        ([key, value]) => {
+            element.setAttribute(
+                key,
+                value
+            );
+        }
+    );
+
+    return element;
+}
+
+
+function phaseBuildSmoothPath(
+    points
+) {
+    if (!points.length) {
+        return '';
+    }
+
+    let path =
+        `M ${points[0].x},${points[0].y}`;
+
+    for (
+        let i = 0;
+        i < points.length - 1;
+        i++
+    ) {
+        const current =
+            points[i];
+
+        const next =
+            points[i + 1];
+
+        const controlX =
+            (
+                current.x +
+                next.x
+            ) / 2;
+
+        path +=
+            ` C ${controlX},${current.y} ${controlX},${next.y} ${next.x},${next.y}`;
+    }
+
+    return path;
+}
+
+
+// ==========================================
+// MAIN PHASE WAVELENGTH RENDER
 // ==========================================
 
 function renderPhaseWavelength() {
-    if (!cachedWavelengthData) return;
-
-    const gridGroup = document.getElementById('wavelengthGridGroup');
-    const pathsGroup = document.getElementById('wavelengthPathsGroup');
-    const eventsGroup = document.getElementById('wavelengthEventsGroup');
-    const labelsContainer = document.getElementById('dynamicChartLabels');
-    const tooltip = document.getElementById('chartTooltip');
-    const crosshair = document.getElementById('wavelengthCrosshair');
-    const svgElem = document.querySelector('.wavelength-svg');
-
-    if (!pathsGroup || !labelsContainer || !svgElem) return;
-
-    svgElem.setAttribute('viewBox', '0 0 780 180');
-    svgElem.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-    gridGroup.innerHTML = '';
-    pathsGroup.innerHTML = '';
-    eventsGroup.innerHTML = '';
-
-    const { buckets, mood, spotify, medication, journal } = cachedWavelengthData;
-    
-    const labelStep = currentWavelengthRange > 14 ? Math.ceil(currentWavelengthRange / 7) : 1;
-    labelsContainer.innerHTML = buckets.map((b, idx) => {
-        if (idx % labelStep === 0 || idx === buckets.length - 1) {
-            return `<span>${b.label}</span>`;
-        }
-        return `<span></span>`;
-    }).join('');
-
-    const canvasWidth = 780;
-    const paddingLeftRight = 30;
-    const xPositions = buckets.map((_, i) => (i / (buckets.length - 1)) * (canvasWidth - (paddingLeftRight * 2)) + paddingLeftRight);
-
-    const lanes = [
-        { id: 'mood', yBaseline: 45, height: 35, label: 'MOOD' },
-        { id: 'listening', yBaseline: 85, height: 30, label: 'LISTENING' },
-        { id: 'medication', yBaseline: 125, height: 15, label: 'MEDICATION' },
-        { id: 'journal', yBaseline: 155, height: 15, label: 'JOURNAL' }
-    ];
-
-    lanes.forEach(lane => {
-        if (!activeWavelengthSignals.has(lane.id)) return;
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', '10'); line.setAttribute('y1', lane.yBaseline);
-        line.setAttribute('x2', '770'); line.setAttribute('y2', lane.yBaseline);
-        line.setAttribute('stroke', 'rgba(255, 255, 255, 0.07)');
-        line.setAttribute('stroke-dasharray', '3 4');
-        gridGroup.appendChild(line);
-
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', '10'); text.setAttribute('y', lane.yBaseline - 12);
-        text.setAttribute('fill', '#858A82');
-        text.setAttribute('font-size', '8.5');
-        text.setAttribute('font-weight', '700');
-        text.setAttribute('letter-spacing', '0.5px');
-        text.textContent = lane.label;
-        gridGroup.appendChild(text);
-    });
-
-    const moodNorm = normalizeMoodData(mood, buckets);
-    const listeningNorm = normalizeListeningData(spotify, buckets);
-    const medEvents = mapMedicationEvents(medication, buckets);
-    const journalEvents = mapJournalEvents(journal, buckets);
-
-    // 1. Mood Wave Line (Moss)
-    if (activeWavelengthSignals.has('mood')) {
-        const moodPoints = moodNorm.map((d, i) => ({
-            x: xPositions[i],
-            y: Math.round(45 - (d.val * 30)),
-            score: (d.val * 5).toFixed(1)
-        }));
-
-        for (let i = 0; i < moodPoints.length - 1; i++) {
-            const p0 = moodPoints[i];
-            const p1 = moodPoints[i + 1];
-            const cpX = (p0.x + p1.x) / 2;
-            const segment = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            segment.setAttribute('d', `M ${p0.x},${p0.y} C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`);
-            segment.setAttribute('fill', 'none');
-            segment.setAttribute('stroke', '#788D46');
-            segment.setAttribute('stroke-width', moodNorm[i + 1].hasData ? '2.5' : '1.5');
-            segment.setAttribute('stroke-opacity', moodNorm[i + 1].hasData ? '1' : '0.28');
-            segment.setAttribute('stroke-linecap', 'round');
-            pathsGroup.appendChild(segment);
-        }
-
-        moodPoints.forEach((point, index) => {
-            if (!moodNorm[index].hasData) return;
-            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            marker.setAttribute('cx', point.x);
-            marker.setAttribute('cy', point.y);
-            marker.setAttribute('r', '3.5');
-            marker.setAttribute('fill', '#788D46');
-            marker.setAttribute('stroke', '#F1EFE7');
-            marker.setAttribute('stroke-width', '1');
-            eventsGroup.appendChild(marker);
-        });
+    if (!cachedWavelengthData) {
+        return;
     }
 
-    // 2. Listening Wave Line (Violet)
-    if (activeWavelengthSignals.has('listening')) {
-        const listeningPoints = listeningNorm.map((d, i) => ({
-            x: xPositions[i],
-            y: Math.round(85 - (d.norm * 25)),
-            count: d.count
-        }));
 
-        let pathD = `M ${listeningPoints[0].x},${listeningPoints[0].y}`;
-        for (let i = 0; i < listeningPoints.length - 1; i++) {
-            const p0 = listeningPoints[i];
-            const p1 = listeningPoints[i + 1];
-            const cpX = (p0.x + p1.x) / 2;
-            pathD += ` C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`;
-        }
+    const gridGroup =
+        document.getElementById(
+            'wavelengthGridGroup'
+        );
 
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathD); path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', '#9A75C4'); path.setAttribute('stroke-width', '2');
-        path.setAttribute('stroke-linecap', 'round');
-        pathsGroup.appendChild(path);
+    const pathsGroup =
+        document.getElementById(
+            'wavelengthPathsGroup'
+        );
 
-        const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        area.setAttribute('d', `${pathD} L ${xPositions[xPositions.length-1]},85 L ${xPositions[0]},85 Z`);
-        area.setAttribute('fill', 'url(#listeningWaveGradient)');
-        pathsGroup.appendChild(area);
+    const eventsGroup =
+        document.getElementById(
+            'wavelengthEventsGroup'
+        );
+
+    const labelsContainer =
+        document.getElementById(
+            'dynamicChartLabels'
+        );
+
+    const tooltip =
+        document.getElementById(
+            'chartTooltip'
+        );
+
+    const crosshair =
+        document.getElementById(
+            'wavelengthCrosshair'
+        );
+
+    const svg =
+        document.querySelector(
+            '.wavelength-svg'
+        );
+
+
+    if (
+        !gridGroup ||
+        !pathsGroup ||
+        !eventsGroup ||
+        !labelsContainer ||
+        !svg
+    ) {
+        return;
     }
 
-    // 3. Medication Events (Amber Baseline Markers)
-    if (activeWavelengthSignals.has('medication')) {
-        medEvents.forEach((d, i) => {
-            const x = xPositions[i];
-            const y = 125;
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', x); circle.setAttribute('cy', y);
-            circle.setAttribute('r', d.count > 0 ? '4.5' : '2');
-            circle.setAttribute('fill', d.count > 0 ? '#D49728' : '#171B19');
-            circle.setAttribute('stroke', '#D49728');
-            circle.setAttribute('stroke-width', '1.5');
-            eventsGroup.appendChild(circle);
-        });
+
+    const canvasWidth =
+        780;
+
+    const canvasHeight =
+        220;
+
+    const horizontalPadding =
+        32;
+
+
+    svg.setAttribute(
+        'viewBox',
+        `0 0 ${canvasWidth} ${canvasHeight}`
+    );
+
+    svg.setAttribute(
+        'preserveAspectRatio',
+        'xMidYMid meet'
+    );
+
+
+    gridGroup.innerHTML =
+        '';
+
+    pathsGroup.innerHTML =
+        '';
+
+    eventsGroup.innerHTML =
+        '';
+
+
+    const {
+        buckets,
+        mood,
+        spotify,
+        medication,
+        sleep
+    } =
+        cachedWavelengthData;
+
+
+    if (
+        !buckets ||
+        buckets.length < 2
+    ) {
+        return;
     }
 
-    // 4. Journal Activity Wave (Burnt Coral)
-    if (activeWavelengthSignals.has('journal')) {
-        const journalPoints = journalEvents.map((d, i) => ({
-            x: xPositions[i],
-            y: Math.round(155 - (d.norm * 18)),
-            count: d.count
-        }));
 
-        let pathD = `M ${journalPoints[0].x},${journalPoints[0].y}`;
-        for (let i = 0; i < journalPoints.length - 1; i++) {
-            const p0 = journalPoints[i];
-            const p1 = journalPoints[i + 1];
-            const cpX = (p0.x + p1.x) / 2;
-            pathD += ` C ${cpX},${p0.y} ${cpX},${p1.y} ${p1.x},${p1.y}`;
-        }
+    // ======================================
+    // X POSITIONS / LABELS
+    // ======================================
 
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', pathD); path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', '#D56543'); path.setAttribute('stroke-width', '1.8');
-        path.setAttribute('stroke-dasharray', '3 3');
-        pathsGroup.appendChild(path);
-    }
+    const xPositions =
+        buckets.map(
+            (_, index) =>
+                horizontalPadding +
+                (
+                    index /
+                    (
+                        buckets.length -
+                        1
+                    )
+                ) *
+                (
+                    canvasWidth -
+                    horizontalPadding *
+                    2
+                )
+        );
 
-    // Shared Hover Cursor & Tooltip Calculation
-    svgElem.onmousemove = (e) => {
-        const rect = svgElem.getBoundingClientRect();
-        const mouseX = ((e.clientX - rect.left) / rect.width) * canvasWidth;
 
-        let closestIdx = 0;
-        let minDiff = Infinity;
-        xPositions.forEach((pos, idx) => {
-            const diff = Math.abs(pos - mouseX);
-            if (diff < minDiff) {
-                minDiff = diff;
-                closestIdx = idx;
+    const labelStep =
+        currentWavelengthRange > 14
+            ? Math.ceil(
+                currentWavelengthRange /
+                7
+            )
+            : 1;
+
+
+    labelsContainer.innerHTML =
+        buckets.map(
+            (bucket, index) => {
+                if (
+                    index %
+                        labelStep ===
+                        0 ||
+                    index ===
+                        buckets.length -
+                            1
+                ) {
+                    return `<span>${bucket.label}</span>`;
+                }
+
+                return '<span></span>';
             }
-        });
+        ).join('');
 
-        const matchX = xPositions[closestIdx];
-        if (crosshair) {
-            crosshair.style.display = 'block';
-            crosshair.setAttribute('x1', matchX);
-            crosshair.setAttribute('x2', matchX);
-            crosshair.setAttribute('y1', '10');
-            crosshair.setAttribute('y2', '170');
-            crosshair.setAttribute('stroke', '#41473E');
+
+    // ======================================
+    // SIGNAL DATA
+    // ======================================
+
+    const moodData =
+        normalizeMoodData(
+            mood,
+            buckets
+        );
+
+    const listeningData =
+        normalizeListeningData(
+            spotify,
+            buckets
+        );
+
+    const medicationData =
+        mapMedicationEvents(
+            medication,
+            buckets
+        );
+
+    const sleepData =
+        normalizeSleepData(
+            sleep,
+            buckets
+        );
+
+
+    // ======================================
+    // LANE CONFIGURATION
+    // ======================================
+
+    const lanes = {
+        mood: {
+            baseline: 48,
+            amplitude: 33,
+            label: 'MOOD',
+            color: '#91B956'
+        },
+
+        listening: {
+            baseline: 101,
+            amplitude: 38,
+            label: 'LISTENING',
+            color: '#B48BE4'
+        },
+
+        medication: {
+            baseline: 145,
+            amplitude: 18,
+            label: 'MEDICATION',
+            color: '#E1A53B'
+        },
+
+        sleep: {
+            baseline: 197,
+            amplitude: 34,
+            label: 'SLEEP WINDOW',
+            color: '#5AAFC3'
         }
+    };
 
-        if (tooltip) {
-            tooltip.style.display = 'block';
-            tooltip.style.left = `${(matchX / canvasWidth) * 100}%`;
-            tooltip.style.top = `35px`;
 
-            const b = buckets[closestIdx];
-            const moodPoint = moodNorm[closestIdx];
-            const mVal = (moodPoint.val * 5).toFixed(1);
-            const lVal = listeningNorm[closestIdx].count;
-            const medVal = medEvents[closestIdx].count > 0 ? 'Logged' : 'None';
-            const jVal = journalEvents[closestIdx].count;
+    // ======================================
+    // GRID / SIGNAL LABELS
+    // ======================================
+
+    Object.entries(
+        lanes
+    ).forEach(
+        ([signal, lane]) => {
+            if (
+                !activeWavelengthSignals
+                    .has(signal)
+            ) {
+                return;
+            }
+
+            const baseline =
+                phaseCreateSvgElement(
+                    'line',
+                    {
+                        x1: 12,
+                        y1:
+                            lane.baseline,
+
+                        x2:
+                            canvasWidth -
+                            12,
+
+                        y2:
+                            lane.baseline,
+
+                        stroke:
+                            'rgba(255,255,255,0.075)',
+
+                        'stroke-width':
+                            '1',
+
+                        'stroke-dasharray':
+                            '3 5'
+                    }
+                );
+
+            gridGroup.appendChild(
+                baseline
+            );
+
+
+            const label =
+                phaseCreateSvgElement(
+                    'text',
+                    {
+                        x: 12,
+
+                        y:
+                            lane.baseline -
+                            lane.amplitude -
+                            6,
+
+                        fill:
+                            lane.color,
+
+                        'fill-opacity':
+                            '0.82',
+
+                        'font-size':
+                            '8.5',
+
+                        'font-weight':
+                            '700',
+
+                        'letter-spacing':
+                            '0.8px'
+                    }
+                );
+
+            label.textContent =
+                lane.label;
+
+            gridGroup.appendChild(
+                label
+            );
+        }
+    );
+
+
+    // ======================================
+    // MOOD
+    // ======================================
+
+    if (
+        activeWavelengthSignals.has(
+            'mood'
+        )
+    ) {
+        const lane =
+            lanes.mood;
+
+        const points =
+            moodData.map(
+                (item, index) => ({
+                    x:
+                        xPositions[
+                            index
+                        ],
+
+                    y:
+                        lane.baseline -
+                        item.val *
+                        lane.amplitude
+                })
+            );
+
+        const pathData =
+            phaseBuildSmoothPath(
+                points
+            );
+
+
+        const area =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        `${pathData} L ${points[points.length - 1].x},${lane.baseline} L ${points[0].x},${lane.baseline} Z`,
+
+                    fill:
+                        'url(#moodWaveGradient)',
+
+                    opacity:
+                        '0.95'
+                }
+            );
+
+        pathsGroup.appendChild(
+            area
+        );
+
+
+        const path =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        pathData,
+
+                    fill:
+                        'none',
+
+                    stroke:
+                        lane.color,
+
+                    'stroke-width':
+                        '4',
+
+                    'stroke-linecap':
+                        'round',
+
+                    'stroke-linejoin':
+                        'round'
+                }
+            );
+
+        pathsGroup.appendChild(
+            path
+        );
+
+
+        points.forEach(
+            (point, index) => {
+                if (
+                    !moodData[index]
+                        .hasData
+                ) {
+                    return;
+                }
+
+                const glow =
+                    phaseCreateSvgElement(
+                        'circle',
+                        {
+                            cx:
+                                point.x,
+
+                            cy:
+                                point.y,
+
+                            r: '8',
+
+                            fill:
+                                lane.color,
+
+                            opacity:
+                                '0.12'
+                        }
+                    );
+
+                const marker =
+                    phaseCreateSvgElement(
+                        'circle',
+                        {
+                            cx:
+                                point.x,
+
+                            cy:
+                                point.y,
+
+                            r: '4.5',
+
+                            fill:
+                                lane.color,
+
+                            stroke:
+                                '#F1EFE7',
+
+                            'stroke-width':
+                                '1.2'
+                        }
+                    );
+
+                eventsGroup.appendChild(
+                    glow
+                );
+
+                eventsGroup.appendChild(
+                    marker
+                );
+            }
+        );
+    }
+
+
+    // ======================================
+    // LISTENING
+    // ======================================
+
+    if (
+        activeWavelengthSignals.has(
+            'listening'
+        )
+    ) {
+        const lane =
+            lanes.listening;
+
+        const points =
+            listeningData.map(
+                (item, index) => ({
+                    x:
+                        xPositions[
+                            index
+                        ],
+
+                    y:
+                        lane.baseline -
+                        item.norm *
+                        lane.amplitude
+                })
+            );
+
+        const pathData =
+            phaseBuildSmoothPath(
+                points
+            );
+
+
+        const area =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        `${pathData} L ${points[points.length - 1].x},${lane.baseline} L ${points[0].x},${lane.baseline} Z`,
+
+                    fill:
+                        'url(#listeningWaveGradient)',
+
+                    opacity:
+                        '1'
+                }
+            );
+
+        pathsGroup.appendChild(
+            area
+        );
+
+
+        const shadow =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        pathData,
+
+                    fill:
+                        'none',
+
+                    stroke:
+                        lane.color,
+
+                    'stroke-width':
+                        '9',
+
+                    'stroke-linecap':
+                        'round',
+
+                    opacity:
+                        '0.10'
+                }
+            );
+
+        pathsGroup.appendChild(
+            shadow
+        );
+
+
+        const path =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        pathData,
+
+                    fill:
+                        'none',
+
+                    stroke:
+                        lane.color,
+
+                    'stroke-width':
+                        '4.5',
+
+                    'stroke-linecap':
+                        'round',
+
+                    'stroke-linejoin':
+                        'round'
+                }
+            );
+
+        pathsGroup.appendChild(
+            path
+        );
+
+
+        listeningData.forEach(
+            (item, index) => {
+                if (!item.count) {
+                    return;
+                }
+
+                const marker =
+                    phaseCreateSvgElement(
+                        'circle',
+                        {
+                            cx:
+                                xPositions[
+                                    index
+                                ],
+
+                            cy:
+                                points[
+                                    index
+                                ].y,
+
+                            r:
+                                Math.min(
+                                    6,
+                                    3 +
+                                    item.norm *
+                                    3
+                                ),
+
+                            fill:
+                                lane.color,
+
+                            opacity:
+                                '0.95'
+                        }
+                    );
+
+                eventsGroup.appendChild(
+                    marker
+                );
+            }
+        );
+    }
+
+
+    // ======================================
+    // MEDICATION
+    // ======================================
+
+    if (
+        activeWavelengthSignals.has(
+            'medication'
+        )
+    ) {
+        const lane =
+            lanes.medication;
+
+        medicationData.forEach(
+            (item, index) => {
+                const x =
+                    xPositions[
+                        index
+                    ];
+
+                if (!item.count) {
+                    const empty =
+                        phaseCreateSvgElement(
+                            'circle',
+                            {
+                                cx: x,
+
+                                cy:
+                                    lane.baseline,
+
+                                r: '2.5',
+
+                                fill:
+                                    'var(--phase-graph-surface)',
+
+                                stroke:
+                                    lane.color,
+
+                                'stroke-width':
+                                    '1',
+
+                                opacity:
+                                    '0.28'
+                            }
+                        );
+
+                    eventsGroup.appendChild(
+                        empty
+                    );
+
+                    return;
+                }
+
+
+                const pulseHeight =
+                    Math.min(
+                        28,
+                        12 +
+                        item.count *
+                        5
+                    );
+
+
+                const glow =
+                    phaseCreateSvgElement(
+                        'line',
+                        {
+                            x1: x,
+
+                            x2: x,
+
+                            y1:
+                                lane.baseline,
+
+                            y2:
+                                lane.baseline -
+                                pulseHeight,
+
+                            stroke:
+                                lane.color,
+
+                            'stroke-width':
+                                '8',
+
+                            'stroke-linecap':
+                                'round',
+
+                            opacity:
+                                '0.12'
+                        }
+                    );
+
+
+                const pulse =
+                    phaseCreateSvgElement(
+                        'line',
+                        {
+                            x1: x,
+
+                            x2: x,
+
+                            y1:
+                                lane.baseline,
+
+                            y2:
+                                lane.baseline -
+                                pulseHeight,
+
+                            stroke:
+                                lane.color,
+
+                            'stroke-width':
+                                '3.5',
+
+                            'stroke-linecap':
+                                'round'
+                        }
+                    );
+
+
+                const marker =
+                    phaseCreateSvgElement(
+                        'circle',
+                        {
+                            cx: x,
+
+                            cy:
+                                lane.baseline -
+                                pulseHeight,
+
+                            r: '4.5',
+
+                            fill:
+                                lane.color,
+
+                            stroke:
+                                '#F1EFE7',
+
+                            'stroke-width':
+                                '1'
+                        }
+                    );
+
+
+                eventsGroup.appendChild(
+                    glow
+                );
+
+                eventsGroup.appendChild(
+                    pulse
+                );
+
+                eventsGroup.appendChild(
+                    marker
+                );
+            }
+        );
+    }
+
+
+    // ======================================
+    // SLEEP WINDOW
+    // ======================================
+
+    if (
+        activeWavelengthSignals.has(
+            'sleep'
+        )
+    ) {
+        const lane =
+            lanes.sleep;
+
+        const points =
+            sleepData.map(
+                (item, index) => ({
+                    x:
+                        xPositions[
+                            index
+                        ],
+
+                    y:
+                        item.hasData
+                            ? lane.baseline -
+                              (
+                                  0.20 +
+                                  item.durationNorm *
+                                  0.80
+                              ) *
+                              lane.amplitude
+                            : lane.baseline
+                })
+            );
+
+
+        const pathData =
+            phaseBuildSmoothPath(
+                points
+            );
+
+
+        const area =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        `${pathData} L ${points[points.length - 1].x},${lane.baseline} L ${points[0].x},${lane.baseline} Z`,
+
+                    fill:
+                        'url(#sleepWaveGradient)',
+
+                    opacity:
+                        '0.90'
+                }
+            );
+
+        pathsGroup.appendChild(
+            area
+        );
+
+
+        const path =
+            phaseCreateSvgElement(
+                'path',
+                {
+                    d:
+                        pathData,
+
+                    fill:
+                        'none',
+
+                    stroke:
+                        lane.color,
+
+                    'stroke-width':
+                        '4',
+
+                    'stroke-linecap':
+                        'round',
+
+                    'stroke-linejoin':
+                        'round',
+
+                    opacity:
+                        sleepData.some(
+                            item =>
+                                item.hasData
+                        )
+                            ? '1'
+                            : '0.22'
+                }
+            );
+
+        pathsGroup.appendChild(
+            path
+        );
+
+
+        sleepData.forEach(
+            (item, index) => {
+                if (!item.hasData) {
+                    return;
+                }
+
+                const point =
+                    points[
+                        index
+                    ];
+
+
+                const glow =
+                    phaseCreateSvgElement(
+                        'circle',
+                        {
+                            cx:
+                                point.x,
+
+                            cy:
+                                point.y,
+
+                            r: '9',
+
+                            fill:
+                                lane.color,
+
+                            opacity:
+                                item.isOpen
+                                    ? '0.24'
+                                    : '0.12'
+                        }
+                    );
+
+
+                const marker =
+                    phaseCreateSvgElement(
+                        'circle',
+                        {
+                            cx:
+                                point.x,
+
+                            cy:
+                                point.y,
+
+                            r:
+                                item.isOpen
+                                    ? '5.5'
+                                    : '4.5',
+
+                            fill:
+                                lane.color,
+
+                            stroke:
+                                '#F1EFE7',
+
+                            'stroke-width':
+                                '1.2'
+                        }
+                    );
+
+
+                eventsGroup.appendChild(
+                    glow
+                );
+
+                eventsGroup.appendChild(
+                    marker
+                );
+            }
+        );
+    }
+
+
+    // ======================================
+    // SHARED TOOLTIP
+    // ======================================
+
+    svg.onmousemove =
+        event => {
+            const rect =
+                svg.getBoundingClientRect();
+
+            const mouseX =
+                (
+                    (
+                        event.clientX -
+                        rect.left
+                    ) /
+                    rect.width
+                ) *
+                canvasWidth;
+
+
+            let closestIndex =
+                0;
+
+            let smallestDistance =
+                Infinity;
+
+
+            xPositions.forEach(
+                (position, index) => {
+                    const distance =
+                        Math.abs(
+                            position -
+                            mouseX
+                        );
+
+                    if (
+                        distance <
+                        smallestDistance
+                    ) {
+                        smallestDistance =
+                            distance;
+
+                        closestIndex =
+                            index;
+                    }
+                }
+            );
+
+
+            const matchX =
+                xPositions[
+                    closestIndex
+                ];
+
+
+            if (crosshair) {
+                crosshair.style.display =
+                    'block';
+
+                crosshair.setAttribute(
+                    'x1',
+                    matchX
+                );
+
+                crosshair.setAttribute(
+                    'x2',
+                    matchX
+                );
+
+                crosshair.setAttribute(
+                    'y1',
+                    '8'
+                );
+
+                crosshair.setAttribute(
+                    'y2',
+                    '212'
+                );
+            }
+
+
+            if (!tooltip) {
+                return;
+            }
+
+
+            const bucket =
+                buckets[
+                    closestIndex
+                ];
+
+            const moodPoint =
+                moodData[
+                    closestIndex
+                ];
+
+            const listeningPoint =
+                listeningData[
+                    closestIndex
+                ];
+
+            const medPoint =
+                medicationData[
+                    closestIndex
+                ];
+
+            const sleepPoint =
+                sleepData[
+                    closestIndex
+                ];
+
+
+            const moodValue =
+                (
+                    moodPoint.val *
+                    5
+                ).toFixed(1);
+
+
+            let sleepValue =
+                'No window recorded';
+
+            if (
+                sleepPoint.hasData
+            ) {
+                const duration =
+                    typeof phaseSleepFormatDuration ===
+                        'function' &&
+                    Number.isFinite(
+                        sleepPoint.durationMinutes
+                    )
+                        ? phaseSleepFormatDuration(
+                            sleepPoint.durationMinutes
+                        )
+                        : 'Recorded';
+
+                const quality =
+                    sleepPoint.quality
+                        ? ` · ${sleepPoint.quality}/5 quality`
+                        : '';
+
+                sleepValue =
+                    sleepPoint.isOpen
+                        ? `${duration} · in progress`
+                        : `${duration}${quality}`;
+            }
+
+
+            tooltip.style.display =
+                'block';
+
+            tooltip.style.left =
+                `${(
+                    matchX /
+                    canvasWidth
+                ) * 100}%`;
+
+            tooltip.style.top =
+                '34px';
+
 
             tooltip.innerHTML = `
-                <div class="tooltip-date">${b.dateString}</div>
-                <div class="tooltip-row"><span style="color:#788D46">●</span> Mood: ${mVal}/5${moodPoint.hasData ? '' : ' (carried forward)'}</div>
-                <div class="tooltip-row"><span style="color:#9A75C4">●</span> Tracks: ${lVal}</div>
-                <div class="tooltip-row"><span style="color:#D49728">●</span> Meds: ${medVal}</div>
-                <div class="tooltip-row"><span style="color:#D56543">●</span> Journal: ${jVal} entries</div>
-            `;
-        }
-    };
+                <div class="tooltip-date">
+                    ${bucket.dateString}
+                </div>
 
-    svgElem.onmouseleave = () => {
-        if (crosshair) crosshair.style.display = 'none';
-        if (tooltip) tooltip.style.display = 'none';
-    };
+                ${
+                    activeWavelengthSignals.has('mood')
+                        ? `
+                            <div class="tooltip-row">
+                                <span style="color:#91B956;">●</span>
+                                Mood: ${moodValue}/5
+                                ${
+                                    moodPoint.hasData
+                                        ? ''
+                                        : ' (carried forward)'
+                                }
+                            </div>
+                        `
+                        : ''
+                }
+
+                ${
+                    activeWavelengthSignals.has('listening')
+                        ? `
+                            <div class="tooltip-row">
+                                <span style="color:#B48BE4;">●</span>
+                                Listening: ${listeningPoint.count} track${listeningPoint.count === 1 ? '' : 's'}
+                            </div>
+                        `
+                        : ''
+                }
+
+                ${
+                    activeWavelengthSignals.has('medication')
+                        ? `
+                            <div class="tooltip-row">
+                                <span style="color:#E1A53B;">●</span>
+                                Medication: ${
+                                    medPoint.count
+                                        ? medPoint.doses
+                                            .map(
+                                                dose =>
+                                                    phaseEscapeHtml(
+                                                        dose
+                                                    )
+                                            )
+                                            .join(', ')
+                                        : 'None logged'
+                                }
+                            </div>
+                        `
+                        : ''
+                }
+
+                ${
+                    activeWavelengthSignals.has('sleep')
+                        ? `
+                            <div class="tooltip-row">
+                                <span style="color:#5AAFC3;">●</span>
+                                Sleep Window: ${sleepValue}
+                            </div>
+                        `
+                        : ''
+                }
+            `;
+        };
+
+
+    svg.onmouseleave =
+        () => {
+            if (crosshair) {
+                crosshair.style.display =
+                    'none';
+            }
+
+            if (tooltip) {
+                tooltip.style.display =
+                    'none';
+            }
+        };
 }
