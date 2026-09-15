@@ -2397,7 +2397,7 @@ function renderPhaseWavelength() {
                             color,
 
                         'stroke-width':
-                            '3.2',
+                            '1.8',
 
                         'stroke-linecap':
                             'round',
