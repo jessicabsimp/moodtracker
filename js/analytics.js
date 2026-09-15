@@ -1659,7 +1659,40 @@ function phaseWaveEscape(
 // ==========================================
 // MAIN PHASE WAVELENGTH RENDER
 // ==========================================
+// ==========================================
+// SVG ELEMENT CREATOR
+// ==========================================
 
+function phaseCreateSvgElement(
+    tagName,
+    attributes = {}
+) {
+    const element =
+        document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            tagName
+        );
+
+    Object.entries(
+        attributes
+    ).forEach(
+        ([name, value]) => {
+            if (
+                value === null ||
+                value === undefined
+            ) {
+                return;
+            }
+
+            element.setAttribute(
+                name,
+                String(value)
+            );
+        }
+    );
+
+    return element;
+}
 function renderPhaseWavelength() {
     if (!cachedWavelengthData) {
         return;
@@ -2260,10 +2293,10 @@ function renderPhaseWavelength() {
             }
 
 
-            const pathData =
-                phaseBuildSmoothPath(
-                    points
-                );
+        const pathData =
+            phaseWaveSmoothPath(
+                 points
+        );
 
 
             // ==================================
