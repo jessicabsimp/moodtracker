@@ -372,10 +372,6 @@ function normalizeSleepData(
             }
 
             // Map roughly 4–10 hours to 0–1.
-            //
-            // This is visual normalization only.
-            // The actual tooltip always displays
-            // the real Sleep Window duration.
             const minimumMinutes =
                 4 * 60;
 
@@ -500,8 +496,7 @@ async function updateAnalytics() {
         try {
             sleepSessions =
                 await phaseLoadSleepSessions(
-                    currentWavelengthRange +
-                    1
+                    currentWavelengthRange + 1
                 );
         } catch (error) {
             console.warn(
@@ -510,7 +505,6 @@ async function updateAnalytics() {
             );
         }
     }
-
 
     cachedWavelengthData = {
         mood:
@@ -528,16 +522,13 @@ async function updateAnalytics() {
         buckets
     };
 
-
     await updateTodayCardStatuses(
         medLogs,
         spotifyItems,
         sleepSessions
     );
 
-
     renderPhaseWavelength();
-
 
     // ======================================
     // PHASE NOTICED
@@ -597,7 +588,6 @@ async function updateAnalytics() {
                 )
         );
 
-
     if (
         moodDays.size === 0 &&
         listeningDays.size === 0 &&
@@ -610,9 +600,6 @@ async function updateAnalytics() {
         return;
     }
 
-
-    // Prefer the existing persistent insight
-    // engine when enough data exists.
     if (
         typeof phaseBuildInsightModel ===
             'function' &&
@@ -648,9 +635,6 @@ async function updateAnalytics() {
         }
     }
 
-
-    // Before there is enough correlation data,
-    // surface a useful descriptive observation.
     const completedSleep =
         sleepSessions.filter(
             session =>
@@ -695,8 +679,7 @@ async function updateAnalytics() {
                         averageMinutes
                     )
                     : `${Math.round(
-                        averageMinutes /
-                        60
+                        averageMinutes / 60
                     )}h`;
 
             insightElement.textContent =
@@ -705,7 +688,6 @@ async function updateAnalytics() {
             return;
         }
     }
-
 
     if (
         moodDays.size >= 3
@@ -716,7 +698,6 @@ async function updateAnalytics() {
         return;
     }
 
-
     if (
         spotifyItems.length
     ) {
@@ -726,12 +707,9 @@ async function updateAnalytics() {
         return;
     }
 
-
     insightElement.textContent =
         'Your signals are starting to build a timeline. More overlapping observations will reveal stronger patterns.';
 }
-
-
 // ==========================================
 // TODAY STATUS CARD
 // ==========================================
@@ -760,57 +738,38 @@ async function updateTodayCardStatuses(
                     todayString
             );
 
-    const hasMorning =
+    const morningTaken =
         todayMeds.some(
             log =>
                 String(
                     log.time_of_day || ''
                 )
-                    .toLowerCase() ===
-                'morning'
+                    .toLowerCase()
+                    .includes(
+                        'morning'
+                    )
         );
 
-    const hasBedtime =
+    const eveningTaken =
         todayMeds.some(
             log =>
                 String(
                     log.time_of_day || ''
                 )
-                    .toLowerCase() ===
-                'bedtime'
+                    .toLowerCase()
+                    .includes(
+                        'evening'
+                    )
         );
 
-    const medElement =
+    const medicationStatus =
         document.getElementById(
-            'todayMedText'
+            'medicationStatus'
         );
 
-    if (medElement) {
-        if (
-            hasMorning &&
-            hasBedtime
-        ) {
-            medElement.innerHTML =
-                'Morning <span style="color:var(--signal-medication);font-weight:700;">✓</span> · Bedtime <span style="color:var(--signal-medication);font-weight:700;">✓</span>';
-
-        } else if (hasMorning) {
-            medElement.innerHTML =
-                'Morning <span style="color:var(--signal-medication);font-weight:700;">✓</span> · Evening ○';
-
-        } else if (hasBedtime) {
-            medElement.innerHTML =
-                'Morning ○ · Evening <span style="color:var(--signal-medication);font-weight:700;">✓</span>';
-
-        } else if (
-            todayMeds.length
-        ) {
-            medElement.innerHTML =
-                `${todayMeds.length} dose${todayMeds.length === 1 ? '' : 's'} logged today <span style="color:var(--signal-medication);font-weight:700;">✓</span>`;
-
-        } else {
-            medElement.textContent =
-                'Not logged today';
-        }
+    if (medicationStatus) {
+        medicationStatus.textContent =
+            `Morning ${morningTaken ? '✓' : '○'} · Evening ${eveningTaken ? '✓' : '○'}`;
     }
 
 
@@ -818,7 +777,220 @@ async function updateTodayCardStatuses(
     // LISTENING
     // ======================================
 
-    const audioElement =
+    const todayListening =
+        (spotifyItems || [])
+            .filter(
+                item =>
+                    item.played_at &&
+                    phaseLocalDateKey(
+                        item.played_at
+                    ) ===
+                    todayString
+            );
+
+    const listeningStatus =
+        document.getElementById(
+            'listeningStatus'
+        );
+
+    if (listeningStatus) {
+        if (todayListening.length) {
+            listeningStatus.textContent =
+                `${todayListening.length} track${todayListening.length === 1 ? '' : 's'} logged today`;
+        } else {
+            listeningStatus.textContent =
+                'No listening saved today';
+        }
+    }
+
+
+    // ======================================
+    // SLEEP
+    // ======================================
+
+    const sleepStatus =
+        document.getElementById(
+            'sleepStatus'
+        );
+
+    const sleepAction =
+        document.getElementById(
+            'sleepAction'
+        );
+
+    let openSession =
+        (sleepSessions || [])
+            .find(
+                session =>
+                    !session.wake_time
+            ) || null;
+
+
+    if (
+        !openSession &&
+        typeof phaseGetOpenSleepSession ===
+            'function'
+    ) {
+        try {
+            openSession =
+                await phaseGetOpenSleepSession();
+        } catch (error) {
+            console.warn(
+                'Could not check open sleep session:',
+                error
+            );
+        }
+    }
+
+
+    if (sleepStatus) {
+        if (openSession) {
+            const durationMinutes =
+                typeof phaseSleepDurationMinutes ===
+                    'function'
+                    ? phaseSleepDurationMinutes(
+                        openSession.bedtime,
+                        new Date()
+                    )
+                    : null;
+
+            const durationText =
+                Number.isFinite(
+                    durationMinutes
+                )
+                    ? (
+                        typeof phaseSleepFormatDuration ===
+                            'function'
+                            ? phaseSleepFormatDuration(
+                                durationMinutes
+                            )
+                            : `${Math.round(
+                                durationMinutes /
+                                60
+                            )}h`
+                    )
+                    : '';
+
+            sleepStatus.textContent =
+                durationText
+                    ? `Sleep window open · ${durationText}`
+                    : 'Sleep window open';
+        } else {
+            const latestCompleted =
+                (sleepSessions || [])
+                    .filter(
+                        session =>
+                            session.wake_time
+                    )
+                    .sort(
+                        (a, b) =>
+                            new Date(
+                                b.wake_time
+                            ) -
+                            new Date(
+                                a.wake_time
+                            )
+                    )[0];
+
+            if (
+                latestCompleted &&
+                phaseLocalDateKey(
+                    latestCompleted.wake_time
+                ) ===
+                todayString
+            ) {
+                const durationMinutes =
+                    typeof phaseSleepDurationMinutes ===
+                        'function'
+                        ? phaseSleepDurationMinutes(
+                            latestCompleted.bedtime,
+                            latestCompleted.wake_time
+                        )
+                        : null;
+
+                const durationText =
+                    Number.isFinite(
+                        durationMinutes
+                    )
+                        ? (
+                            typeof phaseSleepFormatDuration ===
+                                'function'
+                                ? phaseSleepFormatDuration(
+                                    durationMinutes
+                                )
+                                : `${Math.round(
+                                    durationMinutes /
+                                    60
+                                )}h`
+                        )
+                        : '';
+
+                sleepStatus.textContent =
+                    durationText
+                        ? `Last sleep window · ${durationText}`
+                        : 'Sleep logged today';
+            } else {
+                sleepStatus.textContent =
+                    'Ready for your next sleep window';
+            }
+        }
+    }
+
+
+    if (sleepAction) {
+        sleepAction.textContent =
+            openSession
+                ? 'Wake →'
+                : 'Open →';
+    }
+
+
+    // ======================================
+    // DASHBOARD LISTENING CARD
+    // ======================================
+
+    if (
+        typeof updateDashboardListeningCard ===
+            'function'
+    ) {
+        try {
+            await updateDashboardListeningCard();
+        } catch (error) {
+            console.warn(
+                'Dashboard listening card could not update:',
+                error
+            );
+        }
+    }
+}
+
+
+// ==========================================
+// SPOTIFY DASHBOARD CARD
+// ==========================================
+
+async function updateDashboardListeningCard() {
+    const title =
+        document.getElementById(
+            'dashboardListeningTitle'
+        );
+
+    const artist =
+        document.getElementById(
+            'dashboardListeningArtist'
+        );
+
+    const label =
+        document.getElementById(
+            'dashboardListeningLabel'
+        );
+
+    const albumArt =
+        document.getElementById(
+            'dashboardAlbumArt'
+        );
+
+    const vibeSubtitle =
         document.getElementById(
             'spotifyVibeSubtitle'
         );
@@ -828,185 +1000,351 @@ async function updateTodayCardStatuses(
             'connectSpotifyBtn'
         );
 
+
+    if (
+        !title ||
+        !artist
+    ) {
+        return;
+    }
+
+
     const connected =
-        !!localStorage.getItem(
-            'spotify_access_token'
+        typeof isSpotifyConnected ===
+            'function'
+            ? isSpotifyConnected()
+            : false;
+
+
+    if (!connected) {
+        if (label) {
+            label.textContent =
+                'LISTENING';
+        }
+
+        title.textContent =
+            'Connect Spotify';
+
+        artist.textContent =
+            'Add listening as a Phase signal';
+
+        if (vibeSubtitle) {
+            vibeSubtitle.textContent =
+                'Connect Spotify to compare listening with mood, sleep, and medication.';
+        }
+
+        if (albumArt) {
+            albumArt.innerHTML =
+                '<span class="album-placeholder-icon">♪</span>';
+        }
+
+        if (connectButton) {
+            connectButton.style.display =
+                '';
+        }
+
+        updateAudioPulseUI(
+            'Quiet',
+            0
         );
 
-    if (audioElement) {
-        if (connected) {
-            const todayTracks =
-                (spotifyItems || [])
-                    .filter(
-                        item =>
-                            item.played_at &&
-                            phaseLocalDateKey(
-                                item.played_at
-                            ) ===
-                            todayString
-                    );
+        return;
+    }
 
-            audioElement.textContent =
-                todayTracks.length
-                    ? `${todayTracks.length} track${todayTracks.length === 1 ? '' : 's'} logged today`
-                    : 'Connected & active';
 
-            if (connectButton) {
-                connectButton.textContent =
-                    'Active';
+    if (connectButton) {
+        connectButton.style.display =
+            'none';
+    }
 
-                connectButton.style.color =
-                    'var(--signal-listening-hover)';
-            }
 
-        } else {
-            audioElement.textContent =
-                'Spotify not connected';
+    let current =
+        null;
 
-            if (connectButton) {
-                connectButton.textContent =
-                    'Connect';
-            }
+
+    if (
+        typeof fetchCurrentlyPlayingTrack ===
+            'function'
+    ) {
+        try {
+            current =
+                await fetchCurrentlyPlayingTrack();
+        } catch (error) {
+            console.warn(
+                'Currently playing track unavailable:',
+                error
+            );
         }
     }
 
 
-    // ======================================
-    // SLEEP
-    // ======================================
+    const currentTrack =
+        current?.item || null;
 
-    const sleepElement =
-        document.getElementById(
-            'todaySleepText'
+
+    if (currentTrack) {
+        if (label) {
+            label.textContent =
+                current.is_playing
+                    ? 'PLAYING NOW'
+                    : 'LAST ACTIVE';
+        }
+
+        title.textContent =
+            currentTrack.name ||
+            'Unknown track';
+
+        artist.textContent =
+            currentTrack.artists
+                ?.map(
+                    item =>
+                        item.name
+                )
+                .join(
+                    ', '
+                ) ||
+            'Unknown artist';
+
+
+        const artwork =
+            currentTrack.album
+                ?.images?.[0]?.url;
+
+
+        if (
+            albumArt &&
+            artwork
+        ) {
+            albumArt.innerHTML =
+                `<img src="${artwork}" alt="">`;
+        }
+
+
+        if (vibeSubtitle) {
+            vibeSubtitle.textContent =
+                current.is_playing
+                    ? 'Your listening signal is active.'
+                    : 'Your recent listening is part of the current Phase.';
+        }
+
+
+        const pulse =
+            current.is_playing
+                ? 0.86
+                : 0.42;
+
+        updateAudioPulseUI(
+            current.is_playing
+                ? 'High'
+                : 'Low',
+            pulse
         );
 
-    if (!sleepElement) {
         return;
     }
 
 
-    const openSession =
-        (sleepSessions || [])
-            .find(
-                session =>
-                    !session.wake_time
+    let recent =
+        [];
+
+
+    if (
+        typeof fetchRecentlyPlayedTracks ===
+            'function'
+    ) {
+        try {
+            recent =
+                await fetchRecentlyPlayedTracks();
+        } catch (error) {
+            console.warn(
+                'Recent listening unavailable:',
+                error
             );
+        }
+    }
 
 
-    if (openSession) {
-        const minutes =
-            typeof phaseSleepDurationMinutes ===
-                'function'
-                ? phaseSleepDurationMinutes(
-                    openSession.bedtime,
-                    new Date()
+    const latest =
+        recent?.[0]?.track;
+
+
+    if (latest) {
+        if (label) {
+            label.textContent =
+                'RECENTLY PLAYED';
+        }
+
+        title.textContent =
+            latest.name ||
+            'Unknown track';
+
+        artist.textContent =
+            latest.artists
+                ?.map(
+                    item =>
+                        item.name
                 )
-                : null;
+                .join(
+                    ', '
+                ) ||
+            'Unknown artist';
 
-        const duration =
-            typeof phaseSleepFormatDuration ===
-                'function' &&
-            Number.isFinite(minutes)
-                ? phaseSleepFormatDuration(
-                    minutes
-                )
-                : '';
 
-        sleepElement.textContent =
-            duration
-                ? `Sleep window open · ${duration}`
-                : 'Sleep window in progress';
+        const artwork =
+            latest.album
+                ?.images?.[0]?.url;
+
+
+        if (
+            albumArt &&
+            artwork
+        ) {
+            albumArt.innerHTML =
+                `<img src="${artwork}" alt="">`;
+        }
+
+
+        if (vibeSubtitle) {
+            vibeSubtitle.textContent =
+                'Recent listening is contributing to your Phase.';
+        }
+
+
+        updateAudioPulseUI(
+            'Low',
+            0.36
+        );
 
         return;
     }
 
 
-    const completedToday =
-        (sleepSessions || [])
-            .filter(
-                session =>
-                    session.wake_time &&
-                    phaseLocalDateKey(
-                        session.wake_time
-                    ) ===
-                    todayString
-            )
-            .sort(
-                (a, b) =>
-                    new Date(
-                        b.wake_time
-                    ) -
-                    new Date(
-                        a.wake_time
-                    )
-            )[0];
-
-
-    if (completedToday) {
-        const minutes =
-            typeof phaseSleepDurationMinutes ===
-                'function'
-                ? phaseSleepDurationMinutes(
-                    completedToday.bedtime,
-                    completedToday.wake_time
-                )
-                : null;
-
-        const duration =
-            typeof phaseSleepFormatDuration ===
-                'function' &&
-            Number.isFinite(minutes)
-                ? phaseSleepFormatDuration(
-                    minutes
-                )
-                : 'Saved';
-
-        const quality =
-            completedToday.sleep_quality
-                ? ` · Quality ${completedToday.sleep_quality}/5`
-                : '';
-
-        sleepElement.textContent =
-            `${duration}${quality}`;
-
-        return;
+    if (label) {
+        label.textContent =
+            'LISTENING';
     }
 
+    title.textContent =
+        'Spotify connected';
 
-    sleepElement.textContent =
-        'Ready for your next sleep window';
+    artist.textContent =
+        'Waiting for listening activity';
+
+    if (vibeSubtitle) {
+        vibeSubtitle.textContent =
+            'Your listening signal will appear here when activity is available.';
+    }
+
+    if (albumArt) {
+        albumArt.innerHTML =
+            '<span class="album-placeholder-icon">♪</span>';
+    }
+
+    updateAudioPulseUI(
+        'Quiet',
+        0.15
+    );
 }
 
 
 // ==========================================
-// RANGE CONTROLS
+// AUDIO PULSE UI
 // ==========================================
 
-function setWavelengthRange(
-    days,
-    buttonElement
+function updateAudioPulseUI(
+    label,
+    level
 ) {
-    currentWavelengthRange =
-        Number(days) || 7;
-
-    document
-        .querySelectorAll(
-            '.range-btn'
-        )
-        .forEach(
-            button =>
-                button.classList.remove(
-                    'active'
-                )
+    const levelText =
+        document.getElementById(
+            'audioPulseLevel'
         );
 
-    if (buttonElement) {
-        buttonElement.classList.add(
-            'active'
+    const dots =
+        document.getElementById(
+            'audioPulseDots'
+        );
+
+    const waveform =
+        document.getElementById(
+            'audioWaveformVisualizer'
+        );
+
+
+    if (levelText) {
+        levelText.textContent =
+            label;
+    }
+
+
+    if (dots) {
+        const dotElements =
+            dots.querySelectorAll(
+                '.pulse-dot'
+            );
+
+        const activeCount =
+            Math.max(
+                0,
+                Math.min(
+                    dotElements.length,
+                    Math.round(
+                        level *
+                        dotElements.length
+                    )
+                )
+            );
+
+        dotElements.forEach(
+            (dot, index) => {
+                dot.classList.toggle(
+                    'active',
+                    index <
+                    activeCount
+                );
+            }
         );
     }
 
-    updateAnalytics();
+
+    if (waveform) {
+        const bars =
+            waveform.querySelectorAll(
+                '.bar'
+            );
+
+        bars.forEach(
+            (bar, index) => {
+                const wave =
+                    0.35 +
+                    (
+                        (
+                            Math.sin(
+                                index *
+                                1.7
+                            ) +
+                            1
+                        ) /
+                        2
+                    ) *
+                    0.65;
+
+                bar.style.transform =
+                    `scaleY(${Math.max(
+                        0.2,
+                        wave * level
+                    )})`;
+
+                bar.style.opacity =
+                    String(
+                        Math.max(
+                            0.25,
+                            level
+                        )
+                    );
+            }
+        );
+    }
 }
 
 
@@ -1015,19 +1353,16 @@ function setWavelengthRange(
 // ==========================================
 
 function toggleWavelengthSignal(
-    signalName
+    signal
 ) {
-    const validSignals =
-        new Set([
+    if (
+        ![
             'mood',
             'listening',
-            'medication',
-            'sleep'
-        ]);
-
-    if (
-        !validSignals.has(
-            signalName
+            'sleep',
+            'medication'
+        ].includes(
+            signal
         )
     ) {
         return;
@@ -1036,64 +1371,52 @@ function toggleWavelengthSignal(
 
     if (
         activeWavelengthSignals.has(
-            signalName
+            signal
         )
     ) {
-        // Never allow every signal to be
-        // hidden at once.
+        // Keep at least one signal visible.
         if (
-            activeWavelengthSignals
-                .size > 1
+            activeWavelengthSignals.size ===
+            1
         ) {
-            activeWavelengthSignals
-                .delete(
-                    signalName
-                );
+            return;
         }
 
+        activeWavelengthSignals.delete(
+            signal
+        );
     } else {
-        activeWavelengthSignals
-            .add(
-                signalName
-            );
+        activeWavelengthSignals.add(
+            signal
+        );
     }
 
 
-    const buttonMap = {
-        mood:
-            'btnSignalMood',
+    document
+        .querySelectorAll(
+            '.signal-pill'
+        )
+        .forEach(
+            button => {
+                const buttonSignal =
+                    button.dataset.signal;
 
-        listening:
-            'btnSignalListening',
+                const active =
+                    activeWavelengthSignals.has(
+                        buttonSignal
+                    );
 
-        medication:
-            'btnSignalMedication',
-
-        sleep:
-            'btnSignalSleep'
-    };
-
-
-    Object.entries(
-        buttonMap
-    ).forEach(
-        ([signal, buttonId]) => {
-            const button =
-                document.getElementById(
-                    buttonId
+                button.classList.toggle(
+                    'active',
+                    active
                 );
 
-            if (!button) {
-                return;
+                button.classList.toggle(
+                    'inactive',
+                    !active
+                );
             }
-
-            button.className =
-                activeWavelengthSignals
-                    .has(signal)
-                    ? 'signal-pill active'
-                    : 'signal-pill inactive';
-        }
-    );
+        );
 
 
     renderPhaseWavelength();
@@ -1101,47 +1424,124 @@ function toggleWavelengthSignal(
 
 
 // ==========================================
-// SVG HELPERS
+// RANGE SWITCHING
 // ==========================================
 
-function phaseCreateSvgElement(
-    tag,
-    attributes = {}
+async function setWavelengthRange(
+    daysCount
 ) {
-    const element =
-        document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            tag
+    const parsed =
+        Number(
+            daysCount
         );
 
-    Object.entries(
-        attributes
-    ).forEach(
-        ([key, value]) => {
-            element.setAttribute(
-                key,
-                value
-            );
-        }
-    );
 
-    return element;
+    if (
+        ![
+            7,
+            14,
+            30,
+            90
+        ].includes(
+            parsed
+        )
+    ) {
+        return;
+    }
+
+
+    currentWavelengthRange =
+        parsed;
+
+
+    document
+        .querySelectorAll(
+            '[data-wavelength-range]'
+        )
+        .forEach(
+            button => {
+                button.classList.toggle(
+                    'active',
+                    Number(
+                        button.dataset
+                            .wavelengthRange
+                    ) ===
+                    parsed
+                );
+            }
+        );
+
+
+    await updateAnalytics();
 }
 
 
-function phaseBuildSmoothPath(
+// ==========================================
+// SVG HELPERS
+// ==========================================
+
+function phaseWaveX(
+    index,
+    total,
+    left,
+    right
+) {
+    if (
+        total <= 1
+    ) {
+        return (
+            left +
+            (
+                right -
+                left
+            ) /
+            2
+        );
+    }
+
+
+    return (
+        left +
+        (
+            index /
+            (
+                total -
+                1
+            )
+        ) *
+        (
+            right -
+            left
+        )
+    );
+}
+
+
+function phaseWaveSmoothPath(
     points
 ) {
     if (!points.length) {
         return '';
     }
 
+
+    if (
+        points.length === 1
+    ) {
+        return (
+            `M ${points[0].x} ${points[0].y}`
+        );
+    }
+
+
     let path =
-        `M ${points[0].x},${points[0].y}`;
+        `M ${points[0].x} ${points[0].y}`;
+
 
     for (
         let i = 0;
-        i < points.length - 1;
+        i <
+        points.length - 1;
         i++
     ) {
         const current =
@@ -1150,1195 +1550,109 @@ function phaseBuildSmoothPath(
         const next =
             points[i + 1];
 
-        const controlX =
+        const midpointX =
             (
                 current.x +
                 next.x
-            ) / 2;
+            ) /
+            2;
+
 
         path +=
-            ` C ${controlX},${current.y} ${controlX},${next.y} ${next.x},${next.y}`;
+            ` C ${midpointX} ${current.y}, ${midpointX} ${next.y}, ${next.x} ${next.y}`;
     }
+
 
     return path;
 }
 
 
-// ==========================================
-// MAIN PHASE WAVELENGTH RENDER
-// ==========================================
-
-function renderPhaseWavelength() {
-    if (!cachedWavelengthData) {
-        return;
-    }
-
-
-    const gridGroup =
-        document.getElementById(
-            'wavelengthGridGroup'
-        );
-
-    const pathsGroup =
-        document.getElementById(
-            'wavelengthPathsGroup'
-        );
-
-    const eventsGroup =
-        document.getElementById(
-            'wavelengthEventsGroup'
-        );
-
-    const labelsContainer =
-        document.getElementById(
-            'dynamicChartLabels'
-        );
-
-    const tooltip =
-        document.getElementById(
-            'chartTooltip'
-        );
-
-    const crosshair =
-        document.getElementById(
-            'wavelengthCrosshair'
-        );
-
-    const svg =
-        document.querySelector(
-            '.wavelength-svg'
-        );
-
-
+function phaseWaveAreaPath(
+    points,
+    bottom
+) {
     if (
-        !gridGroup ||
-        !pathsGroup ||
-        !eventsGroup ||
-        !labelsContainer ||
-        !svg
+        !points.length
     ) {
-        return;
+        return '';
     }
 
 
-    const canvasWidth =
-        780;
-
-    const canvasHeight =
-        220;
-
-    const horizontalPadding =
-        32;
+    const linePath =
+        phaseWaveSmoothPath(
+            points
+        );
 
 
-    svg.setAttribute(
-        'viewBox',
-        `0 0 ${canvasWidth} ${canvasHeight}`
+    return (
+        `${linePath} ` +
+        `L ${points[points.length - 1].x} ${bottom} ` +
+        `L ${points[0].x} ${bottom} Z`
     );
+}
 
-    svg.setAttribute(
-        'preserveAspectRatio',
-        'xMidYMid meet'
+
+function phaseWaveClamp(
+    value,
+    minimum = 0,
+    maximum = 1
+) {
+    return Math.max(
+        minimum,
+        Math.min(
+            maximum,
+            value
+        )
     );
+}
 
 
-    gridGroup.innerHTML =
-        '';
-
-    pathsGroup.innerHTML =
-        '';
-
-    eventsGroup.innerHTML =
-        '';
-
-
-    const {
-        buckets,
-        mood,
-        spotify,
-        medication,
-        sleep
-    } =
-        cachedWavelengthData;
-
-
-    if (
-        !buckets ||
-        buckets.length < 2
-    ) {
-        return;
-    }
-
-
-    // ======================================
-    // X POSITIONS / LABELS
-    // ======================================
-
-    const xPositions =
-        buckets.map(
-            (_, index) =>
-                horizontalPadding +
-                (
-                    index /
-                    (
-                        buckets.length -
-                        1
-                    )
-                ) *
-                (
-                    canvasWidth -
-                    horizontalPadding *
-                    2
-                )
+function phaseWaveMapY(
+    value,
+    top,
+    bottom
+) {
+    const normalized =
+        phaseWaveClamp(
+            value
         );
 
 
-    const labelStep =
-        currentWavelengthRange > 14
-            ? Math.ceil(
-                currentWavelengthRange /
-                7
-            )
-            : 1;
-
-
-    labelsContainer.innerHTML =
-        buckets.map(
-            (bucket, index) => {
-                if (
-                    index %
-                        labelStep ===
-                        0 ||
-                    index ===
-                        buckets.length -
-                            1
-                ) {
-                    return `<span>${bucket.label}</span>`;
-                }
-
-                return '<span></span>';
-            }
-        ).join('');
-
-
-    // ======================================
-    // SIGNAL DATA
-    // ======================================
-
-    const moodData =
-        normalizeMoodData(
-            mood,
-            buckets
-        );
-
-    const listeningData =
-        normalizeListeningData(
-            spotify,
-            buckets
-        );
-
-    const medicationData =
-        mapMedicationEvents(
-            medication,
-            buckets
-        );
-
-    const sleepData =
-        normalizeSleepData(
-            sleep,
-            buckets
-        );
-
-
-    // ======================================
-    // LANE CONFIGURATION
-    // ======================================
-
-    const lanes = {
-        mood: {
-            baseline: 48,
-            amplitude: 33,
-            label: 'MOOD',
-            color: '#91B956'
-        },
-
-        listening: {
-            baseline: 101,
-            amplitude: 38,
-            label: 'LISTENING',
-            color: '#B48BE4'
-        },
-
-        medication: {
-            baseline: 145,
-            amplitude: 18,
-            label: 'MEDICATION',
-            color: '#E1A53B'
-        },
-
-        sleep: {
-            baseline: 197,
-            amplitude: 34,
-            label: 'SLEEP WINDOW',
-            color: '#5AAFC3'
-        }
-    };
-
-
-    // ======================================
-    // GRID / SIGNAL LABELS
-    // ======================================
-
-    Object.entries(
-        lanes
-    ).forEach(
-        ([signal, lane]) => {
-            if (
-                !activeWavelengthSignals
-                    .has(signal)
-            ) {
-                return;
-            }
-
-            const baseline =
-                phaseCreateSvgElement(
-                    'line',
-                    {
-                        x1: 12,
-                        y1:
-                            lane.baseline,
-
-                        x2:
-                            canvasWidth -
-                            12,
-
-                        y2:
-                            lane.baseline,
-
-                        stroke:
-                            'rgba(255,255,255,0.075)',
-
-                        'stroke-width':
-                            '1',
-
-                        'stroke-dasharray':
-                            '3 5'
-                    }
-                );
-
-            gridGroup.appendChild(
-                baseline
-            );
-
-
-            const label =
-                phaseCreateSvgElement(
-                    'text',
-                    {
-                        x: 12,
-
-                        y:
-                            lane.baseline -
-                            lane.amplitude -
-                            6,
-
-                        fill:
-                            lane.color,
-
-                        'fill-opacity':
-                            '0.82',
-
-                        'font-size':
-                            '8.5',
-
-                        'font-weight':
-                            '700',
-
-                        'letter-spacing':
-                            '0.8px'
-                    }
-                );
-
-            label.textContent =
-                lane.label;
-
-            gridGroup.appendChild(
-                label
-            );
-        }
+    return (
+        bottom -
+        normalized *
+        (
+            bottom -
+            top
+        )
     );
+}
 
 
-    // ======================================
-    // MOOD
-    // ======================================
-
-    if (
-        activeWavelengthSignals.has(
-            'mood'
+function phaseWaveEscape(
+    value
+) {
+    return String(
+        value ?? ''
+    )
+        .replace(
+            /&/g,
+            '&amp;'
         )
-    ) {
-        const lane =
-            lanes.mood;
-
-        const points =
-            moodData.map(
-                (item, index) => ({
-                    x:
-                        xPositions[
-                            index
-                        ],
-
-                    y:
-                        lane.baseline -
-                        item.val *
-                        lane.amplitude
-                })
-            );
-
-        const pathData =
-            phaseBuildSmoothPath(
-                points
-            );
-
-
-        const area =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        `${pathData} L ${points[points.length - 1].x},${lane.baseline} L ${points[0].x},${lane.baseline} Z`,
-
-                    fill:
-                        'url(#moodWaveGradient)',
-
-                    opacity:
-                        '0.95'
-                }
-            );
-
-        pathsGroup.appendChild(
-            area
-        );
-
-
-        const path =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        pathData,
-
-                    fill:
-                        'none',
-
-                    stroke:
-                        lane.color,
-
-                    'stroke-width':
-                        '4',
-
-                    'stroke-linecap':
-                        'round',
-
-                    'stroke-linejoin':
-                        'round'
-                }
-            );
-
-        pathsGroup.appendChild(
-            path
-        );
-
-
-        points.forEach(
-            (point, index) => {
-                if (
-                    !moodData[index]
-                        .hasData
-                ) {
-                    return;
-                }
-
-                const glow =
-                    phaseCreateSvgElement(
-                        'circle',
-                        {
-                            cx:
-                                point.x,
-
-                            cy:
-                                point.y,
-
-                            r: '8',
-
-                            fill:
-                                lane.color,
-
-                            opacity:
-                                '0.12'
-                        }
-                    );
-
-                const marker =
-                    phaseCreateSvgElement(
-                        'circle',
-                        {
-                            cx:
-                                point.x,
-
-                            cy:
-                                point.y,
-
-                            r: '4.5',
-
-                            fill:
-                                lane.color,
-
-                            stroke:
-                                '#F1EFE7',
-
-                            'stroke-width':
-                                '1.2'
-                        }
-                    );
-
-                eventsGroup.appendChild(
-                    glow
-                );
-
-                eventsGroup.appendChild(
-                    marker
-                );
-            }
-        );
-    }
-
-
-    // ======================================
-    // LISTENING
-    // ======================================
-
-    if (
-        activeWavelengthSignals.has(
-            'listening'
+        .replace(
+            /</g,
+            '&lt;'
         )
-    ) {
-        const lane =
-            lanes.listening;
-
-        const points =
-            listeningData.map(
-                (item, index) => ({
-                    x:
-                        xPositions[
-                            index
-                        ],
-
-                    y:
-                        lane.baseline -
-                        item.norm *
-                        lane.amplitude
-                })
-            );
-
-        const pathData =
-            phaseBuildSmoothPath(
-                points
-            );
-
-
-        const area =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        `${pathData} L ${points[points.length - 1].x},${lane.baseline} L ${points[0].x},${lane.baseline} Z`,
-
-                    fill:
-                        'url(#listeningWaveGradient)',
-
-                    opacity:
-                        '1'
-                }
-            );
-
-        pathsGroup.appendChild(
-            area
-        );
-
-
-        const shadow =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        pathData,
-
-                    fill:
-                        'none',
-
-                    stroke:
-                        lane.color,
-
-                    'stroke-width':
-                        '9',
-
-                    'stroke-linecap':
-                        'round',
-
-                    opacity:
-                        '0.10'
-                }
-            );
-
-        pathsGroup.appendChild(
-            shadow
-        );
-
-
-        const path =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        pathData,
-
-                    fill:
-                        'none',
-
-                    stroke:
-                        lane.color,
-
-                    'stroke-width':
-                        '4.5',
-
-                    'stroke-linecap':
-                        'round',
-
-                    'stroke-linejoin':
-                        'round'
-                }
-            );
-
-        pathsGroup.appendChild(
-            path
-        );
-
-
-        listeningData.forEach(
-            (item, index) => {
-                if (!item.count) {
-                    return;
-                }
-
-                const marker =
-                    phaseCreateSvgElement(
-                        'circle',
-                        {
-                            cx:
-                                xPositions[
-                                    index
-                                ],
-
-                            cy:
-                                points[
-                                    index
-                                ].y,
-
-                            r:
-                                Math.min(
-                                    6,
-                                    3 +
-                                    item.norm *
-                                    3
-                                ),
-
-                            fill:
-                                lane.color,
-
-                            opacity:
-                                '0.95'
-                        }
-                    );
-
-                eventsGroup.appendChild(
-                    marker
-                );
-            }
-        );
-    }
-
-
-    // ======================================
-    // MEDICATION
-    // ======================================
-
-    if (
-        activeWavelengthSignals.has(
-            'medication'
+        .replace(
+            />/g,
+            '&gt;'
         )
-    ) {
-        const lane =
-            lanes.medication;
-
-        medicationData.forEach(
-            (item, index) => {
-                const x =
-                    xPositions[
-                        index
-                    ];
-
-                if (!item.count) {
-                    const empty =
-                        phaseCreateSvgElement(
-                            'circle',
-                            {
-                                cx: x,
-
-                                cy:
-                                    lane.baseline,
-
-                                r: '2.5',
-
-                                fill:
-                                    'var(--phase-graph-surface)',
-
-                                stroke:
-                                    lane.color,
-
-                                'stroke-width':
-                                    '1',
-
-                                opacity:
-                                    '0.28'
-                            }
-                        );
-
-                    eventsGroup.appendChild(
-                        empty
-                    );
-
-                    return;
-                }
-
-
-                const pulseHeight =
-                    Math.min(
-                        28,
-                        12 +
-                        item.count *
-                        5
-                    );
-
-
-                const glow =
-                    phaseCreateSvgElement(
-                        'line',
-                        {
-                            x1: x,
-
-                            x2: x,
-
-                            y1:
-                                lane.baseline,
-
-                            y2:
-                                lane.baseline -
-                                pulseHeight,
-
-                            stroke:
-                                lane.color,
-
-                            'stroke-width':
-                                '8',
-
-                            'stroke-linecap':
-                                'round',
-
-                            opacity:
-                                '0.12'
-                        }
-                    );
-
-
-                const pulse =
-                    phaseCreateSvgElement(
-                        'line',
-                        {
-                            x1: x,
-
-                            x2: x,
-
-                            y1:
-                                lane.baseline,
-
-                            y2:
-                                lane.baseline -
-                                pulseHeight,
-
-                            stroke:
-                                lane.color,
-
-                            'stroke-width':
-                                '3.5',
-
-                            'stroke-linecap':
-                                'round'
-                        }
-                    );
-
-
-                const marker =
-                    phaseCreateSvgElement(
-                        'circle',
-                        {
-                            cx: x,
-
-                            cy:
-                                lane.baseline -
-                                pulseHeight,
-
-                            r: '4.5',
-
-                            fill:
-                                lane.color,
-
-                            stroke:
-                                '#F1EFE7',
-
-                            'stroke-width':
-                                '1'
-                        }
-                    );
-
-
-                eventsGroup.appendChild(
-                    glow
-                );
-
-                eventsGroup.appendChild(
-                    pulse
-                );
-
-                eventsGroup.appendChild(
-                    marker
-                );
-            }
-        );
-    }
-
-
-    // ======================================
-    // SLEEP WINDOW
-    // ======================================
-
-    if (
-        activeWavelengthSignals.has(
-            'sleep'
+        .replace(
+            /"/g,
+            '&quot;'
         )
-    ) {
-        const lane =
-            lanes.sleep;
-
-        const points =
-            sleepData.map(
-                (item, index) => ({
-                    x:
-                        xPositions[
-                            index
-                        ],
-
-                    y:
-                        item.hasData
-                            ? lane.baseline -
-                              (
-                                  0.20 +
-                                  item.durationNorm *
-                                  0.80
-                              ) *
-                              lane.amplitude
-                            : lane.baseline
-                })
-            );
-
-
-        const pathData =
-            phaseBuildSmoothPath(
-                points
-            );
-
-
-        const area =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        `${pathData} L ${points[points.length - 1].x},${lane.baseline} L ${points[0].x},${lane.baseline} Z`,
-
-                    fill:
-                        'url(#sleepWaveGradient)',
-
-                    opacity:
-                        '0.90'
-                }
-            );
-
-        pathsGroup.appendChild(
-            area
+        .replace(
+            /'/g,
+            '&#039;'
         );
-
-
-        const path =
-            phaseCreateSvgElement(
-                'path',
-                {
-                    d:
-                        pathData,
-
-                    fill:
-                        'none',
-
-                    stroke:
-                        lane.color,
-
-                    'stroke-width':
-                        '4',
-
-                    'stroke-linecap':
-                        'round',
-
-                    'stroke-linejoin':
-                        'round',
-
-                    opacity:
-                        sleepData.some(
-                            item =>
-                                item.hasData
-                        )
-                            ? '1'
-                            : '0.22'
-                }
-            );
-
-        pathsGroup.appendChild(
-            path
-        );
-
-
-        sleepData.forEach(
-            (item, index) => {
-                if (!item.hasData) {
-                    return;
-                }
-
-                const point =
-                    points[
-                        index
-                    ];
-
-
-                const glow =
-                    phaseCreateSvgElement(
-                        'circle',
-                        {
-                            cx:
-                                point.x,
-
-                            cy:
-                                point.y,
-
-                            r: '9',
-
-                            fill:
-                                lane.color,
-
-                            opacity:
-                                item.isOpen
-                                    ? '0.24'
-                                    : '0.12'
-                        }
-                    );
-
-
-                const marker =
-                    phaseCreateSvgElement(
-                        'circle',
-                        {
-                            cx:
-                                point.x,
-
-                            cy:
-                                point.y,
-
-                            r:
-                                item.isOpen
-                                    ? '5.5'
-                                    : '4.5',
-
-                            fill:
-                                lane.color,
-
-                            stroke:
-                                '#F1EFE7',
-
-                            'stroke-width':
-                                '1.2'
-                        }
-                    );
-
-
-                eventsGroup.appendChild(
-                    glow
-                );
-
-                eventsGroup.appendChild(
-                    marker
-                );
-            }
-        );
-    }
-
-
-    // ======================================
-    // SHARED TOOLTIP
-    // ======================================
-
-    svg.onmousemove =
-        event => {
-            const rect =
-                svg.getBoundingClientRect();
-
-            const mouseX =
-                (
-                    (
-                        event.clientX -
-                        rect.left
-                    ) /
-                    rect.width
-                ) *
-                canvasWidth;
-
-
-            let closestIndex =
-                0;
-
-            let smallestDistance =
-                Infinity;
-
-
-            xPositions.forEach(
-                (position, index) => {
-                    const distance =
-                        Math.abs(
-                            position -
-                            mouseX
-                        );
-
-                    if (
-                        distance <
-                        smallestDistance
-                    ) {
-                        smallestDistance =
-                            distance;
-
-                        closestIndex =
-                            index;
-                    }
-                }
-            );
-
-
-            const matchX =
-                xPositions[
-                    closestIndex
-                ];
-
-
-            if (crosshair) {
-                crosshair.style.display =
-                    'block';
-
-                crosshair.setAttribute(
-                    'x1',
-                    matchX
-                );
-
-                crosshair.setAttribute(
-                    'x2',
-                    matchX
-                );
-
-                crosshair.setAttribute(
-                    'y1',
-                    '8'
-                );
-
-                crosshair.setAttribute(
-                    'y2',
-                    '212'
-                );
-            }
-
-
-            if (!tooltip) {
-                return;
-            }
-
-
-            const bucket =
-                buckets[
-                    closestIndex
-                ];
-
-            const moodPoint =
-                moodData[
-                    closestIndex
-                ];
-
-            const listeningPoint =
-                listeningData[
-                    closestIndex
-                ];
-
-            const medPoint =
-                medicationData[
-                    closestIndex
-                ];
-
-            const sleepPoint =
-                sleepData[
-                    closestIndex
-                ];
-
-
-            const moodValue =
-                (
-                    moodPoint.val *
-                    5
-                ).toFixed(1);
-
-
-            let sleepValue =
-                'No window recorded';
-
-            if (
-                sleepPoint.hasData
-            ) {
-                const duration =
-                    typeof phaseSleepFormatDuration ===
-                        'function' &&
-                    Number.isFinite(
-                        sleepPoint.durationMinutes
-                    )
-                        ? phaseSleepFormatDuration(
-                            sleepPoint.durationMinutes
-                        )
-                        : 'Recorded';
-
-                const quality =
-                    sleepPoint.quality
-                        ? ` · ${sleepPoint.quality}/5 quality`
-                        : '';
-
-                sleepValue =
-                    sleepPoint.isOpen
-                        ? `${duration} · in progress`
-                        : `${duration}${quality}`;
-            }
-
-
-            tooltip.style.display =
-                'block';
-
-            tooltip.style.left =
-                `${(
-                    matchX /
-                    canvasWidth
-                ) * 100}%`;
-
-            tooltip.style.top =
-                '34px';
-
-
-            tooltip.innerHTML = `
-                <div class="tooltip-date">
-                    ${bucket.dateString}
-                </div>
-
-                ${
-                    activeWavelengthSignals.has('mood')
-                        ? `
-                            <div class="tooltip-row">
-                                <span style="color:#91B956;">●</span>
-                                Mood: ${moodValue}/5
-                                ${
-                                    moodPoint.hasData
-                                        ? ''
-                                        : ' (carried forward)'
-                                }
-                            </div>
-                        `
-                        : ''
-                }
-
-                ${
-                    activeWavelengthSignals.has('listening')
-                        ? `
-                            <div class="tooltip-row">
-                                <span style="color:#B48BE4;">●</span>
-                                Listening: ${listeningPoint.count} track${listeningPoint.count === 1 ? '' : 's'}
-                            </div>
-                        `
-                        : ''
-                }
-
-                ${
-                    activeWavelengthSignals.has('medication')
-                        ? `
-                            <div class="tooltip-row">
-                                <span style="color:#E1A53B;">●</span>
-                                Medication: ${
-                                    medPoint.count
-                                        ? medPoint.doses
-                                            .map(
-                                                dose =>
-                                                    phaseEscapeHtml(
-                                                        dose
-                                                    )
-                                            )
-                                            .join(', ')
-                                        : 'None logged'
-                                }
-                            </div>
-                        `
-                        : ''
-                }
-
-                ${
-                    activeWavelengthSignals.has('sleep')
-                        ? `
-                            <div class="tooltip-row">
-                                <span style="color:#5AAFC3;">●</span>
-                                Sleep Window: ${sleepValue}
-                            </div>
-                        `
-                        : ''
-                }
-            `;
-        };
-
-
-    svg.onmouseleave =
-        () => {
-            if (crosshair) {
-                crosshair.style.display =
-                    'none';
-            }
-
-            if (tooltip) {
-                tooltip.style.display =
-                    'none';
-            }
-        };
 }
